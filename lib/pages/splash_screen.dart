@@ -12,154 +12,208 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() {
-    return _SplashScreenState();
-  }
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 @NowaGenerated()
-class _SplashScreenState extends State<SplashScreen> {
-  bool _isVisible = false;
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _logoOpacity;
+  late Animation<double> _logoScale;
+  late Animation<double> _titleOpacity;
+  late Animation<double> _subtitleOpacity;
+  late Animation<double> _loaderOpacity;
 
   @override
   void initState() {
     super.initState();
+    _setupAnimations();
+    _controller.forward();
     _initializeApp();
+  }
+
+  void _setupAnimations() {
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+
+    // Staggered Animations
+    _logoOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
+    );
+
+    _logoScale = Tween(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _titleOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.4, 0.65, curve: Curves.easeIn),
+      ),
+    );
+
+    _subtitleOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.6, 0.8, curve: Curves.easeIn),
+      ),
+    );
+
+    _loaderOpacity = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.8, 1.0, curve: Curves.easeIn),
+      ),
+    );
   }
 
   Future<void> _initializeApp() async {
     try {
       sharedPrefs.getBool('test');
-    } catch (e) {}
-    setState(() {
-      _isVisible = true;
-    });
+    } catch (_) {}
     await AuthService.instance.loadCurrentUser();
     await Future.delayed(const Duration(seconds: 3));
-    if (mounted) {
-      if (AuthService.instance.currentUser != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      } else {
-        bool hasSeenIntro = false;
-        try {
-          hasSeenIntro = sharedPrefs.getBool('hasSeenIntro') ?? false;
-        } catch (e) {
-          hasSeenIntro = false;
-        }
-        if (hasSeenIntro) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const IntroScreen()),
-          );
-        }
-      }
+
+    if (!mounted) return;
+
+    final hasSeenIntro = sharedPrefs.getBool('hasSeenIntro') ?? false;
+
+    if (AuthService.instance.currentUser != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+      );
+    } else if (hasSeenIntro) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const IntroScreen()),
+      );
     }
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: colorScheme.primary,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedScale(
-              scale: _isVisible ? 1 : 0.8,
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.easeOutBack,
-              child: AnimatedOpacity(
-                opacity: _isVisible ? 1 : 0,
-                duration: const Duration(milliseconds: 600),
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 🟣 LOGO
+                Transform.scale(
+                  scale: _logoScale.value,
+                  child: Opacity(
+                    opacity: _logoOpacity.value,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.home,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.primary,
+                      child: Icon(
+                        Icons.groups_rounded,
+                        size: 64,
+                        color: colorScheme.primary,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            AnimatedOpacity(
-              opacity: _isVisible ? 1 : 0,
-              duration: const Duration(milliseconds: 800),
-              child: AnimatedScale(
-                scale: _isVisible ? 1 : 0.9,
-                duration: const Duration(milliseconds: 1000),
-                curve: Curves.easeOut,
-                child: FlexSizedBox(
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  height: 40,
-                  child: const Text(
-                    'Family Directory',
+
+                const SizedBox(height: 24),
+
+                // 🟣 TITLE
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Opacity(
+                    opacity: _titleOpacity.value,
+                    child: Transform.scale(
+                      scale: 1 + (0.05 * (1 - _titleOpacity.value)),
+                      child: const Text(
+                        'Mewad Maheshwari Samaj Nadiad',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // 🟣 SUBTITLE
+                Opacity(
+                  opacity: _subtitleOpacity.value,
+                  child: Text(
+                    'Connect with your community',
                     style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      fontSize: 16,
+                      color: Colors.white.withValues(alpha: 0.85),
                     ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            AnimatedOpacity(
-              opacity: _isVisible ? 1 : 0,
-              duration: const Duration(milliseconds: 1200),
-              child: Text(
-                'Connect with your community',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white.withValues(alpha: 0.8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-            AnimatedOpacity(
-              opacity: _isVisible ? 1 : 0,
-              duration: const Duration(milliseconds: 1500),
-              child: AnimatedScale(
-                scale: _isVisible ? 1 : 0.8,
-                duration: const Duration(milliseconds: 1500),
-                curve: Curves.easeInOut,
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      color: Colors.white,
+
+                const SizedBox(height: 40),
+
+                // 🟣 LOADER
+                Opacity(
+                  opacity: _loaderOpacity.value,
+                  child: Transform.scale(
+                    scale: 0.8 + (0.2 * _loaderOpacity.value),
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );
