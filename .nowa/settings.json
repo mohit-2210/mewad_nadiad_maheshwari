@@ -1,0 +1,8 @@
+{
+    "version": "3.0.10",
+    "app": {
+        "name": "mmsn",
+        "package_name": "com.example.mmsn"
+    },
+    "main": {}
+}

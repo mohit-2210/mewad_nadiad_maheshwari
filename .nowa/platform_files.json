@@ -1,0 +1,12 @@
+{
+    "android": {
+        "androidManifest": {},
+        "appBuildGradle": {},
+        "settingsGradle": {}
+    },
+    "iOS": {
+        "infoPlist": {},
+        "podFile": {},
+        "appDelegateSwift": {}
+    }
+}
