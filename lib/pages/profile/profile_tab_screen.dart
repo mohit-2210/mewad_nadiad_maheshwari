@@ -4,9 +4,9 @@ import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/auth_service.dart';
 import 'package:mmsn/data_service.dart';
-import 'package:mmsn/pages/member_details_screen.dart';
-import 'package:mmsn/pages/edit_member_screen.dart';
-import 'package:mmsn/pages/login_screen.dart';
+import 'package:mmsn/pages/family/member_details_screen.dart';
+import 'package:mmsn/pages/profile/update/edit_member_screen.dart';
+import 'package:mmsn/pages/auth/login_screen.dart';
 
 @NowaGenerated()
 class ProfileTabScreen extends StatefulWidget {

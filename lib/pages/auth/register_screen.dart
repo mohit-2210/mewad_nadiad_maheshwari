@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/auth_service.dart';
-import 'package:mmsn/pages/o_t_p_verification_screen.dart';
+import 'package:mmsn/pages/auth/o_t_p_verification_screen.dart';
 
 @NowaGenerated()
 class RegisterScreen extends StatefulWidget {

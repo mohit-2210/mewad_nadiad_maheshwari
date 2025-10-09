@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/models/announcement.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/data_service.dart';
-import 'package:mmsn/pages/announcement_details_screen.dart';
+import 'package:mmsn/pages/announcement/announcement_details_screen.dart';
 
 @NowaGenerated()
 class AnnouncementsTabScreen extends StatefulWidget {

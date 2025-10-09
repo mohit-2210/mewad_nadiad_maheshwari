@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/pages/navigationbar.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/main.dart';
 import 'package:mmsn/auth_service.dart';
-import 'package:mmsn/pages/main_screen.dart';
-import 'package:mmsn/pages/login_screen.dart';
-import 'package:mmsn/pages/intro_screen.dart';
+import 'package:mmsn/pages/home/main_screen.dart';
+import 'package:mmsn/pages/auth/login_screen.dart';
+import 'package:mmsn/pages/intro/intro_screen.dart';
 
 @NowaGenerated()
 class SplashScreen extends StatefulWidget {

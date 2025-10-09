@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:mmsn/models/family.dart';
+import 'package:mmsn/pages/family/family_directory_screen.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/data_service.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/auth_service.dart';
-import 'package:mmsn/pages/family_directory_screen.dart';
 import 'package:mmsn/components/family_card.dart';
-import 'package:mmsn/pages/family_details_screen.dart';
+import 'package:mmsn/pages/family/family_details_screen.dart';
 
 @NowaGenerated()
 class HomeTabScreen extends StatefulWidget {
   @NowaGenerated({'loader': 'auto-constructor'})
-  const HomeTabScreen({super.key});
+  const HomeTabScreen({super.key, this.onDrawerToggle});
+
+  final VoidCallback? onDrawerToggle;
 
   @override
   State<HomeTabScreen> createState() {
@@ -250,93 +252,75 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
             curve: Curves.easeOutBack,
             builder: (context, value, child) => Transform.scale(
               scale: value,
-              child: Hero(
-                tag: 'home_profile_${currentUser?.id ?? 'unknown'}',
-                child: CircleAvatar(
-                  radius: 35,
-                  backgroundImage: currentUser?.profileImage != null
-                      ? NetworkImage(currentUser!.profileImage!)
-                      : null,
-                  child: currentUser?.profileImage == null
-                      ? const Icon(Icons.person, size: 35)
-                      : null,
+              child: GestureDetector(
+                onTap: widget.onDrawerToggle,
+                child: Stack(
+                  children: [
+                    Hero(
+                      tag: 'home_profile_${currentUser?.id ?? 'unknown'}',
+                      child: CircleAvatar(
+                        radius: 35,
+                        backgroundImage: currentUser?.profileImage != null
+                            ? NetworkImage(currentUser!.profileImage!)
+                            : null,
+                        child: currentUser?.profileImage == null
+                            ? const Icon(Icons.person, size: 35)
+                            : null,
+                      ),
+                    ),
+                    // Hamburger menu icon overlay (visual indicator only)
+                    if (widget.onDrawerToggle != null)
+                      Positioned(
+                        bottom: 2,
+                        right: 2,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.menu,
+                            color: Colors.white,
+                            size: 15,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeOut,
-                  builder: (context, value, child) => Transform.translate(
-                    offset: Offset(30 * (1 - value), 0),
-                    child: Opacity(
-                      opacity: value,
-                      child: Text(
-                        'Welcome, ${currentUser?.fullName ?? 'User'}',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: const Duration(milliseconds: 1000),
-                  curve: Curves.easeOut,
-                  builder: (context, value, child) => Transform.translate(
-                    offset: Offset(30 * (1 - value), 0),
-                    child: Opacity(
-                      opacity: value,
-                      child: Text(
-                        'Stay connected with your community',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: const Duration(milliseconds: 1200),
-                  curve: Curves.easeOut,
-                  builder: (context, value, child) => Transform.translate(
-                    offset: Offset(30 * (1 - value), 0),
-                    child: Opacity(
-                      opacity: value,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOut,
+              builder: (context, value, child) => Transform.translate(
+                offset: Offset(30 * (1 - value), 0),
+                child: Opacity(
+                  opacity: value,
+                  child: Text(
+                    currentUser?.fullName ?? 'User',
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(
+                          fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
-                          '${currentUser?.society ?? 'Community'} • ${currentUser?.area ?? 'Member'}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ],

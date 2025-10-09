@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/data_service.dart';
-import 'package:mmsn/pages/family_details_screen.dart';
+import 'package:mmsn/pages/family/family_details_screen.dart';
 
 @NowaGenerated()
 class MemberActionDialog extends StatelessWidget {

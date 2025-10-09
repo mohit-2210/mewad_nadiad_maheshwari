@@ -5,7 +5,7 @@ import 'package:mmsn/data_service.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/components/member_action_dialog.dart';
 import 'package:mmsn/components/family_card.dart';
-import 'package:mmsn/pages/family_details_screen.dart';
+import 'package:mmsn/pages/family/family_details_screen.dart';
 
 @NowaGenerated()
 class SocietyTabScreen extends StatefulWidget {

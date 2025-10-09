@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:mmsn/globals/app_state.dart';
-import 'package:mmsn/pages/splash_screen.dart';
+import 'package:mmsn/pages/splash/splash_screen.dart';
 
 @NowaGenerated()
 late final SharedPreferences sharedPrefs;

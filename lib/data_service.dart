@@ -24,7 +24,7 @@ class DataService {
         phoneNumber: '1234567890',
         pin: '1234',
         profileImage:
-            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+            AppImages.profileImageHead1,
         isHeadOfFamily: true,
         society: 'Green Valley Society',
         area: 'Block A',
@@ -41,7 +41,7 @@ class DataService {
           phoneNumber: '1234567891',
           pin: '1235',
           profileImage:
-              'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+              AppImages.profileImageHead1Wife,
           relation: 'Wife',
           occupation: 'Teacher',
           dateOfBirth: DateTime(1987, 8, 22),
@@ -53,7 +53,7 @@ class DataService {
           phoneNumber: '1234567892',
           pin: '1236',
           profileImage:
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+              AppImages.profileImageHead1Son,
           relation: 'Son',
           occupation: 'Student',
           dateOfBirth: DateTime(2010, 12, 8),
@@ -64,7 +64,7 @@ class DataService {
           phoneNumber: '1234567893',
           pin: '1237',
           profileImage:
-              'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400',
+              AppImages.profileImageHead1Daughter,
           relation: 'Daughter',
           occupation: 'Student',
           dateOfBirth: DateTime(2013, 3, 15),
@@ -118,6 +118,120 @@ class DataService {
       ],
       society: 'Sunset Heights',
       area: 'Block B',
+    ),
+    Family(
+      id: '3',
+      head: User(
+        id: '3',
+        fullName: 'John Jhon',
+        phoneNumber: '1234567890',
+        pin: '1234',
+        profileImage:
+            AppImages.profileImageHead1,
+        isHeadOfFamily: true,
+        society: 'Green Valley Society',
+        area: 'Block A',
+        address: 'Flat 401, Green Valley Apartments, Sector 12',
+        nativePlace: 'Mumbai, Maharashtra',
+        occupation: 'Software Engineer',
+        email: 'john.smith@email.com',
+        dateOfBirth: DateTime(1985, 5, 15),
+      ),
+      members: [
+        User(
+          id: '3a',
+          fullName: 'Jane Jane',
+          phoneNumber: '1234567891',
+          pin: '1235',
+          profileImage:
+              AppImages.profileImageHead1Wife,
+          relation: 'Wife',
+          occupation: 'Teacher',
+          dateOfBirth: DateTime(1987, 8, 22),
+          email: 'jane.smith@email.com',
+        ),
+        User(
+          id: '3b',
+          fullName: 'Mike Mike',
+          phoneNumber: '1234567892',
+          pin: '1236',
+          profileImage:
+              AppImages.profileImageHead1Son,
+          relation: 'Son',
+          occupation: 'Student',
+          dateOfBirth: DateTime(2010, 12, 8),
+        ),
+        User(
+          id: '3c',
+          fullName: 'Emma Emma',
+          phoneNumber: '1234567893',
+          pin: '1237',
+          profileImage:
+              AppImages.profileImageHead1Daughter,
+          relation: 'Daughter',
+          occupation: 'Student',
+          dateOfBirth: DateTime(2013, 3, 15),
+        ),
+      ],
+      society: 'Green Valley Society',
+      area: 'Block Y',
+    ),
+    Family(
+      id: '4',
+      head: User(
+        id: '4',
+        fullName: 'SMith Smith',
+        phoneNumber: '1234567890',
+        pin: '1234',
+        profileImage:
+            AppImages.profileImageHead1,
+        isHeadOfFamily: true,
+        society: 'Green Valley Society',
+        area: 'Block A',
+        address: 'Flat 401, Green Valley Apartments, Sector 12',
+        nativePlace: 'Mumbai, Maharashtra',
+        occupation: 'Software Engineer',
+        email: 'john.smith@email.com',
+        dateOfBirth: DateTime(1985, 5, 15),
+      ),
+      members: [
+        User(
+          id: '4a',
+          fullName: 'TEan Smith',
+          phoneNumber: '1234567891',
+          pin: '1235',
+          profileImage:
+              AppImages.profileImageHead1Wife,
+          relation: 'Wife',
+          occupation: 'Teacher',
+          dateOfBirth: DateTime(1987, 8, 22),
+          email: 'jane.smith@email.com',
+        ),
+        User(
+          id: '4b',
+          fullName: 'Mike Smith',
+          phoneNumber: '1234567892',
+          pin: '1236',
+          profileImage:
+              AppImages.profileImageHead1Son,
+          relation: 'Son',
+          occupation: 'Student',
+          dateOfBirth: DateTime(2010, 12, 8),
+        ),
+        User(
+          id: '4c',
+          fullName: 'SMith SMith',
+          phoneNumber: '1234567893',
+          pin: '1237',
+          profileImage:
+              AppImages.profileImageHead1Daughter,
+          relation: 'Daughter',
+          occupation: 'Student',
+          dateOfBirth: DateTime(2013, 3, 15),
+        ),
+      ],
+      society: 'Green Valley Society',
+      area: 'Block Z',
     ),
   ];
 

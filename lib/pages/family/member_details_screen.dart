@@ -300,6 +300,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
+              
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mmsn/intro_page.dart';
+import 'package:mmsn/pages/intro/intro_page.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/main.dart';
-import 'package:mmsn/pages/login_screen.dart';
+import 'package:mmsn/pages/auth/login_screen.dart';
 
 @NowaGenerated()
 class IntroScreen extends StatefulWidget {

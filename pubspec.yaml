@@ -22,6 +22,7 @@ dependencies:
   dio: ^5.5.0+1
   collection: ^1.19.1
   cached_network_image: ^3.4.1
+  google_fonts: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -35,6 +36,13 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/
+    - assets/carouselImages1.jpeg
+    - assets/carouselImages2.jpeg
+    - assets/carouselImages3.jpeg
+    - assets/carouselImages4.jpeg
+    - assets/profileImageHead1.jpeg
+    - assets/profileImageHead1Wife.jpeg
+    - assets/profileImageHead1Son.jpeg
+    - assets/profileImageHead1Daughter.jpeg
 
   
