@@ -18,15 +18,4 @@ class AppImages {
   static const String logo = 'assets/images/logo.png';
   static const String background = 'assets/images/bg.png';
 
-  // If you are using network images
-  static const String exampleUser =
-      'https://example.com/images/user.png';
-
-  // Optional: Map for dynamic lookup by name
-  static const Map<String, String> all = {
-    'profileAvatar': profileAvatar,
-    'logo': logo,
-    'background': background,
-    'exampleUser': exampleUser,
-  };
 }

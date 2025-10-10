@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mmsn/pages/setting/setting.dart';
 
 class AnimatedDrawer extends StatefulWidget {
   final Widget child;
@@ -80,7 +81,7 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
                         boxShadow: [
                           if (isDrawerOpen)
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha:  0.2),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -144,27 +145,6 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
           ),
           const SizedBox(height: 40),
 
-          _drawerItem(Icons.policy, "Terms & Conditions", onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()),
-            );
-          }),
-
-          _drawerItem(Icons.privacy_tip, "Privacy Policy", onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
-            );
-          }),
-
-          _drawerItem(Icons.info_outline, "About", onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AboutScreen()),
-            );
-          }),
-
           _drawerItem(Icons.color_lens, "Theme", onTap: () {
             Navigator.push(
               context,
@@ -182,7 +162,7 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
           _drawerItem(Icons.settings, "Settings", onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const AppSettingsScreen()),
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
             );
           }),
         ],
@@ -212,27 +192,6 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
 }
 
 /// Example placeholder screens (remove later)
-class TermsAndConditionsScreen extends StatelessWidget {
-  const TermsAndConditionsScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      Scaffold(appBar: AppBar(title: const Text("Terms & Conditions")));
-}
-
-class PrivacyPolicyScreen extends StatelessWidget {
-  const PrivacyPolicyScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      Scaffold(appBar: AppBar(title: const Text("Privacy Policy")));
-}
-
-class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      Scaffold(appBar: AppBar(title: const Text("About")));
-}
-
 class ThemeSettingsScreen extends StatelessWidget {
   const ThemeSettingsScreen({super.key});
   @override
@@ -247,9 +206,3 @@ class LanguageSettingsScreen extends StatelessWidget {
       Scaffold(appBar: AppBar(title: const Text("Language")));
 }
 
-class AppSettingsScreen extends StatelessWidget {
-  const AppSettingsScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      Scaffold(appBar: AppBar(title: const Text("Settings")));
-}

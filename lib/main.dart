@@ -29,20 +29,23 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<AppState>(
       create: (context) => AppState(),
-      builder: (context, child) => MaterialApp(
-        title: 'Family Directory',
-        theme: AppState.of(context).theme,
-        home: const SplashScreen(),
-        debugShowCheckedModeBanner: false,
-        // Wrap every route's content in a SafeArea (top) to avoid overlap with status bar
-        builder: (context, child) {
-          return SafeArea(
-            top: false,
-            bottom: false,
-            child: child ?? const SizedBox.shrink(),
-          );
-        },
-      ),
+      builder: (context, child) {
+        final appState =
+            Provider.of<AppState>(context); // <- listen enabled by default
+        return MaterialApp(
+          title: 'Family Directory',
+          theme: appState.theme, // now reactive
+          home: const SplashScreen(),
+          debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+            return SafeArea(
+              top: false,
+              bottom: false,
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -232,7 +232,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                           child: _buildActionsSection(currentUser!),
                           delay: 300,
                         ),
-                        const SizedBox(height: 100),
+                        const SizedBox(height: 30),
                       ],
                     ),
                   ),
@@ -600,16 +600,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
             onTap: () => _addFamilyMember(),
             delay: 0,
           ),
-          const SizedBox(height: 12),
         ],
-        _buildAnimatedActionButton(
-          icon: Icons.logout,
-          title: 'Logout',
-          subtitle: 'Sign out of your account',
-          onTap: () => _logout(),
-          isDestructive: true,
-          delay: 100,
-        ),
       ],
     );
   }
