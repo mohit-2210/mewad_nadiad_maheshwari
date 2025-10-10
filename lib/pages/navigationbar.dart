@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mmsn/pages/setting/setting.dart';
+import 'package:mmsn/pages/setting/static_pages/About.dart';
+import 'package:mmsn/pages/setting/static_pages/PrivacyPolicy.dart';
+import 'package:mmsn/pages/setting/static_pages/termsAndCondition.dart';
 
 class AnimatedDrawer extends StatefulWidget {
   final Widget child;
   final bool showTopMenuButton;
-  const AnimatedDrawer({super.key, required this.child, this.showTopMenuButton = true});
+  const AnimatedDrawer(
+      {super.key, required this.child, this.showTopMenuButton = true});
 
   @override
   State<AnimatedDrawer> createState() => AnimatedDrawerState();
@@ -47,7 +51,7 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
     final double safeTop = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF4F5BD5), // Drawer background color
+      backgroundColor: const Color.fromARGB(255, 107, 118, 241),
       body: Stack(
         children: [
           /// Drawer Content
@@ -81,7 +85,7 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
                         boxShadow: [
                           if (isDrawerOpen)
                             BoxShadow(
-                              color: Colors.black.withValues(alpha:  0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -98,7 +102,7 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
                               top: safeTop + 16,
                               left: 20,
                               child: Material(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 elevation: 3,
                                 borderRadius: BorderRadius.circular(12),
                                 child: InkWell(
@@ -144,25 +148,32 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
             ),
           ),
           const SizedBox(height: 40),
-
-          _drawerItem(Icons.color_lens, "Theme", onTap: () {
+          
+          _drawerItem(Icons.info_outline, "About Samaj", onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
+              MaterialPageRoute(builder: (_) => const AboutScreen(),),
             );
           }),
 
-          _drawerItem(Icons.language, "Language", onTap: () {
+          _drawerItem(Icons.description_outlined, "Terms & Conditions", onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const LanguageSettingsScreen()),
+              MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen(),),
             );
           }),
 
+          _drawerItem(Icons.privacy_tip_outlined, "Privacy Policy", onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen(),),
+            );
+          }),
+          
           _drawerItem(Icons.settings, "Settings", onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              MaterialPageRoute(builder: (_) => const SettingsScreen(),),
             );
           }),
         ],
@@ -190,19 +201,3 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
     );
   }
 }
-
-/// Example placeholder screens (remove later)
-class ThemeSettingsScreen extends StatelessWidget {
-  const ThemeSettingsScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      Scaffold(appBar: AppBar(title: const Text("Theme")));
-}
-
-class LanguageSettingsScreen extends StatelessWidget {
-  const LanguageSettingsScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      Scaffold(appBar: AppBar(title: const Text("Language")));
-}
-

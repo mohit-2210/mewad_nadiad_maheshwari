@@ -45,38 +45,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
 
-          // 🔹 APP INFORMATION
-          _buildSectionHeader('App Information', theme),
-          _buildListTile(
-            context,
-            icon: Icons.info_outline,
-            title: 'About Samaj',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AboutScreen()),
-            ),
-          ),
-          _buildListTile(
-            context,
-            icon: Icons.description_outlined,
-            title: 'Terms & Conditions',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const TermsAndConditionsScreen()),
-            ),
-          ),
-          _buildListTile(
-            context,
-            icon: Icons.privacy_tip_outlined,
-            title: 'Privacy Policy',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
-            ),
-          ),
-          const Divider(),
-
           // 🔹 SUPPORT / FEEDBACK
           _buildSectionHeader('Support & Feedback', theme),
           _buildListTile(

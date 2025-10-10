@@ -27,7 +27,7 @@ Widget logoutButton({
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: isDestructive
-                ? Border.all(color: Colors.red.withOpacity(0.3))
+                ? Border.all(color: Colors.red.withValues(alpha: 0.3))
                 : null,
           ),
           child: Row(
@@ -36,11 +36,11 @@ Widget logoutButton({
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isDestructive
-                      ? Colors.red.withOpacity(0.1)
+                      ? Colors.red.withValues(alpha: 0.1)
                       : Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
