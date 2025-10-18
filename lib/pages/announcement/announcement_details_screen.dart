@@ -1,10 +1,15 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:mmsn/pages/announcement/pdf_viewer.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/announcement.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 
 @NowaGenerated()
 class AnnouncementDetailsScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const AnnouncementDetailsScreen({required this.announcement, super.key});
 
   final Announcement announcement;
@@ -46,6 +51,24 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
           return '${date.day}/${date.month}/${date.year}';
         }
       }
+    }
+  }
+
+  Future<void> openExternally(String url) async {
+    try {
+      final dir = await getDownloadsDirectory() ??
+          await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/${url.split('/').last}';
+      final file = File(filePath);
+
+      if (!await file.exists()) {
+        final dio = Dio();
+        await dio.download(url, filePath);
+      }
+
+      await OpenFilex.open(file.path);
+    } catch (e) {
+      debugPrint('Error opening file externally: $e');
     }
   }
 
@@ -154,7 +177,10 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                     decoration: BoxDecoration(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.primary.withValues(alpha: 0.1),
+                                      )
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
@@ -232,7 +258,9 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                               const SizedBox(height: 24),
                               Text(
                                 widget.announcement.title,
-                                style: Theme.of(context).textTheme.headlineSmall
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: Theme.of(
@@ -244,7 +272,9 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                               Text(
                                 widget.announcement.fullContent ??
                                     widget.announcement.description,
-                                style: Theme.of(context).textTheme.bodyLarge
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
                                     ?.copyWith(
                                       color: Colors.grey[700],
                                       height: 1.6,
@@ -255,20 +285,22 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withValues(alpha: 0.1),
+                                    color: Colors.red.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: Colors.red.withValues(alpha: 0.3),
-                                    ),
+                                        color: Colors.red.withOpacity(0.3)),
                                   ),
                                   child: InkWell(
                                     onTap: () {
-                                      ScaffoldMessenger.of(
+                                      final pdfUrl = widget
+                                              .announcement.pdfUrl!;
+
+                                      Navigator.push(
                                         context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'PDF download functionality will be implemented',
+                                        MaterialPageRoute(
+                                          builder: (_) => PdfViewerScreen(
+                                            pdfUrl: pdfUrl,
+                                            title: widget.announcement.title,
                                           ),
                                         ),
                                       );
@@ -276,11 +308,8 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                     borderRadius: BorderRadius.circular(8),
                                     child: Row(
                                       children: [
-                                        const Icon(
-                                          Icons.picture_as_pdf,
-                                          color: Colors.red,
-                                          size: 24,
-                                        ),
+                                        const Icon(Icons.picture_as_pdf,
+                                            color: Colors.red, size: 24),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
@@ -305,11 +334,8 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                             ],
                                           ),
                                         ),
-                                        const Icon(
-                                          Icons.arrow_forward_ios,
-                                          size: 16,
-                                          color: Colors.red,
-                                        ),
+                                        const Icon(Icons.arrow_forward_ios,
+                                            size: 16, color: Colors.red),
                                       ],
                                     ),
                                   ),

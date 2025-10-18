@@ -5,11 +5,8 @@ import 'package:mmsn/auth_service.dart';
 import 'package:mmsn/components/DeleteAccountButton.dart';
 import 'package:mmsn/components/logoutButton.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
-import 'package:mmsn/pages/setting/changePassword.dart';
+import 'package:mmsn/pages/auth/changePassword.dart';
 import 'package:mmsn/pages/setting/contactUs.dart';
-import 'package:mmsn/pages/setting/static_pages/About.dart';
-import 'package:mmsn/pages/setting/static_pages/PrivacyPolicy.dart';
-import 'package:mmsn/pages/setting/static_pages/termsAndCondition.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -37,7 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: notificationsEnabled,
             onChanged: (value) {
               setState(() => notificationsEnabled = value);
-              // TODO: Save preference in SharedPreferences or Firestore
+              // Save preference in SharedPreferences or Firestore
             },
             title: const Text('Event & Update Alerts'),
             secondary: Icon(Icons.notifications_active_outlined,

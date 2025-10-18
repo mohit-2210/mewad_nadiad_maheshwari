@@ -1,6 +1,5 @@
 import 'package:nowa_runtime/nowa_runtime.dart';
 
-@NowaGenerated()
 class User {
   const User({
     required this.id,
@@ -15,6 +14,7 @@ class User {
     this.address,
     this.nativePlace,
     this.occupation,
+    this.occupationAddress,
     this.dateOfBirth,
     this.email,
   });
@@ -33,6 +33,7 @@ class User {
       address: json['address'] as String?,
       nativePlace: json['nativePlace'] as String?,
       occupation: json['occupation'] as String?,
+      occupationAddress: json['occupationAddress'] as String?,
       dateOfBirth: json['dateOfBirth'] != null
           ? DateTime.parse(json['dateOfBirth'] as String)
           : null,
@@ -63,6 +64,7 @@ class User {
   final String? nativePlace;
 
   final String? occupation;
+  final String? occupationAddress;
 
   final DateTime? dateOfBirth;
 
@@ -82,6 +84,7 @@ class User {
       'address': address,
       'nativePlace': nativePlace,
       'occupation': occupation,
+      'occupationAddress':occupationAddress,
       'dateOfBirth': dateOfBirth?.toIso8601String(),
       'email': email,
     };
@@ -100,6 +103,7 @@ class User {
     String? address,
     String? nativePlace,
     String? occupation,
+    String? occupationAddress,
     DateTime? dateOfBirth,
     String? email,
   }) {
@@ -116,6 +120,7 @@ class User {
       address: address ?? this.address,
       nativePlace: nativePlace ?? this.nativePlace,
       occupation: occupation ?? this.occupation,
+      occupationAddress: occupationAddress ?? this.occupationAddress,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       email: email ?? this.email,
     );

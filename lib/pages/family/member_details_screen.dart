@@ -40,7 +40,10 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -53,17 +56,21 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
             Text(
               'Basic Information',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
             ),
           ],
         ),
         const SizedBox(height: 20),
-        _buildDetailRow(Icons.badge, 'Full Name', widget.member.fullName),
+        _buildDetailRow(
+          Icons.badge,
+          'Full Name',
+          widget.member.fullName,
+        ),
         _buildDetailRow(
           widget.member.isHeadOfFamily ? Icons.home : Icons.people,
-          'Role',
+          'Relation',
           widget.member.isHeadOfFamily
               ? 'Head of Family'
               : (widget.member.relation ?? 'Family Member'),
@@ -75,7 +82,17 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
             '${widget.member.dateOfBirth?.day}/${widget.member.dateOfBirth?.month}/${widget.member.dateOfBirth?.year}',
           ),
         if (widget.member.occupation != null)
-          _buildDetailRow(Icons.work, 'Occupation', widget.member.occupation!),
+          _buildDetailRow(
+            Icons.work,
+            'Occupation',
+            widget.member.occupation!,
+          ),
+        if(widget.member.occupationAddress != null)
+          _buildDetailRow(
+            Icons.work,
+            'Occupation Address',
+            widget.member.occupationAddress!,
+          ),
       ],
     );
   }
@@ -89,7 +106,10 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondary
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -102,9 +122,9 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
             Text(
               'Contact Information',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
             ),
           ],
         ),
@@ -116,46 +136,46 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
     );
   }
 
-  Widget _buildAdditionalInfoSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.info, color: Colors.green, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              'Additional Information',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        if (widget.member.address != null)
-          _buildDetailRow(Icons.home, 'Address', widget.member.address!),
-        if (widget.member.society != null)
-          _buildDetailRow(Icons.apartment, 'Society', widget.member.society!),
-        if (widget.member.area != null)
-          _buildDetailRow(Icons.location_on, 'Area', widget.member.area!),
-        if (widget.member.nativePlace != null)
-          _buildDetailRow(
-            Icons.place,
-            'Native Place',
-            widget.member.nativePlace!,
-          ),
-      ],
-    );
-  }
+  // Widget _buildAdditionalInfoSection() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Row(
+  //         children: [
+  //           Container(
+  //             padding: const EdgeInsets.all(12),
+  //             decoration: BoxDecoration(
+  //               color: Colors.green.withValues(alpha: 0.1),
+  //               borderRadius: BorderRadius.circular(12),
+  //             ),
+  //             child: const Icon(Icons.info, color: Colors.green, size: 24),
+  //           ),
+  //           const SizedBox(width: 16),
+  //           Text(
+  //             'Additional Information',
+  //             style: Theme.of(context).textTheme.titleLarge?.copyWith(
+  //               fontWeight: FontWeight.bold,
+  //               color: Colors.green,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       const SizedBox(height: 20),
+  //       if (widget.member.address != null)
+  //         _buildDetailRow(Icons.home, 'Address', widget.member.address!),
+  //       if (widget.member.society != null)
+  //         _buildDetailRow(Icons.apartment, 'Society', widget.member.society!),
+  //       if (widget.member.area != null)
+  //         _buildDetailRow(Icons.location_on, 'Area', widget.member.area!),
+  //       if (widget.member.nativePlace != null)
+  //         _buildDetailRow(
+  //           Icons.place,
+  //           'Native Place',
+  //           widget.member.nativePlace!,
+  //         ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Container(
@@ -177,9 +197,9 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -254,7 +274,10 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                      Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.8),
                     ],
                   ),
                 ),
@@ -300,7 +323,6 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
-              
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -313,11 +335,11 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
                     child: _buildContactInfoSection(),
                     delay: 200,
                   ),
-                  const SizedBox(height: 20),
-                  _buildAnimatedCard(
-                    child: _buildAdditionalInfoSection(),
-                    delay: 300,
-                  ),
+                  // const SizedBox(height: 20),
+                  // _buildAnimatedCard(
+                  //   child: _buildAdditionalInfoSection(),
+                  //   delay: 300,
+                  // ),
                 ],
               ),
             ),

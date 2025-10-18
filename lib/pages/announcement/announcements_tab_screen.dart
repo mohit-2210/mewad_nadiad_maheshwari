@@ -6,7 +6,6 @@ import 'package:mmsn/pages/announcement/announcement_details_screen.dart';
 
 @NowaGenerated()
 class AnnouncementsTabScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const AnnouncementsTabScreen({super.key});
 
   @override

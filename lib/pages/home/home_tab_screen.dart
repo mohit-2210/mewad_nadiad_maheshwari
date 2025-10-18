@@ -9,9 +9,7 @@ import 'package:mmsn/auth_service.dart';
 import 'package:mmsn/components/family_card.dart';
 import 'package:mmsn/pages/family/family_details_screen.dart';
 
-@NowaGenerated()
 class HomeTabScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const HomeTabScreen({super.key, this.onDrawerToggle});
 
   final VoidCallback? onDrawerToggle;
