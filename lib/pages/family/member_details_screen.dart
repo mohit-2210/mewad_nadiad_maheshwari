@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/user.dart';
 
@@ -52,7 +53,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
                 size: 24,
               ),
             ),
-            const SizedBox(width: 16),
+            Gap.s16W(),
             Text(
               'Basic Information',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -62,7 +63,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        Gap.s20H(),
         _buildDetailRow(
           Icons.badge,
           'Full Name',
@@ -118,7 +119,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
                 size: 24,
               ),
             ),
-            const SizedBox(width: 16),
+            Gap.s16W(),
             Text(
               'Contact Information',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -128,7 +129,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        Gap.s20H(),
         _buildDetailRow(Icons.phone, 'Phone Number', widget.member.phoneNumber),
         if (widget.member.email != null)
           _buildDetailRow(Icons.email, 'Email', widget.member.email!),
@@ -150,7 +151,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
   //             ),
   //             child: const Icon(Icons.info, color: Colors.green, size: 24),
   //           ),
-  //           const SizedBox(width: 16),
+  //           Gap.s16W(),
   //           Text(
   //             'Additional Information',
   //             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -160,7 +161,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
   //           ),
   //         ],
   //       ),
-  //       const SizedBox(height: 20),
+  //       Gap.s20H(),
   //       if (widget.member.address != null)
   //         _buildDetailRow(Icons.home, 'Address', widget.member.address!),
   //       if (widget.member.society != null)
@@ -189,7 +190,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
       child: Row(
         children: [
           Icon(icon, color: Colors.grey[600], size: 20),
-          const SizedBox(width: 12),
+          Gap.s12W(),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,7 +202,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                 ),
-                const SizedBox(height: 4),
+                Gap.s4H(),
                 Text(
                   value,
                   style: Theme.of(
@@ -330,12 +331,12 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
                     child: _buildBasicInfoSection(),
                     delay: 100,
                   ),
-                  const SizedBox(height: 20),
+                  Gap.s20H(),
                   _buildAnimatedCard(
                     child: _buildContactInfoSection(),
                     delay: 200,
                   ),
-                  // const SizedBox(height: 20),
+                  // Gap.s20H(),
                   // _buildAnimatedCard(
                   //   child: _buildAdditionalInfoSection(),
                   //   delay: 300,

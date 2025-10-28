@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:mmsn/pages/navigationbar.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
+import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/main.dart';
 import 'package:mmsn/auth_service.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
 import 'package:mmsn/pages/intro/intro_screen.dart';
 
-@NowaGenerated()
 class SplashScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-@NowaGenerated()
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _controller;
@@ -153,7 +150,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                Gap.s24H(),
 
                 // 🟣 TITLE
                 Padding(
@@ -163,7 +160,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Transform.scale(
                       scale: 1 + (0.05 * (1 - _titleOpacity.value)),
                       child: const Text(
-                        'Mewad Maheshwari Samaj Nadiad',
+                        AppStrings.appName,
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -175,13 +172,13 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                Gap.s8H(),
 
                 // 🟣 SUBTITLE
                 Opacity(
                   opacity: _subtitleOpacity.value,
                   child: Text(
-                    'Connect with your community',
+                    AppStrings.splashSubtitle,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white.withValues(alpha: 0.85),
@@ -189,7 +186,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                Gap.s40H(),
 
                 // 🟣 LOADER
                 Opacity(

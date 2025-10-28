@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
+import 'package:flutter/services.dart';
+import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/auth_service.dart';
 import 'package:mmsn/pages/auth/o_t_p_verification_screen.dart';
 
-@NowaGenerated()
 class RegisterScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const RegisterScreen({super.key});
 
   @override
@@ -14,7 +14,6 @@ class RegisterScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
@@ -88,7 +87,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Register'),
+        title: const Text(
+          AppStrings.register,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -99,15 +100,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Create Account',
+                AppStrings.createAcc,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              Gap.s8H(),
               Text(
-                'Join your community today',
+                AppStrings.appName,
                 style: Theme.of(
                   context,
                 ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
@@ -122,7 +123,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _nameController,
                       textCapitalization: TextCapitalization.words,
                       decoration: InputDecoration(
-                        labelText: 'Full Name',
+                        labelText: AppStrings.fullName,
+                        hintText: AppStrings.fullNameHint,
                         prefixIcon: const Icon(Icons.person),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -140,12 +142,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    Gap.s16H(),
                     TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
+                      maxLength: 10,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
                       decoration: InputDecoration(
-                        labelText: 'Phone Number',
+                        labelText: AppStrings.phoneNumber,
                         prefixIcon: const Icon(Icons.phone),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -163,14 +169,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    Gap.s16H(),
                     TextFormField(
                       controller: _pinController,
                       obscureText: _obscurePin,
                       keyboardType: TextInputType.number,
                       maxLength: 4,
                       decoration: InputDecoration(
-                        labelText: 'PIN',
+                        labelText: AppStrings.pin,
+                        hintText: AppStrings.pinHint,
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -201,14 +208,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    Gap.s16H(),
                     TextFormField(
                       controller: _confirmPinController,
                       obscureText: _obscureConfirmPin,
                       keyboardType: TextInputType.number,
                       maxLength: 4,
                       decoration: InputDecoration(
-                        labelText: 'Confirm PIN',
+                        labelText: AppStrings.confirmPIN,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -239,7 +246,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 32),
+                    Gap.s32H(),
                     SizedBox(
                       width: double.infinity,
                       height: 56,
@@ -259,7 +266,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                               )
                             : const Text(
-                                'Register',
+                                AppStrings.register,
                                 style: TextStyle(fontSize: 18),
                               ),
                       ),
@@ -267,16 +274,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              Gap.s24H(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Already have an account? '),
+                  const Text(
+                    AppStrings.alreadyHaveAcc,
+                  ),
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: const Text('Login'),
+                    child: const Text(
+                      AppStrings.loginButton,
+                    ),
                   ),
                 ],
               ),

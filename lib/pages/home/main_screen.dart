@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/home/home_tab_screen.dart';
 import 'package:mmsn/pages/announcement/announcements_tab_screen.dart';
 import 'package:mmsn/pages/society/society_tab_screen.dart';
@@ -70,7 +72,7 @@ class _MainScreenState extends State<MainScreen> {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  Gap.s24H(),
 
                   // Exit icon with animated background
                   TweenAnimationBuilder<double>(
@@ -108,7 +110,7 @@ class _MainScreenState extends State<MainScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 20),
+                  Gap.s20H(),
 
                   // Title
                   TweenAnimationBuilder<double>(
@@ -131,7 +133,7 @@ class _MainScreenState extends State<MainScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 12),
+                  Gap.s12H(),
 
                   // Description
                   TweenAnimationBuilder<double>(
@@ -153,7 +155,7 @@ class _MainScreenState extends State<MainScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 32),
+                  Gap.s32H(),
 
                   // Action buttons
                   TweenAnimationBuilder<double>(
@@ -189,9 +191,9 @@ class _MainScreenState extends State<MainScreen> {
                                       color: Colors.grey[700],
                                       size: 20,
                                     ),
-                                    const SizedBox(width: 8),
+                                    Gap.s8W(),
                                     Text(
-                                      'Continue',
+                                      AppStrings.continueText,
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
@@ -203,7 +205,7 @@ class _MainScreenState extends State<MainScreen> {
                               ),
                             ),
 
-                            const SizedBox(width: 12),
+                            Gap.s12W(),
 
                             // Exit button
                             Expanded(
@@ -233,7 +235,7 @@ class _MainScreenState extends State<MainScreen> {
                                     ),
                                     SizedBox(width: 8),
                                     Text(
-                                      'Exit',
+                                      AppStrings.exit,
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -249,8 +251,7 @@ class _MainScreenState extends State<MainScreen> {
                       );
                     },
                   ),
-
-                  const SizedBox(height: 8),
+                  Gap.s8H(),
                 ],
               ),
             ),
@@ -304,20 +305,28 @@ class _MainScreenState extends State<MainScreen> {
               unselectedItemColor: Colors.grey[600],
               items: const [
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: 'Home',
+                  icon: Icon(
+                    Icons.home,
+                  ),
+                  label: AppStrings.home,
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.notifications),
-                  label: 'Announcements',
+                  icon: Icon(
+                    Icons.notifications,
+                  ),
+                  label: AppStrings.announcement,
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.apartment),
-                  label: 'Society',
+                  icon: Icon(
+                    Icons.apartment,
+                  ),
+                  label: AppStrings.society,
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: 'Profile',
+                  icon: Icon(
+                    Icons.person,
+                  ),
+                  label: AppStrings.profile,
                 ),
               ],
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -35,7 +36,7 @@ class _AboutScreenState extends State<AboutScreen> {
               radius: 50,
               backgroundImage: AssetImage('assets/images/samaj_logo.png'),
             ),
-            const SizedBox(height: 10),
+            Gap.s10H(),
             Text(
               'Mewad Maheshwari Nadiad Samaj',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -47,7 +48,7 @@ class _AboutScreenState extends State<AboutScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
             ),
-            const SizedBox(height: 20),
+            Gap.s20H(),
             _buildSection(
               'About the Samaj',
               '''The Mewad Maheshwari Nadiad Samaj is a platform connecting Maheshwari families of Nadiad. Our vision is to preserve our rich traditions while encouraging unity and growth within the community.''',
@@ -63,7 +64,7 @@ class _AboutScreenState extends State<AboutScreen> {
               '''Mewad Maheshwari Nadiad Samaj IT Committee\n📍 Nadiad, Gujarat, India\n✉️ mewadmaheshwarinadiad@gmail.com''',
               theme,
             ),
-            const SizedBox(height: 20),
+            Gap.s20H(),
             Text(
               'App Version: $appVersion',
               style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
@@ -83,7 +84,7 @@ class _AboutScreenState extends State<AboutScreen> {
           Text(title,
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 5),
+          Gap.s4H(),
           Text(content, style: theme.textTheme.bodyMedium?.copyWith(height: 1.5)),
         ],
       ),

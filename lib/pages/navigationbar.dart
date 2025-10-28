@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/setting/setting.dart';
 import 'package:mmsn/pages/setting/static_pages/About.dart';
 import 'package:mmsn/pages/setting/static_pages/PrivacyPolicy.dart';
@@ -147,7 +148,7 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 40),
+          Gap.s40H(),
           
           _drawerItem(Icons.info_outline, "About Samaj", onTap: () {
             Navigator.push(
@@ -190,7 +191,7 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
         child: Row(
           children: [
             Icon(icon, color: Colors.white, size: 22),
-            const SizedBox(width: 16),
+            Gap.s16W(),
             Text(
               title,
               style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),

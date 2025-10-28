@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/user.dart';
@@ -134,7 +135,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 40),
+                          Gap.s40H(),
                           Hero(
                             tag: 'profile_image_${currentUser?.id}',
                             child: Container(
@@ -168,7 +169,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          Gap.s12H(),
                           FadeTransition(
                             opacity: _headerOpacityAnimation,
                             child: Column(
@@ -181,7 +182,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                Gap.s4H(),
                                 Text(
                                   currentUser!.phoneNumber,
                                   style: TextStyle(
@@ -218,21 +219,21 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                           child: _buildPersonalInfoCard(currentUser!),
                           delay: 100,
                         ),
-                        const SizedBox(height: 24),
+                        Gap.s24H(),
                         if (_userFamily != null) ...[
                           _buildAnimatedSection(
                             title: 'Family Members',
                             child: _buildFamilyMembersSection(_userFamily!),
                             delay: 200,
                           ),
-                          const SizedBox(height: 24),
+                          Gap.s24H(),
                         ],
                         _buildAnimatedSection(
                           title: 'Actions',
                           child: _buildActionsSection(currentUser!),
                           delay: 300,
                         ),
-                        const SizedBox(height: 30),
+                        Gap.s30H(),
                       ],
                     ),
                   ),
@@ -265,7 +266,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
               color: Theme.of(context).colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 16),
+          Gap.s16H(),
           child,
         ],
       ),
@@ -379,7 +380,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                 size: 20,
               ),
             ),
-            const SizedBox(width: 16),
+            Gap.s16W(),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,7 +392,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  Gap.s4H(),
                   Text(
                     value,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -476,7 +477,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                                 : null,
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        Gap.s16W(),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -522,7 +523,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                                     ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
+                              Gap.s4H(),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
@@ -549,7 +550,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              Gap.s4H(),
                               Text(
                                 member.phoneNumber,
                                 style: Theme.of(context).textTheme.bodyMedium
@@ -653,7 +654,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
+                Gap.s16W(),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -666,7 +667,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                               color: isDestructive ? Colors.red : null,
                             ),
                       ),
-                      const SizedBox(height: 4),
+                      Gap.s4H(),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(

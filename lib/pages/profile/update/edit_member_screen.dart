@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/data_service.dart';
@@ -232,7 +233,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 _buildAnimatedTextField(
                   controller: _nameController,
                   label: 'Full Name',
@@ -241,7 +242,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   validator: (value) =>
                       value?.isEmpty == true ? 'Please enter full name' : null,
                 ),
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 _buildAnimatedTextField(
                   controller: _phoneController,
                   label: 'Phone Number',
@@ -258,12 +259,12 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 _buildDateOfBirthField(
                   dateOfBirthController: _dateOfBirthController,
                   icon: Icons.cake,
                 ),
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 _buildAnimatedTextField(
                   controller: _emailController,
                   label: 'Email (Optional)',
@@ -271,7 +272,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   keyboardType: TextInputType.emailAddress,
                   delay: 300,
                 ),
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 if (!widget.member.isHeadOfFamily)
                   _buildAnimatedTextField(
                     controller: _relationController,
@@ -279,16 +280,16 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     icon: Icons.people,
                     delay: 400,
                   ),
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 _buildAnimatedTextField(
                   controller: _occupationController,
                   label: 'Occupation (Optional)',
                   icon: Icons.work,
                   delay: 500,
                 ),
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 _buildAnimatedTextField(
                   controller: _addressController,
                   label: 'Address (Optional)',
@@ -296,14 +297,14 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                   maxLines: 2,
                   delay: 600,
                 ),
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 _buildAnimatedTextField(
                   controller: _nativePlaceController,
                   label: 'Native Place (Optional)',
                   icon: Icons.place,
                   delay: 700,
                 ),
-                const SizedBox(height: 40),
+                Gap.s40H(),
               ],
             ),
           ),

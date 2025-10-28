@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/announcement/pdf_viewer.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/announcement.dart';
@@ -191,7 +192,7 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                       size: 24,
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
+                                  Gap.s16W(),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -209,7 +210,7 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                                 ).colorScheme.primary,
                                               ),
                                         ),
-                                        const SizedBox(height: 8),
+                                        Gap.s8H(),
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 12,
@@ -234,7 +235,7 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                                   context,
                                                 ).colorScheme.primary,
                                               ),
-                                              const SizedBox(width: 4),
+                                              Gap.s4W(),
                                               Text(
                                                 _formatDate(
                                                   widget.announcement.date,
@@ -255,7 +256,7 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 24),
+                              Gap.s24H(),
                               Text(
                                 widget.announcement.title,
                                 style: Theme.of(context)
@@ -268,7 +269,7 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                       ).colorScheme.onSurface,
                                     ),
                               ),
-                              const SizedBox(height: 16),
+                              Gap.s16H(),
                               Text(
                                 widget.announcement.fullContent ??
                                     widget.announcement.description,
@@ -281,7 +282,7 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                     ),
                               ),
                               if (widget.announcement.pdfUrl != null) ...[
-                                const SizedBox(height: 24),
+                                Gap.s24H(),
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
@@ -310,7 +311,7 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                       children: [
                                         const Icon(Icons.picture_as_pdf,
                                             color: Colors.red, size: 24),
-                                        const SizedBox(width: 12),
+                                        Gap.s12W(),
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
@@ -323,7 +324,7 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                                   color: Colors.red,
                                                 ),
                                               ),
-                                              const SizedBox(height: 4),
+                                              Gap.s4H(),
                                               Text(
                                                 'Tap to view PDF document',
                                                 style: TextStyle(

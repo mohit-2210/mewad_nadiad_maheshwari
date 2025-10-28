@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchCall.dart';
 import 'package:mmsn/app/services/launchEmail.dart';
 import 'package:mmsn/app/services/launchMap.dart';
@@ -22,12 +23,12 @@ class ContactUsScreen extends StatelessWidget {
               style: theme.textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
+            Gap.s10H(),
             Text(
               '''For any queries, feedback, or community-related assistance, please reach out to us using the details below.''',
               style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
             ),
-            const SizedBox(height: 20),
+            Gap.s20H(),
             ListTile(
               leading: const Icon(Icons.phone, color: Colors.green),
               title: const Text('+91 98765 43210'),
@@ -43,7 +44,7 @@ class ContactUsScreen extends StatelessWidget {
               title: const Text('Mahesh Vatika, Nadiad, Gujarat, India'),
               onTap: () => openMap('Mahesh Vatika, Nadiad, Gujarat, India'),
             ),
-            const SizedBox(height: 30),
+            Gap.s30H(),
             Center(
               child: Text(
                 'We value your feedback 🙏',

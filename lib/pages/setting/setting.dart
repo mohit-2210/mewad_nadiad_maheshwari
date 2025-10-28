@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchEmail.dart';
 import 'package:mmsn/app/services/openPlayOrAppStore.dart';
 import 'package:mmsn/auth_service.dart';
@@ -26,7 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
-          const SizedBox(height: 10),
+          Gap.s10H(),
 
           // 🔹 NOTIFICATIONS
           _buildSectionHeader('Notifications', theme),
@@ -99,14 +100,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
-          const SizedBox(height: 30),
+          Gap.s30H(),
           Center(
             child: Text(
               '© 2025 Mewad Maheshwari Nadiad Samaj',
               style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
           ),
-          const SizedBox(height: 20),
+          Gap.s20H(),
         ],
       ),
     );

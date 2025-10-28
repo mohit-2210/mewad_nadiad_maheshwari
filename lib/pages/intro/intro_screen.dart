@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_spacing.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/intro/intro_page.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/main.dart';
@@ -117,14 +119,14 @@ class _IntroScreenState extends State<IntroScreen> {
                             fit: BoxFit.cover,
                           ),
                         ),
-                        const SizedBox(height: 40),
+                        Gap.s40H(),
                         Text(
                           page.title,
                           style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 16),
+                        Gap.s16H(),
                         Text(
                           page.description,
                           style: Theme.of(context).textTheme.bodyLarge
@@ -166,7 +168,7 @@ class _IntroScreenState extends State<IntroScreen> {
                       child: const Text('Back'),
                     )
                   else
-                    const SizedBox.shrink(),
+                    AppSpacing.shrink,
                   ElevatedButton(
                     onPressed: _nextPage,
                     child: Text(

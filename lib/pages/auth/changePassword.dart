@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -28,7 +29,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               _buildPasswordField('Current Password', currentPasswordController),
               _buildPasswordField('New Password', newPasswordController),
               _buildPasswordField('Confirm Password', confirmPasswordController),
-              const SizedBox(height: 30),
+              Gap.s30H(),
               ElevatedButton.icon(
                 icon: isLoading
                     ? const SizedBox(

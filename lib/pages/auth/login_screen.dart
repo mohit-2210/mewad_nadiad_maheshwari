@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
+import 'package:flutter/services.dart';
+import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/auth_service.dart';
 import 'package:mmsn/pages/auth/o_t_p_verification_screen.dart';
 import 'package:mmsn/pages/auth/register_screen.dart';
 
-@NowaGenerated()
 class LoginScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const LoginScreen({super.key});
 
   @override
@@ -15,7 +15,6 @@ class LoginScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
@@ -91,17 +90,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 size: 80,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(height: 16),
+              Gap.s16H(),
               Text(
-                'Welcome Back',
+                AppStrings.loginTitle,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              Gap.s8H(),
               Text(
-                'Sign in to your account',
+                AppStrings.loginSubTitle,
                 style: Theme.of(
                   context,
                 ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
@@ -116,9 +115,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       maxLength: 10,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
                       decoration: InputDecoration(
-                        labelText: 'Phone Number',
-                        
+                        labelText: AppStrings.phoneNumber,
+                        hintText: AppStrings.phoneHint,
                         prefixIcon: const Icon(Icons.phone),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -136,14 +138,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    Gap.s16H(),
                     TextFormField(
                       controller: _pinController,
                       obscureText: _obscurePin,
                       keyboardType: TextInputType.number,
                       maxLength: 4,
                       decoration: InputDecoration(
-                        labelText: 'PIN',
+                        labelText: AppStrings.pin,
+                        hintText: AppStrings.pinHint,
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -174,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 32),
+                    Gap.s32H(),
                     SizedBox(
                       width: double.infinity,
                       height: 56,
@@ -194,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               )
                             : const Text(
-                                'Login',
+                                AppStrings.loginButton,
                                 style: TextStyle(fontSize: 18),
                               ),
                       ),
@@ -202,11 +205,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              Gap.s24H(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Don\'t have an account? '),
+                  const Text(
+                    AppStrings.dontHaveAcc,
+                  ),
                   TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -216,7 +221,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     },
-                    child: const Text('Register'),
+                    child: const Text(
+                      AppStrings.register,
+                    ),
                   ),
                 ],
               ),

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/data_service.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/family/member_details_screen.dart';
 
-@NowaGenerated()
 class FamilyDetailsScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const FamilyDetailsScreen({required this.familyId, super.key});
 
   final String familyId;
@@ -18,7 +16,6 @@ class FamilyDetailsScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
   Family? _family;
 
@@ -94,7 +91,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                       size: 24,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  Gap.s16W(),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +118,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              Gap.s24H(),
               Row(
                 children: [
                   Expanded(
@@ -132,7 +129,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                       Theme.of(context).colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  Gap.s16W(),
                   Expanded(
                     child: _buildStatCard(
                       Icons.apartment,
@@ -143,7 +140,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              Gap.s16H(),
               if (_family?.head.address != null) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -159,7 +156,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                         color: Theme.of(context).colorScheme.primary,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      Gap.s12W(),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,7 +169,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            Gap.s4H(),
                             Text(
                               _family!.head.address!,
                               style: const TextStyle(
@@ -188,7 +185,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                 ),
               ],
               if (_family?.head.nativePlace != null) ...[
-                const SizedBox(height: 12),
+                Gap.s12H(),
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -203,7 +200,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                         color: Theme.of(context).colorScheme.secondary,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      Gap.s12W(),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +213,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            Gap.s4H(),
                             Text(
                               _family!.head.nativePlace!,
                               style: const TextStyle(
@@ -254,7 +251,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
       child: Column(
         children: [
           Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
+          Gap.s8H(),
           Text(
             value,
             style: TextStyle(
@@ -263,7 +260,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
               color: color,
             ),
           ),
-          const SizedBox(height: 4),
+          Gap.s4H(),
           Text(
             label,
             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
@@ -327,7 +324,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                             ? const Icon(Icons.person, size: 30)
                             : null,
                       ),
-                const SizedBox(width: 20),
+                Gap.s20W(),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +367,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                             ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      Gap.s8H(),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -397,11 +394,11 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      Gap.s8H(),
                       Row(
                         children: [
                           Icon(Icons.phone, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
+                          Gap.s4W(),
                           Expanded(
                             child: Text(
                               member.phoneNumber,
@@ -414,11 +411,11 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                         ],
                       ),
                       if (member.occupation != null) ...[
-                        const SizedBox(height: 4),
+                        Gap.s4H(),
                         Row(
                           children: [
                             Icon(Icons.work, size: 14, color: Colors.grey[600]),
-                            const SizedBox(width: 4),
+                            Gap.s4W(),
                             Expanded(
                               child: Text(
                                 member.occupation!,
@@ -553,9 +550,9 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildFamilyOverviewCard(),
-                    const SizedBox(height: 24),
+                    Gap.s24H(),
                     _buildHeadOfFamilySection(),
-                    const SizedBox(height: 24),
+                    Gap.s24H(),
                     if (_family?.members.isNotEmpty == true)
                       _buildFamilyMembersSection()
                     else
@@ -581,7 +578,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                 color: Theme.of(context).colorScheme.primary,
               ),
         ),
-        const SizedBox(height: 16),
+        Gap.s16H(),
         AnimatedScale(
           scale: _isVisible ? 1 : 0.3,
           duration: const Duration(milliseconds: 600),
@@ -608,7 +605,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                 color: Theme.of(context).colorScheme.primary,
               ),
         ),
-        const SizedBox(height: 16),
+        Gap.s16H(),
         Column(
           children: _family!.members.asMap().entries.map((entry) {
             final index = entry.key;
@@ -652,7 +649,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
             child: Column(
               children: [
                 Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-                const SizedBox(height: 16),
+                Gap.s16H(),
                 Text(
                   'No Other Family Members',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -660,7 +657,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                 ),
-                const SizedBox(height: 8),
+                Gap.s8H(),
                 Text(
                   'Only the head of family is registered',
                   style: TextStyle(color: Colors.grey[500], fontSize: 14),

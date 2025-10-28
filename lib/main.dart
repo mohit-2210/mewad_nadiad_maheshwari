@@ -1,9 +1,10 @@
+import 'package:mmsn/app/globals/app_spacing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:mmsn/globals/app_state.dart';
+import 'package:mmsn/app/globals/app_state.dart';
 import 'package:mmsn/pages/splash/splash_screen.dart';
 
 @NowaGenerated()
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
             return SafeArea(
               top: false,
               bottom: false,
-              child: child ?? const SizedBox.shrink(),
+              child: child ?? AppSpacing.shrink,
             );
           },
         );

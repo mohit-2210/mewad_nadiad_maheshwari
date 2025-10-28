@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 
 class TermsAndConditionsScreen extends StatelessWidget {
   const TermsAndConditionsScreen({super.key});
@@ -33,12 +34,12 @@ class TermsAndConditionsScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 20),
+              Gap.s20H(),
               Text(
                 '''Welcome to the Mewad Maheshwari Nadiad Samaj mobile application. By accessing or using this application, you agree to comply with and be bound by the following Terms and Conditions. Please read them carefully before using the app.''',
                 style: theme.textTheme.bodyMedium,
               ),
-              const SizedBox(height: 20),
+              Gap.s20H(),
               _buildSectionTitle('1. Purpose of the App', theme),
               _buildBody(
                 '''This application is designed exclusively for members of the Maheshwari community residing in Nadiad. It helps connect community members, share information, and promote engagement in social, religious, and cultural activities.''',
@@ -79,7 +80,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
                 '''For any queries or issues related to the app or these Terms, please contact the Mewad Maheshwari Nadiad Samaj office.''',
                 theme,
               ),
-              const SizedBox(height: 30),
+              Gap.s30H(),
               Center(
                 child: Text(
                   'Last Updated: October 2025',

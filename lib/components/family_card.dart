@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
 
-@NowaGenerated()
 class FamilyCard extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const FamilyCard({super.key, required this.family, required this.onTap, this.heroTagPrefix});
 
   final Family family;
@@ -20,7 +18,6 @@ class FamilyCard extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _FamilyCardState extends State<FamilyCard> {
   bool _isPressed = false;
 
@@ -83,7 +80,7 @@ class _FamilyCardState extends State<FamilyCard> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                Gap.s16W(),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +93,7 @@ class _FamilyCardState extends State<FamilyCard> {
                               color: Theme.of(context).colorScheme.primary,
                             ),
                       ),
-                      const SizedBox(height: 4),
+                      Gap.s4H(),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -117,11 +114,11 @@ class _FamilyCardState extends State<FamilyCard> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      Gap.s8H(),
                       Row(
                         children: [
                           Icon(Icons.people, size: 16, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
+                          Gap.s4W(),
                           Text(
                             '${widget.family.totalMembers} members',
                             style: Theme.of(context).textTheme.bodySmall
@@ -129,36 +126,6 @@ class _FamilyCardState extends State<FamilyCard> {
                                   color: Colors.grey[600],
                                   fontWeight: FontWeight.w500,
                                 ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.verified,
-                                  size: 12,
-                                  color: Colors.green[600],
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Verified',
-                                  style: TextStyle(
-                                    color: Colors.green[600],
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
                           ),
                         ],
                       ),

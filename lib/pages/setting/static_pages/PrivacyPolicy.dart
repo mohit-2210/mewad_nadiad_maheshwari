@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
@@ -33,7 +34,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 20),
+              Gap.s20H(),
               Text(
                 '''Your privacy is important to us. This Privacy Policy explains how we collect, use, and protect the personal information of members using the Mewad Maheshwari Nadiad Samaj mobile application.''',
                 style: theme.textTheme.bodyMedium,
@@ -101,7 +102,7 @@ Information may be shared only with:
                 '''For privacy-related questions, corrections, or data removal requests, please contact the Mewad Maheshwari Nadiad Samaj committee.''',
                 theme,
               ),
-              const SizedBox(height: 30),
+              Gap.s30H(),
               Center(
                 child: Text(
                   'Last Updated: October 2025',

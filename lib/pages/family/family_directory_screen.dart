@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/data_service.dart';
@@ -126,7 +127,7 @@ class _FamilyDirectoryScreenState extends State<FamilyDirectoryScreen> {
                                   size: 80,
                                   color: Colors.grey[400],
                                 ),
-                                const SizedBox(height: 16),
+                                Gap.s16H(),
                                 Text(
                                   _searchController.text.isNotEmpty
                                       ? 'No families found'
@@ -135,7 +136,7 @@ class _FamilyDirectoryScreenState extends State<FamilyDirectoryScreen> {
                                       ?.copyWith(color: Colors.grey[600]),
                                 ),
                                 if (_searchController.text.isNotEmpty) ...[
-                                  const SizedBox(height: 8),
+                                  Gap.s8H(),
                                   Text(
                                     'Try searching with different keywords',
                                     style: Theme.of(context)

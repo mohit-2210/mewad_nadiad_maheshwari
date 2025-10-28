@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mmsn/pages/navigationbar.dart';
+import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'dart:async';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/auth_service.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 
-@NowaGenerated()
 class OTPVerificationScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const OTPVerificationScreen({
     required this.phoneNumber,
     required this.isLogin,
@@ -24,7 +22,6 @@ class OTPVerificationScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   final List<TextEditingController> _controllers = List.generate(
     6,
@@ -152,7 +149,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify OTP'),
+        title: const Text(AppStrings.verifyOTP,),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -168,21 +165,21 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 32),
+                      Gap.s32H(),
                       Icon(
                         Icons.message,
                         size: 80,
                         color: Theme.of(context).colorScheme.primary,
                       ),
-                      const SizedBox(height: 24),
+                      Gap.s24H(),
                       Text(
-                        'Verify Your Phone',
+                        AppStrings.verifyPhone,
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 8),
+                      Gap.s8H(),
                       RichText(
                         textAlign: TextAlign.center,
                         text: TextSpan(
@@ -190,7 +187,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                             context,
                           ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                           children: [
-                            const TextSpan(text: 'Enter the 6-digit code sent to\n'),
+                            const TextSpan(text: AppStrings.enter6DigitCode,),
                             TextSpan(
                               text: widget.phoneNumber,
                               style: const TextStyle(fontWeight: FontWeight.bold),
@@ -198,7 +195,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 48),
+                      Gap.s48H(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: List.generate(
@@ -250,7 +247,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                           ),
                         ).cast<Widget>(),
                       ),
-                      const SizedBox(height: 32),
+                      Gap.s32H(),
                       SizedBox(
                         width: double.infinity,
                         height: 56,
@@ -268,16 +265,16 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Text(
-                                  'Verify OTP',
+                                  AppStrings.verifyOTP,
                                   style: TextStyle(fontSize: 18),
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      Gap.s24H(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text('Didn\'t receive the code? '),
+                          const Text(AppStrings.didntReciveCode,),
                           if (_resendTimer > 0)
                             Text(
                               'Resend in ${_resendTimer} s',
@@ -292,7 +289,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                                       height: 16,
                                       child: CircularProgressIndicator(strokeWidth: 2),
                                     )
-                                  : const Text('Resend'),
+                                  : const Text(AppStrings.resend),
                             ),
                         ],
                       ),
@@ -306,7 +303,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                         child: Row(
                           children: [
                             Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
-                            const SizedBox(width: 12),
+                            Gap.s12W(),
                             Expanded(
                               child: Text(
                                 'For demo purposes, use OTP: 123456',

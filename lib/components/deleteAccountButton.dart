@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 
 Widget deleteAccountButton({
   required BuildContext context,
@@ -32,23 +34,24 @@ Widget deleteAccountButton({
                   color: Colors.red.withValues(alpha: .1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.delete_forever, color: Color.fromARGB(255, 248, 17, 0), size: 24),
+                child: const Icon(Icons.delete_forever,
+                    color: Color.fromARGB(255, 248, 17, 0), size: 24),
               ),
-              const SizedBox(width: 16),
+              Gap.s16W(),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Delete Account",
+                      AppStrings.deleteAccountButton,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: const Color.fromARGB(255, 255, 17, 0),
                           ),
                     ),
-                    const SizedBox(height: 4),
+                    Gap.s4H(),
                     Text(
-                      "Permanently remove your account and data",
+                      AppStrings.deleteAccountButttonSubTitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.grey[600],
                           ),
@@ -56,7 +59,11 @@ Widget deleteAccountButton({
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey[400],
+              ),
             ],
           ),
         ),
@@ -66,20 +73,28 @@ Widget deleteAccountButton({
 }
 
 void _showDeleteConfirmationDialog(
-    BuildContext context, VoidCallback onConfirm) {
+  BuildContext context,
+  VoidCallback onConfirm,
+) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text("Delete Account"),
+      title: const Text(
+        AppStrings.deleteAccountButton,
+        style: TextStyle(
+          color: Colors.red,
+        ),
+      ),
       content: const Text(
-        "Are you sure you want to delete your account? "
-        "This action cannot be undone.",
+        AppStrings.deleteAccountDialogText,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text("Cancel"),
+          child: const Text(
+            AppStrings.cancel,
+          ),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -93,7 +108,9 @@ void _showDeleteConfirmationDialog(
             Navigator.of(context).pop();
             onConfirm();
           },
-          child: const Text("Delete"),
+          child: const Text(
+            AppStrings.delete,
+          ),
         ),
       ],
     ),

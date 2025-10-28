@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 
 Widget logoutButton({
   required BuildContext context,
@@ -51,7 +52,7 @@ Widget logoutButton({
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 16),
+              Gap.s16W(),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +67,7 @@ Widget logoutButton({
                             color: isDestructive ? Colors.red : null,
                           ),
                     ),
-                    const SizedBox(height: 4),
+                    Gap.s4H(),
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(

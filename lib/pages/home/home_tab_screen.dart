@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/helpers/gap.dart';
 import 'dart:async';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/pages/family/family_directory_screen.dart';
@@ -160,13 +161,13 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
                           child: _buildAnimatedHeader(currentUser),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      Gap.s24H(),
                       if (_carouselImages.isNotEmpty)
                         ScaleTransition(
                           scale: _carouselScaleAnimation,
                           child: _buildEnhancedCarousel(size),
                         ),
-                      const SizedBox(height: 32),
+                      Gap.s32H(),
                       _buildAnimatedFamilySection(),
                     ],
                   ),
@@ -208,7 +209,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          Gap.s24H(),
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
             duration: const Duration(milliseconds: 1000),
@@ -299,7 +300,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          Gap.s16W(),
           Expanded(
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: 1),
@@ -473,7 +474,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text('View All'),
-                  const SizedBox(width: 4),
+                  Gap.s4W(),
                   Icon(
                     Icons.arrow_forward,
                     size: 16,
@@ -486,7 +487,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
         ],
       ),
 
-      const SizedBox(height: 16),
+      Gap.s16H(),
 
       // Recent families list
       if (_recentFamilies.isEmpty)
@@ -508,7 +509,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
               child: Column(
                 children: [
                   Icon(Icons.people_outline, size: 48, color: Colors.grey[400]),
-                  const SizedBox(height: 12),
+                  Gap.s12H(),
                   const Text('No families found'),
                 ],
               ),

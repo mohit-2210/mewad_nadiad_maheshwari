@@ -45,5 +45,20 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+<string>This app requires camera access to take announcement images.</string>
+
+<key>NSPhotoLibraryUsageDescription</key>
+<string>This app requires photo library access to choose images for announcements.</string>
+
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>This app requires access to save selected images to your gallery.</string>
+
+<key>NSDocumentsFolderUsageDescription</key>
+<string>This app needs access to your files to upload PDFs for announcements.</string>
+
+<key>NSFileProviderPresenceUsageDescription</key>
+<string>This app needs to browse and pick files from your device for announcements.</string>
+
 </dict>
 </plist>

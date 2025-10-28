@@ -1,24 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/helpers/gap.dart';
+import 'package:mmsn/app/services/launchCall.dart';
 import 'package:mmsn/models/user.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/data_service.dart';
 import 'package:mmsn/pages/family/family_details_screen.dart';
 
-@NowaGenerated()
 class MemberActionDialog extends StatelessWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const MemberActionDialog({required this.member, super.key});
 
   final User member;
-
-  void _makeCall(BuildContext context) {
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Calling ${member.fullName} at ${member.phoneNumber}'),
-      ),
-    );
-  }
 
   Future<void> _viewFamilyDetails(BuildContext context) async {
     try {
@@ -71,7 +62,10 @@ class MemberActionDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),
                 ),
@@ -90,16 +84,16 @@ class MemberActionDialog extends StatelessWidget {
                           : null,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  Gap.s16H(),
                   Text(
                     member.fullName,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  Gap.s8H(),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -128,20 +122,25 @@ class MemberActionDialog extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    'What would you like to do?',
+                    AppStrings.memberActionDialogBoxText,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey[700],
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
-                  const SizedBox(height: 24),
+                  Gap.s24H(),
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => _makeCall(context),
-                          icon: const Icon(Icons.phone, size: 20),
-                          label: const Text('Call'),
+                          onPressed: () => launchPhone(member.phoneNumber),
+                          icon: const Icon(
+                            Icons.phone,
+                            size: 20,
+                          ),
+                          label: const Text(
+                            AppStrings.call,
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                             foregroundColor: Colors.white,
@@ -153,12 +152,14 @@ class MemberActionDialog extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      Gap.s12W(),
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => _viewFamilyDetails(context),
                           icon: const Icon(Icons.people, size: 20),
-                          label: const Text('Family'),
+                          label: const Text(
+                            AppStrings.family,
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(
                               context,
@@ -174,7 +175,7 @@ class MemberActionDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  Gap.s12H(),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
@@ -184,7 +185,7 @@ class MemberActionDialog extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Cancel',
+                      AppStrings.cancel,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontWeight: FontWeight.w600,
