@@ -1,18 +1,17 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:mmsn/app/globals/app_spacing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:mmsn/app/globals/app_state.dart';
 import 'package:mmsn/pages/splash/splash_screen.dart';
 
-@NowaGenerated()
 late final SharedPreferences sharedPrefs;
 
-@NowaGenerated()
 main() async {
   WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
   );
@@ -21,9 +20,7 @@ main() async {
   runApp(const MyApp());
 }
 
-@NowaGenerated({'visibleInNowa': false})
 class MyApp extends StatelessWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const MyApp({super.key});
 
   @override

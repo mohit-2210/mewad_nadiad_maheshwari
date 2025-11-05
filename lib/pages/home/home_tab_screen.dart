@@ -140,7 +140,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = AuthService.instance.currentUser;
+    final currentUser = AuthApiService.instance.currentUser;
     final size = MediaQuery.of(context).size;
     return Scaffold(
       body: SafeArea(

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "355448073369",
+    "project_id": "nadiadmaheshwarisamaj-24d98",
+    "storage_bucket": "nadiadmaheshwarisamaj-24d98.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355448073369:android:02f5eefdbb4ca8ce54dc08",
+        "android_client_info": {
+          "package_name": "com.example.mmsn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOK9MlFrg5Dd7U4G6MRXlq2Z2iqUd71GA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

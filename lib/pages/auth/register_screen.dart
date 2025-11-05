@@ -48,7 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isLoading = true;
     });
     try {
-      await AuthService.instance.register(
+      await AuthApiService.instance.register(
         _nameController.text.trim(),
         _phoneController.text.trim(),
         _pinController.text.trim(),

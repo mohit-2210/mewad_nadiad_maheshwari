@@ -137,7 +137,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _logout() async {
-    await AuthService.instance.logout();
+    await AuthApiService.instance.logout();
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,

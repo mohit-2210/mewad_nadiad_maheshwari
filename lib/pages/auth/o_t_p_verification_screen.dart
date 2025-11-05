@@ -87,7 +87,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       _isLoading = true;
     });
     try {
-      final isValid = await AuthService.instance.verifyOTP(otp);
+      final isValid = await AuthApiService.instance.verifyOTP(otp);
       if (isValid && mounted) {
         Navigator.pushAndRemoveUntil(
           context,

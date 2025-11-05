@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
-import 'package:mmsn/pages/auth/data/auth_service.dart';
+import 'package:mmsn/pages/auth/data/auth_repository.dart';
 import 'package:mmsn/pages/auth/o_t_p_verification_screen.dart';
 import 'package:mmsn/pages/auth/register_screen.dart';
 
@@ -34,17 +34,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    setState(() {
-      _isLoading = true;
-    });
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
     try {
-      await AuthService.instance.login(
+      final user = await AuthRepository().login(
         _phoneController.text.trim(),
         _pinController.text.trim(),
       );
+
+      // ✅ If login returned user successfully, now send to OTP Screen
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -57,23 +57,20 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
+      final message = e.toString().replaceFirst("Exception: ", "");
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
+            content: Text(message),
             backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;

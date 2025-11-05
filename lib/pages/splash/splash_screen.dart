@@ -78,14 +78,14 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       sharedPrefs.getBool('test');
     } catch (_) {}
-    await AuthService.instance.loadCurrentUser();
+    await AuthApiService.instance.loadCurrentUser();
     await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
     final hasSeenIntro = sharedPrefs.getBool('hasSeenIntro') ?? false;
 
-    if (AuthService.instance.currentUser != null) {
+    if (AuthApiService.instance.currentUser != null) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MainScreen()),

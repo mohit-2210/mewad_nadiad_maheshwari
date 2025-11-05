@@ -78,7 +78,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   }
 
   Future<void> _loadUserFamily() async {
-    final currentUser = AuthService.instance.currentUser;
+    final currentUser = AuthApiService.instance.currentUser;
     if (currentUser != null) {
       final family = await DataService.instance.getFamilyByHeadId(
         currentUser!.id,
@@ -92,7 +92,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = AuthService.instance.currentUser;
+    final currentUser = AuthApiService.instance.currentUser;
     if (currentUser == null) {
       return const Scaffold(body: Center(child: Text('User not found')));
     }
@@ -423,7 +423,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   }
 
   Widget _buildFamilyMembersSection(Family family) {
-    final currentUser = AuthService.instance.currentUser;
+    final currentUser = AuthApiService.instance.currentUser;
     final allMembers = [family.head, ...family.members];
     return Column(
       children: allMembers.asMap().entries.map((entry) {

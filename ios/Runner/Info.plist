@@ -60,5 +60,18 @@
 <key>NSFileProviderPresenceUsageDescription</key>
 <string>This app needs to browse and pick files from your device for announcements.</string>
 
+<key>NSUserTrackingUsageDescription</key>
+<string>This identifier will be used for phone number verification.</string>
+<key>FirebaseAppDelegateProxyEnabled</key>
+<true/>
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+</dict>
+<key>NSUserNotificationUsageDescription</key>
+<string>This app needs notifications to receive OTP.</string>
+
+
 </dict>
 </plist>
