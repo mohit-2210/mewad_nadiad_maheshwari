@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/admin_screens/adding_family.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/user.dart';
-import 'package:mmsn/auth_service.dart';
+import 'package:mmsn/pages/auth/data/auth_service.dart';
 import 'package:mmsn/data_service.dart';
 import 'package:mmsn/pages/family/member_details_screen.dart';
 import 'package:mmsn/pages/profile/update/edit_member_screen.dart';
@@ -21,7 +22,8 @@ class ProfileTabScreen extends StatefulWidget {
 }
 
 @NowaGenerated()
-class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerProviderStateMixin{
+class _ProfileTabScreenState extends State<ProfileTabScreen>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
 
   late AnimationController _headerAnimationController;
@@ -123,7 +125,10 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                     end: Alignment.bottomCenter,
                     colors: [
                       Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                      Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.8),
                     ],
                   ),
                 ),
@@ -155,8 +160,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                               ),
                               child: CircleAvatar(
                                 radius: 50,
-                                backgroundImage:
-                                    currentUser?.profileImage != null
+                                backgroundImage: currentUser?.profileImage !=
+                                        null
                                     ? NetworkImage(currentUser!.profileImage!)
                                     : null,
                                 child: currentUser?.profileImage == null
@@ -234,6 +239,12 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                           delay: 300,
                         ),
                         Gap.s30H(),
+                        _buildAnimatedSection(
+                          title: 'Super Admin Actions',
+                          child: _buildSuperAdminActionsSection(currentUser!),
+                          delay: 300,
+                        ),
+                        Gap.s30H(),
                       ],
                     ),
                   ),
@@ -262,9 +273,9 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
           Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
           ),
           Gap.s16H(),
           child,
@@ -371,7 +382,10 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -388,16 +402,16 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                   Text(
                     label,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                   Gap.s4H(),
                   Text(
                     value,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                 ],
               ),
@@ -533,7 +547,10 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                                   color: member.isHeadOfFamily
                                       ? Theme.of(
                                           context,
-                                        ).colorScheme.primary.withValues(alpha: 0.2)
+                                        )
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.2)
                                       : Colors.grey[200],
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -553,7 +570,9 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                               Gap.s4H(),
                               Text(
                                 member.phoneNumber,
-                                style: Theme.of(context).textTheme.bodyMedium
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
                                     ?.copyWith(color: Colors.grey[600]),
                               ),
                             ],
@@ -595,10 +614,26 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
       children: [
         if (currentUser.isHeadOfFamily) ...[
           _buildAnimatedActionButton(
-            icon: Icons.group_add,
+            icon: Icons.person_add,
             title: 'Add Family Member',
             subtitle: 'Add new family member to your profile',
             onTap: () => _addFamilyMember(),
+            delay: 0,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSuperAdminActionsSection(User currentUser) {
+    return Column(
+      children: [
+        if (currentUser.isHeadOfFamily) ...[
+          _buildAnimatedActionButton(
+            icon: Icons.group_add,
+            title: 'Add Family',
+            subtitle: 'Add new family in Samaj',
+            onTap: () => _addFamily(),
             delay: 0,
           ),
         ],
@@ -661,18 +696,18 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: isDestructive ? Colors.red : null,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isDestructive ? Colors.red : null,
+                                ),
                       ),
                       Gap.s4H(),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
@@ -718,13 +753,18 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> with SingleTickerPr
     );
   }
 
-  Future<void> _logout() async {
-    await AuthService.instance.logout();
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
+  void _addFamily() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const FamilyFormPage(),
+      ),
+    );
+
+    // If the FamilyFormPage returns true, refresh the list
+    if (result == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('New family added successfully!')),
       );
     }
   }

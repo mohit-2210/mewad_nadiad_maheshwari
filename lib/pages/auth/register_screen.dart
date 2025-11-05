@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
-import 'package:mmsn/auth_service.dart';
+import 'package:mmsn/pages/auth/data/auth_service.dart';
 import 'package:mmsn/pages/auth/o_t_p_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {

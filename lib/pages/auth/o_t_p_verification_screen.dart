@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'dart:async';
-import 'package:mmsn/auth_service.dart';
+import 'package:mmsn/pages/auth/data/auth_service.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 
 class OTPVerificationScreen extends StatefulWidget {

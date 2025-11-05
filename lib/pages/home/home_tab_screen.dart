@@ -6,7 +6,7 @@ import 'package:mmsn/pages/family/family_directory_screen.dart';
 import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/data_service.dart';
 import 'package:mmsn/models/user.dart';
-import 'package:mmsn/auth_service.dart';
+import 'package:mmsn/pages/auth/data/auth_service.dart';
 import 'package:mmsn/components/family_card.dart';
 import 'package:mmsn/pages/family/family_details_screen.dart';
 

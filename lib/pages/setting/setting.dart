@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchEmail.dart';
 import 'package:mmsn/app/services/openPlayOrAppStore.dart';
-import 'package:mmsn/auth_service.dart';
+import 'package:mmsn/pages/auth/data/auth_service.dart';
 import 'package:mmsn/components/DeleteAccountButton.dart';
 import 'package:mmsn/components/logoutButton.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
