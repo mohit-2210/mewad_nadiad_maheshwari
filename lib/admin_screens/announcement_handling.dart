@@ -185,14 +185,14 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
                                 _buildTextField(
                                     _contentController, "Full Content",
                                     maxLines: 5),
-                                Gap.s24H(),
+                                Gap.s16H(),
 
                                 // ---------- PDF Section ----------
                                 _sectionLabel("Attach PDF (optional)"),
-                                Gap.s8H(),
+                                Gap.s16H(),
                                 _buildPdfSelector(),
 
-                                Gap.s30H(),
+                                Gap.s24H(),
 
                                 // ---------- Submit ----------
                                 SizedBox(
