@@ -1,57 +1,54 @@
-// lib/pages/auth/register_screen.dart
+// lib/pages/auth/pin_setup_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 
-class RegisterScreen extends StatelessWidget {
+class PinSetupScreen extends StatelessWidget {
   final String phoneNumber;
 
-  const RegisterScreen({super.key, required this.phoneNumber});
+  const PinSetupScreen({super.key, required this.phoneNumber});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => AuthCubit(AuthRepository()),
-      child: RegisterView(phoneNumber: phoneNumber),
+      child: PinSetupView(phoneNumber: phoneNumber),
     );
   }
 }
 
-class RegisterView extends StatefulWidget {
+class PinSetupView extends StatefulWidget {
   final String phoneNumber;
 
-  const RegisterView({super.key, required this.phoneNumber});
+  const PinSetupView({super.key, required this.phoneNumber});
 
   @override
-  State<RegisterView> createState() => _RegisterViewState();
+  State<PinSetupView> createState() => _PinSetupViewState();
 }
 
-class _RegisterViewState extends State<RegisterView> {
+class _PinSetupViewState extends State<PinSetupView> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _pinController = TextEditingController();
   final _confirmPinController = TextEditingController();
-
+  
   bool _obscurePin = true;
   bool _obscureConfirmPin = true;
 
   @override
   void dispose() {
-    _nameController.dispose();
     _pinController.dispose();
     _confirmPinController.dispose();
     super.dispose();
   }
 
-  void _handleRegister() {
+  void _handleSetPin() {
     if (!_formKey.currentState!.validate()) return;
-
+    
     if (_pinController.text != _confirmPinController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -61,25 +58,15 @@ class _RegisterViewState extends State<RegisterView> {
       );
       return;
     }
-
-    final userData = {
-      'fullName': _nameController.text.trim(),
-      'mobile': widget.phoneNumber,
-      'pin': _pinController.text.trim(),
-      'userType': 'member',
-      'status': 'active',
-    };
-
-    context.read<AuthCubit>().register(userData);
+    
+    context.read<AuthCubit>().setPin(widget.phoneNumber, _pinController.text);
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.register),
+        title: const Text('Set Your PIN'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -112,8 +99,15 @@ class _RegisterViewState extends State<RegisterView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Gap.s32H(),
+                      Icon(
+                        Icons.lock_outline,
+                        size: 80,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      Gap.s24H(),
                       Text(
-                        AppStrings.createAcc,
+                        'Create Your PIN',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -121,57 +115,14 @@ class _RegisterViewState extends State<RegisterView> {
                       ),
                       Gap.s8H(),
                       Text(
-                        AppStrings.appName,
+                        'Set a 4-digit PIN to secure your account',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: Colors.grey[600],
                             ),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: size.height * 0.05),
-
-                      // Phone Number (Read-only)
-                      TextFormField(
-                        initialValue: widget.phoneNumber,
-                        enabled: false,
-                        decoration: InputDecoration(
-                          labelText: AppStrings.phoneNumber,
-                          prefixIcon: const Icon(Icons.phone),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[200],
-                        ),
-                      ),
-                      Gap.s16H(),
-
-                      // Full Name
-                      TextFormField(
-                        controller: _nameController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(
-                          labelText: AppStrings.fullName,
-                          hintText: AppStrings.fullNameHint,
-                          prefixIcon: const Icon(Icons.person),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your full name';
-                          }
-                          if (value.trim().length < 2) {
-                            return 'Name must be at least 2 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      Gap.s16H(),
-
-                      // PIN
+                      Gap.s48H(),
+                      
                       TextFormField(
                         controller: _pinController,
                         obscureText: _obscurePin,
@@ -179,8 +130,8 @@ class _RegisterViewState extends State<RegisterView> {
                         maxLength: 4,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         decoration: InputDecoration(
-                          labelText: AppStrings.pin,
-                          hintText: AppStrings.pinHint,
+                          labelText: 'Enter PIN',
+                          hintText: 'Create 4-digit PIN',
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -208,8 +159,7 @@ class _RegisterViewState extends State<RegisterView> {
                         },
                       ),
                       Gap.s16H(),
-
-                      // Confirm PIN
+                      
                       TextFormField(
                         controller: _confirmPinController,
                         obscureText: _obscureConfirmPin,
@@ -217,7 +167,8 @@ class _RegisterViewState extends State<RegisterView> {
                         maxLength: 4,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         decoration: InputDecoration(
-                          labelText: AppStrings.confirmPIN,
+                          labelText: 'Confirm PIN',
+                          hintText: 'Re-enter PIN',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -238,7 +189,7 @@ class _RegisterViewState extends State<RegisterView> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please confirm your PIN';
+                            return 'Please confirm PIN';
                           }
                           if (value != _pinController.text) {
                             return 'PINs do not match';
@@ -247,13 +198,12 @@ class _RegisterViewState extends State<RegisterView> {
                         },
                       ),
                       Gap.s32H(),
-
-                      // Register Button
+                      
                       SizedBox(
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: isLoading ? null : _handleRegister,
+                          onPressed: isLoading ? null : _handleSetPin,
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -266,7 +216,7 @@ class _RegisterViewState extends State<RegisterView> {
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Text(
-                                  AppStrings.register,
+                                  'Set PIN',
                                   style: TextStyle(fontSize: 18),
                                 ),
                         ),

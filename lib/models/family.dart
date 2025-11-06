@@ -1,7 +1,5 @@
 import 'package:mmsn/models/user.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 
-@NowaGenerated()
 class Family {
   const Family({
     required this.id,

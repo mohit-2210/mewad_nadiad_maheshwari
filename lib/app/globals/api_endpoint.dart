@@ -8,3 +8,5 @@ final refreshTokenEndpoint = '/api/v1/auth/refreshTokens';
 final logoutEndpoint = '/api/v1/auth/logout';
 final changePasswordEndpoint = '/api/v1/auth/changePassword';
 final forgetPasswordEndpoint = '/api/v1/auth/forgetPassword';
+final checkUserEndpoint = '/api/v1/auth/checkUser'; // Check if user exists
+final setPinEndpoint = '/api/v1/auth/setPin'; // Set PIN for existing user

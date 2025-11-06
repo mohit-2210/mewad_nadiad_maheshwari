@@ -1,10 +1,13 @@
+// lib/pages/splash/splash_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/main.dart';
-import 'package:mmsn/pages/auth/data/auth_service.dart';
-import 'package:mmsn/pages/home/main_screen.dart';
+import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
+import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
+import 'package:mmsn/pages/home/main_screen.dart';
 import 'package:mmsn/pages/intro/intro_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -28,7 +31,6 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _setupAnimations();
     _controller.forward();
-    _initializeApp();
   }
 
   void _setupAnimations() {
@@ -37,7 +39,6 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(seconds: 3),
     );
 
-    // Staggered Animations
     _logoOpacity = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
@@ -74,35 +75,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Future<void> _initializeApp() async {
-    try {
-      sharedPrefs.getBool('test');
-    } catch (_) {}
-    await AuthApiService.instance.loadCurrentUser();
-    await Future.delayed(const Duration(seconds: 3));
-
-    if (!mounted) return;
-
-    final hasSeenIntro = sharedPrefs.getBool('hasSeenIntro') ?? false;
-
-    if (AuthApiService.instance.currentUser != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
-      );
-    } else if (hasSeenIntro) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const IntroScreen()),
-      );
-    }
-  }
-
   @override
   void dispose() {
     _controller.dispose();
@@ -115,50 +87,77 @@ class _SplashScreenState extends State<SplashScreen>
 
     return Scaffold(
       backgroundColor: colorScheme.primary,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // 🟣 LOGO
-                Transform.scale(
-                  scale: _logoScale.value,
-                  child: Opacity(
-                    opacity: _logoOpacity.value,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.groups_rounded,
-                        size: 64,
-                        color: colorScheme.primary,
+      body: BlocListener<AuthCubit, AuthState>(
+        listener: (context, state) async {
+          // Wait for animation to complete
+          await Future.delayed(const Duration(seconds: 3));
+
+          if (!mounted) return;
+
+          if (state is AuthSuccess) {
+            // User is logged in - go to main screen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const MainScreen()),
+            );
+          } else {
+            // Check if user has seen intro
+            final hasSeenIntro = sharedPrefs.getBool('hasSeenIntro') ?? false;
+
+            if (hasSeenIntro) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const IntroScreen()),
+              );
+            }
+          }
+        },
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo
+                  Transform.scale(
+                    scale: _logoScale.value,
+                    child: Opacity(
+                      opacity: _logoOpacity.value,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.groups_rounded,
+                          size: 64,
+                          color: colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  Gap.s24H(),
 
-                Gap.s24H(),
-
-                // 🟣 TITLE
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Opacity(
-                    opacity: _titleOpacity.value,
-                    child: Transform.scale(
-                      scale: 1 + (0.05 * (1 - _titleOpacity.value)),
+                  // Title
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Opacity(
+                      opacity: _titleOpacity.value,
                       child: const Text(
                         AppStrings.appName,
                         style: TextStyle(
@@ -167,32 +166,28 @@ class _SplashScreenState extends State<SplashScreen>
                           color: Colors.white,
                           letterSpacing: 1.1,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
-                ),
+                  Gap.s8H(),
 
-                Gap.s8H(),
-
-                // 🟣 SUBTITLE
-                Opacity(
-                  opacity: _subtitleOpacity.value,
-                  child: Text(
-                    AppStrings.splashSubtitle,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withValues(alpha: 0.85),
+                  // Subtitle
+                  Opacity(
+                    opacity: _subtitleOpacity.value,
+                    child: Text(
+                      AppStrings.splashSubtitle,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
                     ),
                   ),
-                ),
+                  Gap.s40H(),
 
-                Gap.s40H(),
-
-                // 🟣 LOADER
-                Opacity(
-                  opacity: _loaderOpacity.value,
-                  child: Transform.scale(
-                    scale: 0.8 + (0.2 * _loaderOpacity.value),
+                  // Loader
+                  Opacity(
+                    opacity: _loaderOpacity.value,
                     child: Container(
                       width: 60,
                       height: 60,
@@ -208,10 +203,10 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
