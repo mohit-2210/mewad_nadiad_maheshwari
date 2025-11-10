@@ -342,48 +342,52 @@ class AuthRepository {
 
   // Refresh token
   Future<void> refreshAccessToken() async {
-    try {
-      final refreshToken = await AuthLocalStorage.getRefreshToken();
-      
-      if (refreshToken == null || refreshToken.isEmpty) {
-        throw AuthenticationException('No refresh token available');
+  try {
+    final refreshToken = await AuthLocalStorage.getRefreshToken();
+
+    if (refreshToken == null || refreshToken.isEmpty) {
+      throw AuthenticationException('No refresh token available');
+    }
+
+    final response = await _api.refreshToken(refreshToken);
+    final responseData = response.data as Map<String, dynamic>?;
+
+    if (responseData == null) {
+      throw AuthenticationException('Invalid response from server');
+    }
+
+    final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+      responseData,
+      (data) => data as Map<String, dynamic>,
+    );
+
+    if (apiResponse.isSuccess && apiResponse.data != null) {
+      final data = apiResponse.data!;
+
+      // ✅ Save tokens
+      final tokens = TokenModel.fromJson(data);
+      await AuthLocalStorage.saveTokens(tokens.accessToken, tokens.refreshToken);
+
+      // ✅ NEW — Save user if provided by API
+      if (data.containsKey('user')) {
+        final user = User.fromJson(data['user']);
+        await AuthLocalStorage.saveUser(user);
+
+        // ✅ Update API service current user
+        await _api.updateCurrentUser(user);
       }
 
-      final response = await _api.refreshToken(refreshToken);
-      final responseData = response.data as Map<String, dynamic>?;
-
-      if (responseData == null) {
-        throw AuthenticationException('Invalid response from server');
-      }
-
-      final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
-        responseData,
-        (data) => data as Map<String, dynamic>,
-      );
-
-      if (apiResponse.isSuccess && apiResponse.data != null) {
-        final tokens = TokenModel.fromJson(apiResponse.data!);
-        
-        if (tokens.accessToken.isEmpty || tokens.refreshToken.isEmpty) {
-          throw AuthenticationException('Token data is missing');
-        }
-        
-        await AuthLocalStorage.saveTokens(tokens.accessToken, tokens.refreshToken);
-      } else {
-        throw AuthenticationException(
-          apiResponse.message ?? 'Failed to refresh token',
-        );
-      }
-    } on ApiException {
-      rethrow;
-    } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
+    } else {
       throw AuthenticationException(
-        'Failed to refresh token: ${e.toString()}',
-        originalError: e,
+        apiResponse.message ?? 'Failed to refresh token',
       );
     }
+  } catch (e) {
+    throw AuthenticationException(
+      'Failed to refresh token: ${e.toString()}',
+      originalError: e,
+    );
   }
+}
+
 }

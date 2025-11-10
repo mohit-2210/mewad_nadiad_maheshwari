@@ -53,7 +53,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
         "phoneNumber": int.tryParse(phoneController.text.trim()),
         "dob": dobController.text.trim(),
         "role": headNameController.text.trim() == selectedEditor
-            ? "HEAD_ADMIN"
+            ? "EDITOR"
             : "HEAD",
         "education": educationController.text.trim(),
         "occupation": occupationController.text.trim(),
@@ -72,7 +72,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
             "occupationAddress": mem["occupationAddress"].text.trim(),
             "image": "", // handle later
             "role":
-                mem["name"].text.trim() == selectedEditor ? "ADMIN" : "MEMBER",
+                mem["name"].text.trim() == selectedEditor ? "EDITOR" : "MEMBER",
           };
         }).toList(),
       };

@@ -136,14 +136,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   } 
 
-  Future<void> _logout() async {
+Future<void> _logout() async {
+  showDialog(
+    context: context,
+    barrierDismissible: false, 
+    builder: (context) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    },
+  );
+
+  try {
     await AuthApiService.instance.logout();
+    if (mounted) Navigator.of(context).pop();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Logged out successfully"),
+        backgroundColor: Colors.green,
+      ),
+    );
+
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
     }
+  } catch (e) {
+    if (mounted) Navigator.of(context).pop();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Logout failed: $e"),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
+
 }

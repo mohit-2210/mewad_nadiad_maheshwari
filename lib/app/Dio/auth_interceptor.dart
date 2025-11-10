@@ -1,4 +1,3 @@
-// lib/app/Dio/auth_interceptor.dart
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
@@ -13,11 +12,8 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    // Skip token for auth endpoints
-    final authEndpoints = [
+      RequestOptions options, RequestInterceptorHandler handler) async {
+    final nonAuthEndpoints = [
       '/api/v1/auth/login',
       '/api/v1/auth/register',
       '/api/v1/auth/sendOtp',
@@ -29,12 +25,9 @@ class AuthInterceptor extends Interceptor {
       '/api/v1/auth/resetPassword',
     ];
 
-    final isAuthEndpoint = authEndpoints.any(
-      (endpoint) => options.path.contains(endpoint),
-    );
+    final skipAuth = nonAuthEndpoints.any((ep) => options.path.contains(ep));
 
-    if (!isAuthEndpoint) {
-      // Add token for protected endpoints
+    if (!skipAuth) {
       final token = await AuthLocalStorage.getAccessToken();
       if (token != null && token.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $token';
@@ -46,71 +39,49 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // Handle 401 Unauthorized - token expired
     if (err.response?.statusCode == 401) {
-      // Don't retry on auth endpoints
-      final authEndpoints = [
-        '/api/v1/auth/login',
-        '/api/v1/auth/register',
-        '/api/v1/auth/refreshTokens',
-      ];
-      
-      final isAuthEndpoint = authEndpoints.any(
-        (endpoint) => err.requestOptions.path.contains(endpoint),
-      );
+      // don't retry auth endpoints
+      final isAuth = ['/login', '/register', '/refreshTokens']
+          .any((ep) => err.requestOptions.path.contains(ep));
 
-      if (isAuthEndpoint) {
+      if (isAuth) {
         return handler.next(err);
       }
 
-      // If already refreshing, queue this request
       if (_isRefreshing) {
+        // Queue request
         final completer = Completer<Response>();
         _pendingRequests.add(_PendingRequest(err.requestOptions, completer));
+
         return completer.future.then(
-          (response) => handler.resolve(response),
-          onError: (error) => handler.next(err),
+          (value) => handler.resolve(value),
+          onError: (e) => handler.next(err),
         );
       }
 
       _isRefreshing = true;
 
       try {
-        // Try to refresh token
+        // refresh token
         final authRepo = AuthRepository();
         await authRepo.refreshAccessToken();
 
-        // Retry all pending requests
-        final token = await AuthLocalStorage.getAccessToken();
-        if (token != null && token.isNotEmpty) {
-          // Update original request
-          err.requestOptions.headers['Authorization'] = 'Bearer $token';
-
-          // Retry original request
-          final opts = Options(
-            method: err.requestOptions.method,
-            headers: err.requestOptions.headers,
-          );
-
-          final cloneReq = await dio.request(
-            err.requestOptions.path,
-            options: opts,
-            data: err.requestOptions.data,
-            queryParameters: err.requestOptions.queryParameters,
-          );
-
-          // Process pending requests
-          _processPendingRequests(token);
-
-          _isRefreshing = false;
-          _pendingRequests.clear();
-
-          return handler.resolve(cloneReq);
-        } else {
-          throw Exception('Token refresh failed - no token received');
+        final newToken = await AuthLocalStorage.getAccessToken();
+        if (newToken == null || newToken.isEmpty) {
+          throw Exception("Refresh returned empty token");
         }
+
+        // Retry original request
+        final response = await _retry(err.requestOptions, newToken);
+
+        // Retry queued requests
+        _processPendingRequests(newToken);
+
+        _pendingRequests.clear();
+        _isRefreshing = false;
+
+        return handler.resolve(response);
       } catch (e) {
-        // Refresh failed - clear tokens and logout user
         _isRefreshing = false;
         _pendingRequests.clear();
         await AuthLocalStorage.clear();
@@ -121,24 +92,43 @@ class AuthInterceptor extends Interceptor {
     return handler.next(err);
   }
 
+  Future<Response> _retry(RequestOptions requestOptions, String newToken) {
+    final options = Options(
+      method: requestOptions.method,
+      headers: {
+        ...requestOptions.headers,
+        'Authorization': 'Bearer $newToken',
+      },
+    );
+
+    return dio.request(
+      requestOptions.path,
+      options: options,
+      data: requestOptions.data,
+      queryParameters: requestOptions.queryParameters,
+    );
+  }
+
   void _processPendingRequests(String token) {
-    for (final pendingRequest in _pendingRequests) {
-      pendingRequest.requestOptions.headers['Authorization'] = 'Bearer $token';
+    for (final p in _pendingRequests) {
       final opts = Options(
-        method: pendingRequest.requestOptions.method,
-        headers: pendingRequest.requestOptions.headers,
+        method: p.requestOptions.method,
+        headers: {
+          ...p.requestOptions.headers,
+          'Authorization': 'Bearer $token',
+        },
       );
 
       dio
           .request(
-            pendingRequest.requestOptions.path,
+            p.requestOptions.path,
             options: opts,
-            data: pendingRequest.requestOptions.data,
-            queryParameters: pendingRequest.requestOptions.queryParameters,
+            data: p.requestOptions.data,
+            queryParameters: p.requestOptions.queryParameters,
           )
           .then(
-            (response) => pendingRequest.completer.complete(response),
-            onError: (error) => pendingRequest.completer.completeError(error),
+            p.completer.complete,
+            onError: p.completer.completeError,
           );
     }
   }
@@ -147,6 +137,5 @@ class AuthInterceptor extends Interceptor {
 class _PendingRequest {
   final RequestOptions requestOptions;
   final Completer<Response> completer;
-
   _PendingRequest(this.requestOptions, this.completer);
 }

@@ -59,7 +59,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     );
     _scrollController.addListener(_handleScroll);
     _loadUserFamily();
-    _userFuture = _getCurrentUser(); // ✅ Store it once
+    _userFuture = _getCurrentUser();
   }
 
   @override

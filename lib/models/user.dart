@@ -17,7 +17,7 @@ class User {
   final String? occupation;
   final String? occupationAddress;
   final DateTime? dateOfBirth;
-  final String userType; // 'admin', 'editor', 'member'
+  final String userType; // 'admin', 'head', 'member'
   final String status; // 'active', 'inactive', 'pending'
 
   const User({

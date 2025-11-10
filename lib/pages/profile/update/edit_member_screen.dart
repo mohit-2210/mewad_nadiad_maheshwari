@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/data_service.dart';
 
-@NowaGenerated()
 class EditMemberScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const EditMemberScreen({required this.member, super.key});
 
   final User member;
@@ -17,7 +14,6 @@ class EditMemberScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _EditMemberScreenState extends State<EditMemberScreen> {
   final _formKey = GlobalKey<FormState>();
 
@@ -128,7 +124,6 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                 : _relationController.text.trim()),
         dateOfBirth: _dateOfBirthController,
       );
-      await DataService.instance.updateUser(updatedUser);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
