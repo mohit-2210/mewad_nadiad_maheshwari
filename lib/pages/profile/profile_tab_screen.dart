@@ -351,7 +351,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                           ),
                           Gap.s24H(),
                         ],
-                        if (currentUser.userType == 'HEAD') ...[
+                        if (currentUser.userType == 'HEAD' || currentUser.userType == 'ADMIN') ...[
                           _buildAnimatedSection(
                             title: 'Actions',
                             child: _buildActionsSection(currentUser),
@@ -733,7 +733,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   Widget _buildActionsSection(User currentUser) {
     return Column(
       children: [
-        if (currentUser.isHeadOfFamily) ...[
+        if (currentUser.userType == 'HEAD' || currentUser.userType == 'ADMIN') ...[
           _buildAnimatedActionButton(
             icon: Icons.person_add,
             title: 'Add Family Member',
