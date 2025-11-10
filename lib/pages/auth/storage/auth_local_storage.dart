@@ -9,9 +9,21 @@ class AuthLocalStorage {
 
   // Save tokens
   static Future<void> saveTokens(String access, String refresh) async {
+    if (access.isEmpty || refresh.isEmpty) {
+      throw Exception('Cannot save empty tokens');
+    }
+    
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_accessTokenKey, access);
     await prefs.setString(_refreshTokenKey, refresh);
+    
+    // Verify tokens were saved
+    final savedAccess = prefs.getString(_accessTokenKey);
+    final savedRefresh = prefs.getString(_refreshTokenKey);
+    
+    if (savedAccess == null || savedRefresh == null) {
+      throw Exception('Failed to save tokens to storage');
+    }
   }
 
   // Save user

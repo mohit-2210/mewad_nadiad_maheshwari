@@ -41,26 +41,71 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Handle date parsing safely
+    DateTime? parseDate(dynamic dateValue) {
+      if (dateValue == null) return null;
+      try {
+        if (dateValue is String) {
+          return DateTime.parse(dateValue);
+        } else if (dateValue is DateTime) {
+          return dateValue;
+        }
+      } catch (e) {
+        return null;
+      }
+      return null;
+    }
+
+    // Combine firstName and lastName if they exist
+    String getFullName() {
+      final firstName = json['firstName']?.toString() ?? '';
+      final lastName = json['lastName']?.toString() ?? '';
+      
+      if (firstName.isNotEmpty && lastName.isNotEmpty) {
+        return '$firstName $lastName'.trim();
+      } else if (firstName.isNotEmpty) {
+        return firstName;
+      } else if (lastName.isNotEmpty) {
+        return lastName;
+      }
+      
+      // Fallback to other field names
+      return json['fullName']?.toString() ?? 
+             json['name']?.toString() ?? 
+             '';
+    }
+
     return User(
-      id: json['id'] as String? ?? json['_id'] as String,
-      fullName: json['fullName'] as String? ?? json['firstName'] as String? ?? '',
-      phoneNumber: json['phoneNumber'] as String? ?? json['mobile'] as String? ?? '',
-      email: json['email'] as String?,
-      profileImage: json['profileImage'] as String?,
-      pin: json['pin'] as String?,
-      isHeadOfFamily: json['isHeadOfFamily'] as bool? ?? false,
-      relation: json['relation'] as String?,
-      society: json['society'] as String?,
-      area: json['area'] as String?,
-      address: json['address'] as String?,
-      nativePlace: json['nativePlace'] as String?,
-      occupation: json['occupation'] as String?,
-      occupationAddress: json['occupationAddress'] as String?,
-      dateOfBirth: json['dateOfBirth'] != null
-          ? DateTime.parse(json['dateOfBirth'] as String)
-          : null,
-      userType: json['userType'] as String? ?? 'member',
-      status: json['status'] as String? ?? 'active',
+      id: json['id']?.toString() ?? 
+          json['_id']?.toString() ?? 
+          '',
+      fullName: getFullName(),
+      phoneNumber: json['phoneNumber']?.toString() ?? 
+                   json['mobile']?.toString() ?? 
+                   json['phone']?.toString() ?? 
+                   '',
+      email: json['email']?.toString(),
+      profileImage: json['profileImage']?.toString() ?? 
+                    json['profile_image']?.toString() ??
+                    json['avatar']?.toString(),
+      pin: json['pin']?.toString(),
+      isHeadOfFamily: json['isHeadOfFamily'] as bool? ?? 
+                      json['is_head_of_family'] as bool? ?? 
+                      false,
+      relation: json['relation']?.toString(),
+      society: json['society']?.toString(),
+      area: json['area']?.toString(),
+      address: json['address']?.toString(),
+      nativePlace: json['nativePlace']?.toString() ?? 
+                   json['native_place']?.toString(),
+      occupation: json['occupation']?.toString(),
+      occupationAddress: json['occupationAddress']?.toString() ?? 
+                         json['occupation_address']?.toString(),
+      dateOfBirth: parseDate(json['dateOfBirth'] ?? json['date_of_birth'] ?? json['dob']),
+      userType: json['userType']?.toString() ?? 
+                json['user_type']?.toString() ?? 
+                'member',
+      status: json['status']?.toString() ?? 'active',
     );
   }
 
@@ -132,17 +177,3 @@ class User {
   }
 }
 
-// Keep TokenModel separate
-class TokenModel {
-  final String accessToken;
-  final String refreshToken;
-
-  TokenModel({required this.accessToken, required this.refreshToken});
-
-  factory TokenModel.fromJson(Map<String, dynamic> json) {
-    return TokenModel(
-      accessToken: json["tokens"]["accessToken"]["token"],
-      refreshToken: json["tokens"]["refreshToken"]["token"],
-    );
-  }
-}

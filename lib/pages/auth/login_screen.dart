@@ -8,8 +8,6 @@ import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
 import 'package:mmsn/pages/auth/o_t_p_verification_screen.dart';
-import 'package:mmsn/pages/auth/pin_setup_screen.dart';
-import 'package:mmsn/pages/auth/register_screen.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 
 class LoginScreen extends StatelessWidget {

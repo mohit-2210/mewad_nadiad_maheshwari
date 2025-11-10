@@ -1,6 +1,6 @@
 // lib/pages/auth/cubit/auth_state.dart
 import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mmsn/models/user.dart';
 
 abstract class AuthState extends Equatable {
   @override

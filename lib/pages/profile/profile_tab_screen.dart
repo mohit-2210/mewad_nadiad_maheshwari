@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/admin_screens/adding_family.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/auth/data/auth_service.dart';
+import 'package:mmsn/pages/auth/data/user_service.dart';
+import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 import 'package:mmsn/data_service.dart';
 import 'package:mmsn/pages/family/member_details_screen.dart';
 import 'package:mmsn/pages/profile/update/edit_member_screen.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
 
-@NowaGenerated()
 class ProfileTabScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const ProfileTabScreen({super.key});
 
   @override
@@ -21,7 +20,6 @@ class ProfileTabScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _ProfileTabScreenState extends State<ProfileTabScreen>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
@@ -31,6 +29,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   late Animation<double> _headerScaleAnimation;
 
   late Animation<double> _headerOpacityAnimation;
+
+  late Future<User?> _userFuture;
 
   Family? _userFamily;
 
@@ -59,6 +59,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     );
     _scrollController.addListener(_handleScroll);
     _loadUserFamily();
+    _userFuture = _getCurrentUser(); // ✅ Store it once
   }
 
   @override
@@ -78,13 +79,60 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   }
 
   Future<void> _loadUserFamily() async {
-    final currentUser = AuthApiService.instance.currentUser;
-    if (currentUser != null) {
-      final family = await DataService.instance.getFamilyByHeadId(
-        currentUser!.id,
-      );
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // First try to get user from storage
+      User? currentUser = await AuthLocalStorage.getUser();
+
+      // If not in storage, try AuthApiService
+      if (currentUser == null) {
+        currentUser = AuthApiService.instance.currentUser;
+      }
+
+      // If still null, fetch from API
+      if (currentUser == null) {
+        try {
+          currentUser = await UserService.instance.getCurrentUser();
+          // Save to storage
+          await AuthLocalStorage.saveUser(currentUser);
+          await AuthApiService.instance.updateCurrentUser(currentUser);
+        } catch (e) {
+          print('Error fetching user from API: $e');
+          // If API fails, show error
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to load user data: ${e.toString()}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
+      if (currentUser != null) {
+        final family = await DataService.instance.getFamilyByHeadId(
+          currentUser.id,
+        );
+        setState(() {
+          _userFamily = family;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading user family: $e');
       setState(() {
-        _userFamily = family;
         _isLoading = false;
       });
     }
@@ -92,10 +140,79 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = AuthApiService.instance.currentUser;
-    if (currentUser == null) {
-      return const Scaffold(body: Center(child: Text('User not found')));
+    // Use FutureBuilder to get user from storage or API
+    return FutureBuilder<User?>(
+      future: _userFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final currentUser = snapshot.data;
+        if (currentUser == null) {
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text('User not found'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    },
+                    child: const Text('Go to Login'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return _buildProfileContent(currentUser);
+      },
+    );
+  }
+
+  Future<User?> _getCurrentUser() async {
+    // Try storage first
+    User? user = await AuthLocalStorage.getUser();
+
+    // Try AuthApiService
+    if (user == null) {
+      user = AuthApiService.instance.currentUser;
     }
+
+    // Always try to fetch from API to get latest/complete user data
+    try {
+      final apiUser = await UserService.instance.getCurrentUser();
+      if (apiUser != null) {
+        // Update storage with fresh data from API
+        await AuthLocalStorage.saveUser(apiUser);
+        await AuthApiService.instance.updateCurrentUser(apiUser);
+        user = apiUser; // Use the fresh data from API
+      }
+    } catch (e) {
+      print('Error fetching user from API: $e');
+      // If API fails, use stored user if available
+      if (user == null) {
+        print('No user data available from storage or API');
+      }
+    }
+
+    return user;
+  }
+
+  Widget _buildProfileContent(User currentUser) {
     return Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
@@ -111,7 +228,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                 opacity: _scrollOffset > 100 ? 1 : 0,
                 duration: const Duration(milliseconds: 200),
                 child: Text(
-                  currentUser!.fullName,
+                  currentUser.fullName,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -142,7 +259,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                         children: [
                           Gap.s40H(),
                           Hero(
-                            tag: 'profile_image_${currentUser?.id}',
+                            tag: 'profile_image_${currentUser.id}',
                             child: Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
@@ -160,11 +277,11 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                               ),
                               child: CircleAvatar(
                                 radius: 50,
-                                backgroundImage: currentUser?.profileImage !=
+                                backgroundImage: currentUser.profileImage !=
                                         null
-                                    ? NetworkImage(currentUser!.profileImage!)
+                                    ? NetworkImage(currentUser.profileImage!)
                                     : null,
-                                child: currentUser?.profileImage == null
+                                child: currentUser.profileImage == null
                                     ? const Icon(
                                         Icons.person,
                                         size: 50,
@@ -180,7 +297,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                             child: Column(
                               children: [
                                 Text(
-                                  currentUser!.fullName,
+                                  currentUser.fullName,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 24,
@@ -189,7 +306,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                                 ),
                                 Gap.s4H(),
                                 Text(
-                                  currentUser!.phoneNumber,
+                                  currentUser.phoneNumber,
                                   style: TextStyle(
                                     color: Colors.white.withValues(alpha: 0.9),
                                     fontSize: 16,
@@ -221,30 +338,35 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                       children: [
                         _buildAnimatedSection(
                           title: 'Personal Information',
-                          child: _buildPersonalInfoCard(currentUser!),
+                          child: _buildPersonalInfoCard(currentUser),
                           delay: 100,
                         ),
                         Gap.s24H(),
                         if (_userFamily != null) ...[
                           _buildAnimatedSection(
                             title: 'Family Members',
-                            child: _buildFamilyMembersSection(_userFamily!),
+                            child: _buildFamilyMembersSection(
+                                _userFamily!, currentUser),
                             delay: 200,
                           ),
                           Gap.s24H(),
                         ],
-                        _buildAnimatedSection(
-                          title: 'Actions',
-                          child: _buildActionsSection(currentUser!),
-                          delay: 300,
-                        ),
-                        Gap.s30H(),
-                        _buildAnimatedSection(
-                          title: 'Super Admin Actions',
-                          child: _buildSuperAdminActionsSection(currentUser!),
-                          delay: 300,
-                        ),
-                        Gap.s30H(),
+                        if (currentUser.userType == 'HEAD') ...[
+                          _buildAnimatedSection(
+                            title: 'Actions',
+                            child: _buildActionsSection(currentUser),
+                            delay: 300,
+                          ),
+                          Gap.s30H(),
+                        ],
+                        if (currentUser.userType == 'ADMIN') ...[
+                          _buildAnimatedSection(
+                            title: 'Super Admin Actions',
+                            child: _buildSuperAdminActionsSection(currentUser),
+                            delay: 300,
+                          ),
+                          Gap.s30H(),
+                        ],
                       ],
                     ),
                   ),
@@ -422,14 +544,13 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     );
   }
 
-  Widget _buildFamilyMembersSection(Family family) {
-    final currentUser = AuthApiService.instance.currentUser;
+  Widget _buildFamilyMembersSection(Family family, User currentUser) {
     final allMembers = [family.head, ...family.members];
     return Column(
       children: allMembers.asMap().entries.map((entry) {
         final index = entry.key;
         final member = entry.value;
-        final isCurrentUser = member.id == currentUser?.id;
+        final isCurrentUser = member.id == currentUser.id;
         return TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: 1),
           duration: Duration(milliseconds: 300 + (index * 100)),
@@ -581,7 +702,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (currentUser?.isHeadOfFamily == true)
+                            if (currentUser.isHeadOfFamily == true)
                               IconButton(
                                 onPressed: () => _editMember(member),
                                 icon: Icon(
@@ -625,10 +746,11 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     );
   }
 
+//For SUPERADMIN to add family
   Widget _buildSuperAdminActionsSection(User currentUser) {
     return Column(
       children: [
-        if (currentUser.isHeadOfFamily) ...[
+        if (currentUser.userType == 'ADMIN') ...[
           _buildAnimatedActionButton(
             icon: Icons.group_add,
             title: 'Add Family',

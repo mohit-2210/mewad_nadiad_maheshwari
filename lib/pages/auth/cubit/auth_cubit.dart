@@ -1,6 +1,6 @@
 // lib/pages/auth/cubit/auth_cubit.dart
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmsn/models/exceptions.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
 
@@ -20,25 +20,39 @@ class AuthCubit extends Cubit<AuthState> {
           emit(UserExistsWithPin(mobile));
           break;
         case UserExistsStatus.existsWithoutPin:
-          emit(UserExistsWithoutPin(mobile, result.user! as User));
+          if (result.user != null) {
+            emit(UserExistsWithoutPin(mobile, result.user!));
+          } else {
+            emit(AuthError('User data is missing'));
+          }
           break;
         case UserExistsStatus.doesNotExist:
           emit(UserDoesNotExist(mobile));
           break;
       }
+    } on ApiException catch (e) {
+      // For checkUser, if it's a 404 or similar, we treat it as user not found
+      // Other errors are shown
+      if (e.statusCode == 404) {
+        emit(UserDoesNotExist(mobile));
+      } else {
+        emit(AuthError(e.message));
+      }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError('Failed to check user: ${e.toString()}'));
     }
   }
 
   // Step 2a: Login with PIN (for existing users with PIN)
-  Future<void> loginWithPin(String mobile, String pin) async {
+  Future<void> loginWithPin(String mobile, String password) async {
     emit(AuthLoading());
     try {
-      final user = await _repo.login(mobile, pin);
-      emit(AuthSuccess(user as User));
+      final user = await _repo.login(mobile, password);
+      emit(AuthSuccess(user));
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError('An unexpected error occurred: ${e.toString()}'));
     }
   }
 
@@ -48,8 +62,10 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await _repo.sendOtp(mobile);
       emit(OtpSent(mobile, isNewUser: isNewUser));
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError('Failed to send OTP: ${e.toString()}'));
     }
   }
 
@@ -65,8 +81,10 @@ class AuthCubit extends Cubit<AuthState> {
       } else {
         emit(AuthError("Invalid OTP"));
       }
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError('OTP verification failed: ${e.toString()}'));
     }
   }
 
@@ -75,9 +93,11 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final user = await _repo.setPin(mobile, pin);
-      emit(AuthSuccess(user as User));
+      emit(AuthSuccess(user));
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError('Failed to set PIN: ${e.toString()}'));
     }
   }
 
@@ -86,9 +106,17 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final user = await _repo.register(userData);
-      emit(AuthSuccess(user as User));
+      emit(AuthSuccess(user));
+    } on ValidationException catch (e) {
+      // Handle validation errors with field-specific messages
+      final errorMessage = e.errors != null && e.errors!.isNotEmpty
+          ? e.errors!.values.first.toString()
+          : e.message;
+      emit(AuthError(errorMessage));
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError('Registration failed: ${e.toString()}'));
     }
   }
 
@@ -110,11 +138,12 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await _repo.getCurrentUser();
       if (user != null) {
-        emit(AuthSuccess(user as User));
+        emit(AuthSuccess(user));
       } else {
         emit(AuthInitial());
       }
     } catch (e) {
+      // On error, just go to initial state
       emit(AuthInitial());
     }
   }

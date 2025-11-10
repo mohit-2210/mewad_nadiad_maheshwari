@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mmsn/app/Dio/dio_client.dart';
+import 'package:mmsn/app/globals/api_endpoint.dart';
 import 'package:mmsn/app/globals/app_constants.dart';
 
 class FamilyFormPage extends StatefulWidget {
@@ -37,12 +39,69 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
 
   List<Map<String, dynamic>> familyMembers = [];
   String? selectedEditor;
+  bool _isLoading = false;
+
+  Future<void> submitFamilyData() async {
+    setState(() => _isLoading = true);
+    try {
+      // Prepare request body
+      final Map<String, dynamic> requestBody = {
+        "address": addressController.text.trim(),
+        "nativePlace": nativePlaceController.text.trim(),
+        "societyName": societyNameController.text.trim(),
+        "headName": headNameController.text.trim(),
+        "phoneNumber": int.tryParse(phoneController.text.trim()),
+        "dob": dobController.text.trim(),
+        "role": "HEAD",
+        "education": educationController.text.trim(),
+        "occupation": occupationController.text.trim(),
+        "occupationAddress": occupationAddressController.text.trim(),
+        "image": "", // handle image upload later
+        "familyMembers": familyMembers.map((mem) {
+          return {
+            "name": mem["name"].text.trim(),
+            "relationWithHead": mem["relation"],
+            "dob": mem["dob"].text.trim(),
+            "phoneNumber": mem["phone"].text.trim().isNotEmpty
+                ? int.tryParse(mem["phone"].text.trim())
+                : null,
+            "education": mem["education"].text.trim(),
+            "occupation": mem["occupation"].text.trim(),
+            "occupationAddress": mem["occupationAddress"].text.trim(),
+            "image": "", // handle later
+            "role":
+                mem["name"].text.trim() == selectedEditor ? "HEAD" : "MEMBER",
+          };
+        }).toList(),
+      };
+
+      final response =
+          await DioClient.instance.post(addFamilyEndpoint, data: requestBody);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Family Registered Successfully"),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context); // ⬅ Go back after success
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to Submit: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   void addMember() {
     setState(() {
       familyMembers.add({
         "name": TextEditingController(),
-        "relation": "", // <- keep this as String, not controller
+        "relation": "",
         "dob": TextEditingController(),
         "phone": TextEditingController(),
         "education": TextEditingController(),
@@ -201,18 +260,13 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
                       if (selectedEditor == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text("Please select a family editor"),
-                            backgroundColor: Colors.orange,
-                          ),
+                              content: Text("Please select a family editor"),
+                              backgroundColor: Colors.orange),
                         );
                         return;
                       }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Form Submitted Successfully!"),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+
+                      submitFamilyData(); // Only this
                     }
                   },
                   style: ElevatedButton.styleFrom(
