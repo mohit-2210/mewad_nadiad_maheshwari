@@ -72,6 +72,5 @@
 <key>NSUserNotificationUsageDescription</key>
 <string>This app needs notifications to receive OTP.</string>
 
-
 </dict>
 </plist>

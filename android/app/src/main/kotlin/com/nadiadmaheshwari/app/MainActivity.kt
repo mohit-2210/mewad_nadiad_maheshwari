@@ -1,4 +1,4 @@
-package com.example.mmsn
+package com.nadiadmaheshwari.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/user.dart';
-import 'package:mmsn/data_service.dart';
 
 class EditMemberScreen extends StatefulWidget {
   const EditMemberScreen({required this.member, super.key});
