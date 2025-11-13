@@ -64,6 +64,12 @@
 <string>This identifier will be used for phone number verification.</string>
 <key>FirebaseAppDelegateProxyEnabled</key>
 <true/>
+
+<key>UIBackgroundModes</key>
+<array>
+  <string>remote-notification</string>
+</array>
+
 <key>NSAppTransportSecurity</key>
 <dict>
     <key>NSAllowsArbitraryLoads</key>
