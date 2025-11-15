@@ -4,6 +4,7 @@ import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/auth/data/auth_service.dart';
+import 'package:mmsn/pages/auth/data/auth_repository.dart';
 import 'package:mmsn/pages/auth/data/user_service.dart';
 import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 import 'package:mmsn/data_service.dart';
@@ -30,13 +31,15 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
 
   late Animation<double> _headerOpacityAnimation;
 
-  late Future<User?> _userFuture;
-
   Family? _userFamily;
 
   bool _isLoading = true;
 
   double _scrollOffset = 0;
+  
+  // Cache the current user to prevent re-fetching on every rebuild
+  User? _currentUser;
+  bool _isLoadingUser = true;
 
   @override
   void initState() {
@@ -58,8 +61,9 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
       ),
     );
     _scrollController.addListener(_handleScroll);
-    _loadUserFamily();
-    _userFuture = _getCurrentUser();
+    
+    // Load user and family data once in initState
+    _loadCurrentUser();
   }
 
   @override
@@ -69,67 +73,82 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     super.dispose();
   }
 
-  void _handleScroll() {
+void _handleScroll() {
+  final offset = _scrollController.offset;
+  if (offset != _scrollOffset) {
     setState(() {
-      _scrollOffset = _scrollController.offset;
+      _scrollOffset = offset;
+      const maxOffset = 200;
+      final value = (_scrollOffset / maxOffset).clamp(0, 1).toDouble();
+      _headerAnimationController.value = value;
     });
-    const maxOffset = 150;
-    final animationValue = (_scrollOffset / maxOffset).clamp(0, 1).toDouble();
-    _headerAnimationController.value = animationValue;
+  }
+}
+
+
+  Future<void> _loadCurrentUser() async {
+    setState(() {
+      _isLoadingUser = true;
+    });
+    
+    try {
+      // Try storage first
+      User? user = await AuthLocalStorage.getUser();
+      
+      // Try AuthApiService
+      if (user == null) {
+        user = AuthApiService.instance.currentUser;
+      }
+      
+      // Always try to fetch from API to get latest/complete user data
+      try {
+        final apiUser = await UserService.instance.getCurrentUser();
+        if (apiUser != null) {
+          // Update storage with fresh data from API
+          await AuthLocalStorage.saveUser(apiUser);
+          await AuthApiService.instance.updateCurrentUser(apiUser);
+          user = apiUser; // Use the fresh data from API
+        }
+      } catch (e) {
+        print('Error fetching user from API: $e');
+        // If API fails, use stored user if available
+        if (user == null) {
+          print('No user data available from storage or API');
+        }
+      }
+      
+      setState(() {
+        _currentUser = user;
+        _isLoadingUser = false;
+      });
+      
+      // Load family data after user is loaded
+      if (user != null) {
+        _loadUserFamily();
+      }
+    } catch (e) {
+      print('Error loading current user: $e');
+      setState(() {
+        _isLoadingUser = false;
+      });
+    }
   }
 
   Future<void> _loadUserFamily() async {
+    if (_currentUser == null) return;
+    
     setState(() {
       _isLoading = true;
     });
-
+    
     try {
-      // First try to get user from storage
-      User? currentUser = await AuthLocalStorage.getUser();
-
-      // If not in storage, try AuthApiService
-      if (currentUser == null) {
-        currentUser = AuthApiService.instance.currentUser;
-      }
-
-      // If still null, fetch from API
-      if (currentUser == null) {
-        try {
-          currentUser = await UserService.instance.getCurrentUser();
-          // Save to storage
-          await AuthLocalStorage.saveUser(currentUser);
-          await AuthApiService.instance.updateCurrentUser(currentUser);
-        } catch (e) {
-          print('Error fetching user from API: $e');
-          // If API fails, show error
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to load user data: ${e.toString()}'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-          setState(() {
-            _isLoading = false;
-          });
-          return;
-        }
-      }
-
-      if (currentUser != null) {
-        final family = await DataService.instance.getFamilyByHeadId(
-          currentUser.id,
-        );
-        setState(() {
-          _userFamily = family;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      final family = await DataService.instance.getFamilyByHeadId(
+        _currentUser!.id,
+      );
+      setState(() {
+        _userFamily = family;
+        _isLoading = false;
+      });
     } catch (e) {
       print('Error loading user family: $e');
       setState(() {
@@ -140,76 +159,42 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Use FutureBuilder to get user from storage or API
-    return FutureBuilder<User?>(
-      future: _userFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final currentUser = snapshot.data;
-        if (currentUser == null) {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  const Text('User not found'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginScreen()),
-                        (route) => false,
-                      );
-                    },
-                    child: const Text('Go to Login'),
-                  ),
-                ],
+    // Show loading indicator while user is being fetched
+    if (_isLoadingUser) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    // Show error state if user is not found
+    if (_currentUser == null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('User not found'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    (route) => false,
+                  );
+                },
+                child: const Text('Go to Login'),
               ),
-            ),
-          );
-        }
-
-        return _buildProfileContent(currentUser);
-      },
-    );
-  }
-
-  Future<User?> _getCurrentUser() async {
-    // Try storage first
-    User? user = await AuthLocalStorage.getUser();
-
-    // Try AuthApiService
-    if (user == null) {
-      user = AuthApiService.instance.currentUser;
+            ],
+          ),
+        ),
+      );
     }
-
-    // Always try to fetch from API to get latest/complete user data
-    try {
-      final apiUser = await UserService.instance.getCurrentUser();
-      if (apiUser != null) {
-        // Update storage with fresh data from API
-        await AuthLocalStorage.saveUser(apiUser);
-        await AuthApiService.instance.updateCurrentUser(apiUser);
-        user = apiUser; // Use the fresh data from API
-      }
-    } catch (e) {
-      print('Error fetching user from API: $e');
-      // If API fails, use stored user if available
-      if (user == null) {
-        print('No user data available from storage or API');
-      }
-    }
-
-    return user;
+    
+    // Build the profile content with the cached user
+    return _buildProfileContent(_currentUser!);
   }
 
   Widget _buildProfileContent(User currentUser) {
@@ -277,8 +262,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                               ),
                               child: CircleAvatar(
                                 radius: 50,
-                                backgroundImage: currentUser.profileImage !=
-                                        null
+                                backgroundImage: currentUser.profileImage != null
                                     ? NetworkImage(currentUser.profileImage!)
                                     : null,
                                 child: currentUser.profileImage == null
@@ -345,27 +329,26 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                         if (_userFamily != null) ...[
                           _buildAnimatedSection(
                             title: 'Family Members',
-                            child: _buildFamilyMembersSection(
-                                _userFamily!, currentUser),
+                            child: _buildFamilyMembersSection(_userFamily!, currentUser),
                             delay: 200,
                           ),
                           Gap.s24H(),
                         ],
-                        if (currentUser.userType == 'HEAD' || currentUser.userType == 'ADMIN') ...[
-                          _buildAnimatedSection(
-                            title: 'Actions',
-                            child: _buildActionsSection(currentUser),
-                            delay: 300,
-                          ),
-                          Gap.s30H(),
+                        if(_currentUser!.userType == 'ADMIN' || _currentUser!.userType == 'HEAD') ...[
+                        _buildAnimatedSection(
+                          title: 'Actions',
+                          child: _buildActionsSection(currentUser),
+                          delay: 300,
+                        ),
+                        Gap.s30H(),
                         ],
-                        if (currentUser.userType == 'ADMIN') ...[
-                          _buildAnimatedSection(
-                            title: 'Super Admin Actions',
-                            child: _buildSuperAdminActionsSection(currentUser),
-                            delay: 300,
-                          ),
-                          Gap.s30H(),
+                        if(_currentUser!.userType == 'ADMIN') ...[
+                        _buildAnimatedSection(
+                          title: 'Super Admin Actions',
+                          child: _buildSuperAdminActionsSection(currentUser),
+                          delay: 300,
+                        ),
+                        Gap.s30H(),
                         ],
                       ],
                     ),
@@ -733,7 +716,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   Widget _buildActionsSection(User currentUser) {
     return Column(
       children: [
-        if (currentUser.userType == 'HEAD' || currentUser.userType == 'ADMIN') ...[
+        if (currentUser.isHeadOfFamily) ...[
           _buildAnimatedActionButton(
             icon: Icons.person_add,
             title: 'Add Family Member',
@@ -746,7 +729,6 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     );
   }
 
-//For SUPERADMIN to add family
   Widget _buildSuperAdminActionsSection(User currentUser) {
     return Column(
       children: [
@@ -862,7 +844,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
       MaterialPageRoute(builder: (context) => EditMemberScreen(member: member)),
     ).then((updated) {
       if (updated == true) {
-        _loadUserFamily();
+        // Reload both user and family data
+        _loadCurrentUser();
       }
     });
   }

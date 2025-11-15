@@ -1,6 +1,5 @@
-import 'package:nowa_runtime/nowa_runtime.dart';
 
-@NowaGenerated()
+
 class IntroPage {
   IntroPage({
     required this.image,

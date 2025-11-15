@@ -3,7 +3,6 @@ import 'package:mmsn/app/helpers/gap.dart';
 import 'dart:async';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/pages/family/family_directory_screen.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/data_service.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/auth/data/auth_service.dart';
@@ -21,7 +20,6 @@ class HomeTabScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateMixin {
   final PageController _carouselController = PageController();
 

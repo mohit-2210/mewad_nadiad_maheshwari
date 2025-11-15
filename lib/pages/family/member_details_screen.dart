@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/user.dart';
 
-@NowaGenerated()
+
 class MemberDetailsScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const MemberDetailsScreen({required this.member, super.key});
 
   final User member;
@@ -16,7 +14,7 @@ class MemberDetailsScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
+
 class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
   bool _isVisible = false;
 

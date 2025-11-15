@@ -1,5 +1,6 @@
 // lib/pages/auth/cubit/auth_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmsn/app/services/device_service.dart';
 import 'package:mmsn/models/exceptions.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
@@ -11,7 +12,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   // Step 1: Check if user exists
   Future<void> checkUser(String mobile) async {
-    emit(AuthLoading());  
+    emit(AuthLoading());
     try {
       final result = await _repo.checkUser(mobile);
 
@@ -43,11 +44,18 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Step 2a: Login with PIN (for existing users with PIN)
   Future<void> loginWithPin(String mobile, String password) async {
     emit(AuthLoading());
     try {
-      final user = await _repo.login(mobile, password);
+      final deviceId = DeviceService.instance.deviceId;
+      final deviceToken = DeviceService.instance.deviceToken;
+
+      if (deviceId == null || deviceToken == null) {
+        emit(AuthError("Device details not ready. Please try again."));
+        return;
+      }
+
+      final user = await _repo.login(mobile, password, deviceId, deviceToken);
       emit(AuthSuccess(user));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
@@ -70,11 +78,12 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // Step 3: Verify OTP
-  Future<void> verifyOtp(String mobile, String otp, {bool isNewUser = false}) async {
+  Future<void> verifyOtp(String mobile, String otp,
+      {bool isNewUser = false}) async {
     emit(AuthLoading());
     try {
       final isValid = await _repo.verifyOtp(mobile, otp);
-      
+
       if (isValid) {
         // OTP verified - now user needs to set PIN or register
         emit(OtpVerified(mobile, needsPin: !isNewUser, isNewUser: isNewUser));

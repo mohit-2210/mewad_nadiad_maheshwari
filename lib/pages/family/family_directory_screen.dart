@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/data_service.dart';
 import 'package:mmsn/components/family_card.dart';
 import 'package:mmsn/pages/family/family_details_screen.dart';
 
-@NowaGenerated()
 class FamilyDirectoryScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const FamilyDirectoryScreen({super.key});
 
   @override
@@ -17,7 +14,6 @@ class FamilyDirectoryScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _FamilyDirectoryScreenState extends State<FamilyDirectoryScreen> {
   final TextEditingController _searchController = TextEditingController();
 

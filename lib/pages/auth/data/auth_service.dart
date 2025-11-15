@@ -195,17 +195,19 @@ class AuthApiService {
     }
   }
 
-  // Login with mobile and password/PIN
-  Future<Response> login(String mobile, String password) async {
+  // Login with mobile and password/PIN with deviceId and deviceToken
+  Future<Response> login(String mobile, String password, String deviceId,
+      String deviceToken) async {
     try {
-      final response = await _dio.post(
+      return await _dio.post(
         loginEndpoint,
         data: {
           "mobile": mobile,
           "password": password,
+          "deviceId": deviceId,
+          "deviceToken": deviceToken,
         },
       );
-      return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -216,7 +218,7 @@ class AuthApiService {
     try {
       return await _dio.post(
         sendOtpEndpoint,
-        data: {"mobile": mobile},
+        data: {"email": "test12@yopmail.com"},
       );
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -267,16 +269,18 @@ class AuthApiService {
   // Register new user
   Future<Response> register(Map<String, dynamic> data) async {
     try {
-      return await _dio.post(registerEndpoint, data: data);
+      return await _dio.post(
+        registerEndpoint,
+        data: data,
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
-  // Logout - CORRECTED
+  // Logout - updated to work without parameters
   Future<void> logout() async {
     try {
-      // ✅ Get tokens from storage
       final accessToken = await AuthLocalStorage.getAccessToken();
       final refreshToken = await AuthLocalStorage.getRefreshToken();
 
@@ -285,25 +289,24 @@ class AuthApiService {
           await _dio.post(
             logoutEndpoint,
             data: {
-              "refreshToken": refreshToken, // ✅ Send raw refresh token only
+              "refreshToken": refreshToken,
             },
             options: Options(
               headers: {
-                if (accessToken != null && accessToken.isNotEmpty)
-                  "Authorization": "Bearer $accessToken", // ✅ required
+                "Authorization": "Bearer $accessToken",
+                "Content-Type": "application/json",
               },
             ),
           );
         } on DioException catch (e) {
-          print('Logout API error: ${e.response?.data ?? e.message}');
+          print('Error during logout API call: ${e.message}');
         }
       } else {
-        print("No refresh token found. Skipping server logout.");
+        print('No refresh token found for logout');
       }
     } catch (e) {
-      print('Logout error: $e');
+      print('Error in logout(): $e');
     } finally {
-      // ✅ Always clear local authentication state
       await clearUserData();
       await AuthLocalStorage.clear();
     }

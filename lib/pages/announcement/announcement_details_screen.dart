@@ -4,12 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/announcement/pdf_viewer.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/announcement.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
-@NowaGenerated()
 class AnnouncementDetailsScreen extends StatefulWidget {
   const AnnouncementDetailsScreen({required this.announcement, super.key});
 
@@ -21,7 +19,6 @@ class AnnouncementDetailsScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
 class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
   bool _isVisible = false;
 

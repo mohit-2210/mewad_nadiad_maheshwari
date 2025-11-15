@@ -1,10 +1,9 @@
 import 'package:mmsn/app/AppImages.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/models/user.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/models/announcement.dart';
 
-@NowaGenerated()
+
 class DataService {
   DataService._();
 

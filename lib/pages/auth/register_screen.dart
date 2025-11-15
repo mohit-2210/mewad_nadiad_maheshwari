@@ -41,6 +41,9 @@ class _RegisterViewState extends State<RegisterView> {
   bool _obscurePin = true;
   bool _obscureConfirmPin = true;
 
+  String? deviceId;
+  String? deviceToken;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -68,6 +71,8 @@ class _RegisterViewState extends State<RegisterView> {
       'pin': _pinController.text.trim(),
       'userType': 'member',
       'status': 'active',
+      'deviceId': deviceId,
+      'deviceToken': deviceToken,
     };
 
     context.read<AuthCubit>().register(userData);
@@ -114,7 +119,10 @@ class _RegisterViewState extends State<RegisterView> {
                     children: [
                       Text(
                         AppStrings.createAcc,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                         textAlign: TextAlign.center,
@@ -177,14 +185,18 @@ class _RegisterViewState extends State<RegisterView> {
                         obscureText: _obscurePin,
                         keyboardType: TextInputType.number,
                         maxLength: 4,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
                         decoration: InputDecoration(
                           labelText: AppStrings.pin,
                           hintText: AppStrings.pinHint,
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePin ? Icons.visibility : Icons.visibility_off,
+                              _obscurePin
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                             ),
                             onPressed: () {
                               setState(() => _obscurePin = !_obscurePin);
@@ -215,7 +227,9 @@ class _RegisterViewState extends State<RegisterView> {
                         obscureText: _obscureConfirmPin,
                         keyboardType: TextInputType.number,
                         maxLength: 4,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
                         decoration: InputDecoration(
                           labelText: AppStrings.confirmPIN,
                           prefixIcon: const Icon(Icons.lock_outline),
@@ -226,7 +240,8 @@ class _RegisterViewState extends State<RegisterView> {
                                   : Icons.visibility_off,
                             ),
                             onPressed: () {
-                              setState(() => _obscureConfirmPin = !_obscureConfirmPin);
+                              setState(() =>
+                                  _obscureConfirmPin = !_obscureConfirmPin);
                             },
                           ),
                           border: OutlineInputBorder(
@@ -263,7 +278,8 @@ class _RegisterViewState extends State<RegisterView> {
                               ? const SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Text(
                                   AppStrings.register,

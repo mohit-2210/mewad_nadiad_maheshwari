@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/app/globals/app_spacing.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/intro/intro_page.dart';
-import 'package:nowa_runtime/nowa_runtime.dart';
 import 'package:mmsn/main.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
 
-@NowaGenerated()
+
 class IntroScreen extends StatefulWidget {
-  @NowaGenerated({'loader': 'auto-constructor'})
   const IntroScreen({super.key});
 
   @override
@@ -17,7 +15,7 @@ class IntroScreen extends StatefulWidget {
   }
 }
 
-@NowaGenerated()
+
 class _IntroScreenState extends State<IntroScreen> {
   final PageController _pageController = PageController();
 
