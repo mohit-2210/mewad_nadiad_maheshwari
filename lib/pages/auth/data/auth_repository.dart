@@ -3,7 +3,7 @@ import 'package:mmsn/models/user.dart';
 import 'package:mmsn/models/token_model.dart';
 import 'package:mmsn/models/exceptions.dart';
 import 'package:mmsn/models/api_response.dart';
-import 'package:mmsn/pages/auth/data/auth_service.dart';
+import 'package:mmsn/pages/auth/services/auth_service.dart';
 import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 
 enum UserExistsStatus {

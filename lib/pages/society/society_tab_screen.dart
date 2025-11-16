@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
-import 'package:mmsn/data_service.dart';
+import 'package:mmsn/pages/family/services/family_api_services.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/components/member_action_dialog.dart';
 import 'package:mmsn/components/family_card.dart';
@@ -26,7 +26,7 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
 
   Future<void> _loadSocietyData() async {
     try {
-      final societyGroups = await DataService.instance.getFamiliesBySociety();
+      final societyGroups = await FamilyApiService.instance.getFamiliesBySociety();
       setState(() {
         _societyGroups = societyGroups;
         _isLoading = false;
@@ -208,8 +208,8 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
                                                     heroTagPrefix:
                                                         'society_family',
                                                     onTap: () {
-                                                      _showMemberActionDialog(
-                                                          family.head);
+                                                      final headUser = User.fromJson(family.head.toUserJson());
+                                                      _showMemberActionDialog(headUser);
                                                     },
                                                   ),
                                                 ),

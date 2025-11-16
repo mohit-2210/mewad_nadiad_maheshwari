@@ -3,11 +3,10 @@ import 'package:mmsn/admin_screens/adding_family.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/models/user.dart';
-import 'package:mmsn/pages/auth/data/auth_service.dart';
-import 'package:mmsn/pages/auth/data/auth_repository.dart';
+import 'package:mmsn/pages/auth/services/auth_service.dart';
 import 'package:mmsn/pages/auth/data/user_service.dart';
 import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
-import 'package:mmsn/data_service.dart';
+import 'package:mmsn/pages/family/services/family_api_services.dart';
 import 'package:mmsn/pages/family/member_details_screen.dart';
 import 'package:mmsn/pages/profile/update/edit_member_screen.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
@@ -142,9 +141,18 @@ void _handleScroll() {
     });
     
     try {
-      final family = await DataService.instance.getFamilyByHeadId(
+      // Try to get family by head ID first
+      Family? family = await FamilyApiService.instance.getFamilyByHeadId(
         _currentUser!.id,
       );
+      
+      // If not found, try by member ID
+      if (family == null) {
+        family = await FamilyApiService.instance.getFamilyByMemberId(
+          _currentUser!.id,
+        );
+      }
+      
       setState(() {
         _userFamily = family;
         _isLoading = false;
@@ -528,7 +536,11 @@ void _handleScroll() {
   }
 
   Widget _buildFamilyMembersSection(Family family, User currentUser) {
-    final allMembers = [family.head, ...family.members];
+    // Convert FamilyHead and FamilyMember to User objects
+    final headUser = User.fromJson(family.head.toUserJson());
+    final memberUsers = family.members.map((m) => User.fromJson(m.toUserJson())).toList();
+    final allMembers = [headUser, ...memberUsers];
+    
     return Column(
       children: allMembers.asMap().entries.map((entry) {
         final index = entry.key;

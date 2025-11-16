@@ -9,9 +9,14 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
 class AnnouncementDetailsScreen extends StatefulWidget {
-  const AnnouncementDetailsScreen({required this.announcement, super.key});
+  const AnnouncementDetailsScreen({
+    required this.announcement,
+    this.isAdmin = false,
+    super.key,
+  });
 
   final Announcement announcement;
+  final bool isAdmin;
 
   @override
   State<AnnouncementDetailsScreen> createState() {
@@ -44,7 +49,7 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
         return 'Tomorrow';
       } else {
         if (difference < 7) {
-          return 'In ${difference} days';
+          return 'In $difference days';
         } else {
           return '${date.day}/${date.month}/${date.year}';
         }
@@ -68,6 +73,55 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
     } catch (e) {
       debugPrint('Error opening file externally: $e');
     }
+  }
+
+  void _showDeleteConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: const [
+            Icon(Icons.warning, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Delete Announcement'),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to delete this announcement? This action cannot be undone.',
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // TODO: Implement delete API call
+              // await AnnouncementApiService.instance.deleteAnnouncement(widget.announcement.id);
+              
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context, true); // Go back and refresh list
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Announcement deleted successfully'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -114,6 +168,18 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                         image: NetworkImage(widget.announcement.image!),
                         fit: BoxFit.cover,
                         width: double.infinity,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     )
                   : Container(
@@ -131,6 +197,40 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                       ),
                     ),
             ),
+            actions: [
+              // Show edit and delete buttons only for admins
+              if (widget.isAdmin) ...[
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.white),
+                  tooltip: 'Edit Announcement',
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditAnnouncementPage(
+                          announcement: widget.announcement,
+                        ),
+                      ),
+                    );
+
+                    if (result == true) {
+                      Navigator.pop(context, true); // Return true to refresh list
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Announcement updated successfully'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.white),
+                  tooltip: 'Delete Announcement',
+                  onPressed: _showDeleteConfirmation,
+                ),
+              ],
+            ],
           ),
           SliverToBoxAdapter(
             child: AnimatedOpacity(
@@ -145,6 +245,69 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Admin mode indicator
+                      if (widget.isAdmin)
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: 1),
+                          duration: const Duration(milliseconds: 800),
+                          curve: Curves.easeOutBack,
+                          builder: (context, value, child) => Transform.scale(
+                            scale: value,
+                            child: child,
+                          ),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.purple.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.purple.withOpacity(0.3),
+                                width: 2,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.admin_panel_settings,
+                                    size: 20,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Gap.s12W(),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Admin Mode',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF6A11CB),
+                                        ),
+                                      ),
+                                      Gap.s4H(),
+                                      Text(
+                                        'You can edit or delete this announcement',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       Card(
                         elevation: 4,
                         shape: RoundedRectangleBorder(
@@ -350,6 +513,68 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Placeholder for EditAnnouncementPage
+class EditAnnouncementPage extends StatelessWidget {
+  const EditAnnouncementPage({
+    required this.announcement,
+    super.key,
+  });
+
+  final Announcement announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Implement edit form similar to AddAnnouncementPage
+    // but pre-filled with announcement data
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Announcement'),
+        backgroundColor: const Color(0xFF6A11CB),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.edit_note,
+                size: 80,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Edit Announcement',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Editing: ${announcement.title}',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'TODO: Implement edit form here\nSimilar to AddAnnouncementPage',
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -218,6 +218,7 @@ class AuthApiService {
     try {
       return await _dio.post(
         sendOtpEndpoint,
+        //To change in prod data: {"mobile": mobile},
         data: {"email": "test12@yopmail.com"},
       );
     } on DioException catch (e) {

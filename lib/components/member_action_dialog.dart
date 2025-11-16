@@ -3,7 +3,7 @@ import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchCall.dart';
 import 'package:mmsn/models/user.dart';
-import 'package:mmsn/data_service.dart';
+import 'package:mmsn/pages/family/services/family_api_services.dart';
 import 'package:mmsn/pages/family/family_details_screen.dart';
 
 class MemberActionDialog extends StatelessWidget {
@@ -13,7 +13,7 @@ class MemberActionDialog extends StatelessWidget {
 
   Future<void> _viewFamilyDetails(BuildContext context) async {
     try {
-      final family = await DataService.instance.getFamilyByMember(member.id);
+      final family = await FamilyApiService.instance.getFamilyByMemberId(member.id);
 
       if (!context.mounted) return;
 

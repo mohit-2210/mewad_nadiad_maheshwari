@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
-import 'package:mmsn/data_service.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/family/member_details_screen.dart';
+import 'package:mmsn/pages/family/services/family_api_services.dart';
 
 class FamilyDetailsScreen extends StatefulWidget {
   const FamilyDetailsScreen({required this.familyId, super.key});
@@ -31,12 +31,14 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
 
   Future<void> _loadFamilyDetails() async {
     try {
-      final family = await DataService.instance.getFamilyById(widget.familyId);
-      setState(() {
-        _family = family;
-        _isLoading = false;
-      });
+      final family =
+          await FamilyApiService.instance.getFamilyById(widget.familyId);
       if (family != null) {
+        setState(() {
+          _family = family;
+          _isLoading = false;
+        });
+        // Trigger visibility animation
         Future.delayed(const Duration(milliseconds: 100), () {
           if (mounted) {
             setState(() {
@@ -44,11 +46,13 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
             });
           }
         });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      // Handle error
     }
   }
 
@@ -171,7 +175,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                             ),
                             Gap.s4H(),
                             Text(
-                              _family!.head.address!,
+                              _family!.head.address,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
@@ -215,7 +219,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                             ),
                             Gap.s4H(),
                             Text(
-                              _family!.head.nativePlace!,
+                              _family!.head.nativePlace,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
@@ -281,8 +285,14 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
           gradient: isHead
               ? LinearGradient(
                   colors: [
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                    Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
+                    Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -317,7 +327,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                       )
                     : CircleAvatar(
                         radius: 30,
-                        backgroundImage: member.profileImage != null  
+                        backgroundImage: member.profileImage != null
                             ? NetworkImage(member.profileImage!)
                             : null,
                         child: member.profileImage == null
@@ -513,7 +523,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 120,
+            expandedHeight: 100,
             floating: false,
             pinned: true,
             backgroundColor: Theme.of(context).colorScheme.primary,
@@ -533,7 +543,10 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                     end: Alignment.bottomRight,
                     colors: [
                       Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                      Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.8),
                     ],
                   ),
                 ),
@@ -587,7 +600,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
           child: AnimatedOpacity(
             opacity: _isVisible ? 1 : 0,
             duration: const Duration(milliseconds: 600),
-            child: _buildMemberCard(_family!.head, isHead: true),
+            child: _buildMemberCard(User.fromJson(_family!.head.toUserJson()), isHead: true),
           ),
         ),
       ],
@@ -619,7 +632,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
               child: AnimatedOpacity(
                 opacity: _isVisible ? 1 : 0,
                 duration: Duration(milliseconds: 800 + (index * 100)),
-                child: _buildMemberCard(member),
+                child: _buildMemberCard(User.fromJson(member.toUserJson())),
               ),
             );
           }).toList(),

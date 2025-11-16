@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'dart:async';
 import 'package:mmsn/models/family.dart';
+import 'package:mmsn/pages/auth/services/auth_service.dart';
 import 'package:mmsn/pages/family/family_directory_screen.dart';
-import 'package:mmsn/data_service.dart';
+import 'package:mmsn/pages/family/services/family_api_services.dart';
+import 'package:mmsn/data_service.dart'; // Keep for carousel images only
 import 'package:mmsn/models/user.dart';
-import 'package:mmsn/pages/auth/data/auth_service.dart';
 import 'package:mmsn/components/family_card.dart';
 import 'package:mmsn/pages/family/family_details_screen.dart';
 
@@ -24,27 +25,18 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
   final PageController _carouselController = PageController();
 
   int _currentCarouselIndex = 0;
-
   Timer? _carouselTimer;
-
   List<String> _carouselImages = [];
-
   List<Family> _recentFamilies = [];
-
   bool _isLoading = true;
+  String? _errorMessage;
 
   late AnimationController _headerAnimationController;
-
   late AnimationController _carouselAnimationController;
-
   late AnimationController _listAnimationController;
-
   late Animation<double> _headerFadeAnimation;
-
   late Animation<Offset> _headerSlideAnimation;
-
   late Animation<double> _carouselScaleAnimation;
-
 
   @override
   void initState() {
@@ -115,14 +107,24 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
   }
 
   Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
+      // Get carousel images from DataService (keep this as it's local assets)
       final images = DataService.instance.carouselImages;
-      final families = await DataService.instance.getFamilies();
+      
+      // Fetch families from API
+      final families = await FamilyApiService.instance.getFamilies();
+      
       setState(() {
         _carouselImages = images;
         _recentFamilies = families.take(3).toList();
         _isLoading = false;
       });
+      
       _setupFamilyAnimations(_recentFamilies.length);
       _headerAnimationController.forward();
       await Future.delayed(const Duration(milliseconds: 200));
@@ -132,7 +134,23 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
     } catch (e) {
       setState(() {
         _isLoading = false;
+        _errorMessage = 'Failed to load data: ${e.toString()}';
       });
+      
+      // Show error snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_errorMessage!),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _loadData,
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -265,7 +283,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
                             : null,
                       ),
                     ),
-                    // Hamburger menu icon overlay (visual indicator only)
                     if (widget.onDrawerToggle != null)
                       Positioned(
                         bottom: 2,
@@ -412,152 +429,143 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
   }
 
   Widget _buildAnimatedFamilySection() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Animated "Family Directory" title
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOut,
+              builder: (context, value, child) => Transform.translate(
+                offset: Offset(-30 * (1 - value), 0),
+                child: Opacity(
+                  opacity: value,
+                  child: child,
+                ),
+              ),
+              child: Text(
+                'Family Directory',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              ),
+            ),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 1000),
+              curve: Curves.easeOut,
+              builder: (context, value, child) => Transform.translate(
+                offset: Offset(30 * (1 - value), 0),
+                child: Opacity(
+                  opacity: value,
+                  child: child,
+                ),
+              ),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FamilyDirectoryScreen(),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('View All'),
+                    Gap.s4W(),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        Gap.s16H(),
+        if (_recentFamilies.isEmpty)
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
             duration: const Duration(milliseconds: 800),
             curve: Curves.easeOut,
-            builder: (context, value, child) => Transform.translate(
-              offset: Offset(-30 * (1 - value), 0),
-              child: Opacity(
-                opacity: value,
-                child: child,
+            builder: (context, value, child) => Opacity(
+              opacity: value,
+              child: child,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-            child: Text(
-              'Family Directory',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-            ),
-          ),
-
-          // Animated "View All" button
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: 1),
-            duration: const Duration(milliseconds: 1000),
-            curve: Curves.easeOut,
-            builder: (context, value, child) => Transform.translate(
-              offset: Offset(30 * (1 - value), 0),
-              child: Opacity(
-                opacity: value,
-                child: child,
-              ),
-            ),
-            child: TextButton(
-              onPressed: () {
-                // Navigate safely to FamilyDirectoryScreen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const FamilyDirectoryScreen(),
-                  ),
-                );
-              },
-              style: TextButton.styleFrom(
-                backgroundColor:
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.people_outline, size: 48, color: Colors.grey[400]),
+                    Gap.s12H(),
+                    const Text('No families found'),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('View All'),
-                  Gap.s4W(),
-                  Icon(
-                    Icons.arrow_forward,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
+            ),
+          )
+        else
+          Column(
+            children: _recentFamilies.asMap().entries.map((entry) {
+              final index = entry.key;
+              final family = entry.value;
+
+              final slideAnimation = Tween<Offset>(
+                begin: const Offset(1, 0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: _listAnimationController,
+                  curve: Interval(
+                    index * 0.2,
+                    (index * 0.2) + 0.6,
+                    curve: Curves.easeOutCubic,
                   ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-
-      Gap.s16H(),
-
-      // Recent families list
-      if (_recentFamilies.isEmpty)
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeOut,
-          builder: (context, value, child) => Opacity(
-            opacity: value,
-            child: child,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(Icons.people_outline, size: 48, color: Colors.grey[400]),
-                  Gap.s12H(),
-                  const Text('No families found'),
-                ],
-              ),
-            ),
-          ),
-        )
-      else
-        Column(
-          children: _recentFamilies.asMap().entries.map((entry) {
-            final index = entry.key;
-            final family = entry.value;
-
-            // Slide animation for each family card
-            final slideAnimation = Tween<Offset>(
-              begin: const Offset(1, 0),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(
-                parent: _listAnimationController,
-                curve: Interval(
-                  index * 0.2,
-                  (index * 0.2) + 0.6,
-                  curve: Curves.easeOutCubic,
                 ),
-              ),
-            );
+              );
 
-            return SlideTransition(
-              position: slideAnimation,
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: FamilyCard(
-                  family: family,
-                  heroTagPrefix: 'home_family',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            FamilyDetailsScreen(familyId: family.id),
-                      ),
-                    );
-                  },
+              return SlideTransition(
+                position: slideAnimation,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: FamilyCard(
+                    family: family,
+                    heroTagPrefix: 'home_family',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              FamilyDetailsScreen(familyId: family.id),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
-        ),
-    ],
-  );
-}
-
+              );
+            }).toList(),
+          ),
+      ],
+    );
+  }
 }

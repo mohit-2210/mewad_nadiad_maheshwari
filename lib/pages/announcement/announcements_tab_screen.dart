@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/admin_screens/announcement_handling.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/announcement.dart';
-import 'package:mmsn/data_service.dart';
+import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/announcement/announcement_details_screen.dart';
+import 'package:mmsn/pages/auth/services/auth_service.dart';
+import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 
 class AnnouncementsTabScreen extends StatefulWidget {
   const AnnouncementsTabScreen({super.key});
@@ -15,21 +17,58 @@ class AnnouncementsTabScreen extends StatefulWidget {
 class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
   List<Announcement> _announcements = [];
   bool _isLoading = true;
+  User? _currentUser;
+  bool _isLoadingUser = true;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _loadAnnouncements();
   }
 
-  Future<void> _loadAnnouncements() async {
+  Future<void> _loadCurrentUser() async {
+    setState(() {
+      _isLoadingUser = true;
+    });
+    
     try {
-      final announcements = await DataService.instance.getAnnouncements();
+      // Try to get user from storage first
+      User? user = await AuthLocalStorage.getUser();
+      
+      // If not in storage, get from AuthApiService
+      user ??= AuthApiService.instance.currentUser;
+      
       setState(() {
-        _announcements = announcements;
+        _currentUser = user;
+        _isLoadingUser = false;
+      });
+    } catch (e) {
+      print('Error loading current user: $e');
+      setState(() {
+        _isLoadingUser = false;
+      });
+    }
+  }
+
+  bool get _isAdmin {
+    return _currentUser?.userType == 'ADMIN';
+  }
+
+  Future<void> _loadAnnouncements() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      // TODO: Replace with your API call
+      // final announcements = await AnnouncementApiService.instance.getAnnouncements();
+      setState(() {
+        // _announcements = announcements;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
+      print('Error loading announcements: $e');
       setState(() => _isLoading = false);
     }
   }
@@ -43,6 +82,34 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
     return '${date.day}/${date.month}/${date.year}';
   }
 
+  void _showAccessDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: const [
+            Icon(Icons.lock, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Access Denied'),
+          ],
+        ),
+        content: const Text(
+          'Only administrators can add or edit announcements.',
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -54,7 +121,7 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)], // Purple → Blue
+              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -81,43 +148,77 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      elevation: 5,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: const Icon(Icons.add, color: Color(0xFF6A11CB)),
-                    label: const Text(
-                      'Add',
-                      style: TextStyle(
-                        color: Color(0xFF6A11CB),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onPressed: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AddAnnouncementPage(),
+                  // Show Add button only for Admin users
+                  if (_isAdmin)
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        elevation: 5,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
                         ),
-                      );
-
-                      if (result == true) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('New announcement added!')),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add, color: Color(0xFF6A11CB)),
+                      label: const Text(
+                        'Add',
+                        style: TextStyle(
+                          color: Color(0xFF6A11CB),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddAnnouncementPage(),
+                          ),
                         );
-                        _loadAnnouncements();
-                      }
-                    },
-                  ),
+
+                        if (result == true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('New announcement added!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                          _loadAnnouncements();
+                        }
+                      },
+                    )
+                  else if (!_isLoadingUser)
+                    // Show locked button for non-admin users
+                    Tooltip(
+                      message: 'Admin access required',
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.7),
+                          elevation: 2,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: const Icon(Icons.lock, 
+                          color: Colors.grey, 
+                          size: 18,
+                        ),
+                        label: const Text(
+                          'Add',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: _showAccessDeniedDialog,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -129,26 +230,36 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
           : RefreshIndicator(
               onRefresh: _loadAnnouncements,
               child: _announcements.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.notifications_off,
-                              size: 80, color: Colors.grey[400]),
-                          Gap.s16H(),
-                          Text(
-                            'No announcements yet',
-                            style: theme.textTheme.titleLarge
-                                ?.copyWith(color: Colors.grey[600]),
+                  ? ListView(
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.notifications_off,
+                                  size: 80,
+                                  color: Colors.grey[400],
+                                ),
+                                Gap.s16H(),
+                                Text(
+                                  'No announcements yet',
+                                  style: theme.textTheme.titleLarge
+                                      ?.copyWith(color: Colors.grey[600]),
+                                ),
+                                Gap.s8H(),
+                                Text(
+                                  'Check back later for updates',
+                                  style: theme.textTheme.bodyMedium
+                                      ?.copyWith(color: Colors.grey[500]),
+                                ),
+                              ],
+                            ),
                           ),
-                          Gap.s8H(),
-                          Text(
-                            'Check back later for updates',
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(color: Colors.grey[500]),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
@@ -172,20 +283,79 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                     builder: (context) =>
                                         AnnouncementDetailsScreen(
                                       announcement: announcement,
+                                      isAdmin: _isAdmin,
                                     ),
                                   ),
-                                );
+                                ).then((shouldRefresh) {
+                                  // Refresh list if announcement was edited/deleted
+                                  if (shouldRefresh == true) {
+                                    _loadAnnouncements();
+                                  }
+                                });
                               },
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (announcement.image != null)
-                                    Image.network(
-                                      announcement.image!,
-                                      height: 180,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                    ),
+                                  // Admin badge overlay on image
+                                  Stack(
+                                    children: [
+                                      if (announcement.image != null)
+                                        Image.network(
+                                          announcement.image!,
+                                          height: 180,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              height: 180,
+                                              color: Colors.grey[300],
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.broken_image,
+                                                  size: 50,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      // Admin edit badge
+                                      if (_isAdmin && announcement.image != null)
+                                        Positioned(
+                                          top: 8,
+                                          right: 8,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacity(0.6),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: const [
+                                                Icon(
+                                                  Icons.edit,
+                                                  color: Colors.white,
+                                                  size: 14,
+                                                ),
+                                                SizedBox(width: 4),
+                                                Text(
+                                                  'Edit',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                   Padding(
                                     padding: const EdgeInsets.all(16),
                                     child: Column(
@@ -276,9 +446,14 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                                         AnnouncementDetailsScreen(
                                                       announcement:
                                                           announcement,
+                                                      isAdmin: _isAdmin,
                                                     ),
                                                   ),
-                                                );
+                                                ).then((shouldRefresh) {
+                                                  if (shouldRefresh == true) {
+                                                    _loadAnnouncements();
+                                                  }
+                                                });
                                               },
                                               icon: const Icon(
                                                 Icons.arrow_forward,

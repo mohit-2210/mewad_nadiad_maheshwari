@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
         final appState = Provider.of<AppState>(context);
         
         return MaterialApp(
-          title: 'Family Directory',
+          title: 'Mewad Maheshwari Samaj Nadiad',
           theme: appState.theme,
           home: const SplashScreen(),
           debugShowCheckedModeBanner: false,
