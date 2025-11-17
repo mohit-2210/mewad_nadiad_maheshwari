@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/admin_screens/adding_family.dart';
 import 'package:mmsn/app/helpers/gap.dart';
+import 'package:mmsn/app/services/launchCall.dart';
+import 'package:mmsn/app/services/launchEmail.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/auth/services/auth_service.dart';
@@ -35,7 +37,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   bool _isLoading = true;
 
   double _scrollOffset = 0;
-  
+
   // Cache the current user to prevent re-fetching on every rebuild
   User? _currentUser;
   bool _isLoadingUser = true;
@@ -60,7 +62,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
       ),
     );
     _scrollController.addListener(_handleScroll);
-    
+
     // Load user and family data once in initState
     _loadCurrentUser();
   }
@@ -72,33 +74,39 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     super.dispose();
   }
 
-void _handleScroll() {
-  final offset = _scrollController.offset;
-  if (offset != _scrollOffset) {
-    setState(() {
-      _scrollOffset = offset;
-      const maxOffset = 200;
-      final value = (_scrollOffset / maxOffset).clamp(0, 1).toDouble();
-      _headerAnimationController.value = value;
-    });
+  void _handleScroll() {
+    final offset = _scrollController.offset;
+    if (offset != _scrollOffset) {
+      setState(() {
+        _scrollOffset = offset;
+        const maxOffset = 200;
+        final value = (_scrollOffset / maxOffset).clamp(0, 1).toDouble();
+        _headerAnimationController.value = value;
+      });
+    }
   }
-}
 
+  void _handleTap(String value, {bool? isEmail, bool? isPhone}) async {
+    if (isPhone == true) {
+      launchPhone(value);
+    }
+    if (isEmail == true) {
+      launchEmail(value);
+    }
+  }
 
   Future<void> _loadCurrentUser() async {
     setState(() {
       _isLoadingUser = true;
     });
-    
+
     try {
       // Try storage first
       User? user = await AuthLocalStorage.getUser();
-      
+
       // Try AuthApiService
-      if (user == null) {
-        user = AuthApiService.instance.currentUser;
-      }
-      
+      user ??= AuthApiService.instance.currentUser;
+
       // Always try to fetch from API to get latest/complete user data
       try {
         final apiUser = await UserService.instance.getCurrentUser();
@@ -115,12 +123,12 @@ void _handleScroll() {
           print('No user data available from storage or API');
         }
       }
-      
+
       setState(() {
         _currentUser = user;
         _isLoadingUser = false;
       });
-      
+
       // Load family data after user is loaded
       if (user != null) {
         _loadUserFamily();
@@ -135,24 +143,22 @@ void _handleScroll() {
 
   Future<void> _loadUserFamily() async {
     if (_currentUser == null) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       // Try to get family by head ID first
       Family? family = await FamilyApiService.instance.getFamilyByHeadId(
         _currentUser!.id,
       );
-      
+
       // If not found, try by member ID
-      if (family == null) {
-        family = await FamilyApiService.instance.getFamilyByMemberId(
-          _currentUser!.id,
-        );
-      }
-      
+      family ??= await FamilyApiService.instance.getFamilyByMemberId(
+        _currentUser!.id,
+      );
+
       setState(() {
         _userFamily = family;
         _isLoading = false;
@@ -173,7 +179,7 @@ void _handleScroll() {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    
+
     // Show error state if user is not found
     if (_currentUser == null) {
       return Scaffold(
@@ -189,7 +195,8 @@ void _handleScroll() {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
                     (route) => false,
                   );
                 },
@@ -200,7 +207,7 @@ void _handleScroll() {
         ),
       );
     }
-    
+
     // Build the profile content with the cached user
     return _buildProfileContent(_currentUser!);
   }
@@ -270,7 +277,8 @@ void _handleScroll() {
                               ),
                               child: CircleAvatar(
                                 radius: 50,
-                                backgroundImage: currentUser.profileImage != null
+                                backgroundImage: currentUser.profileImage !=
+                                        null
                                     ? NetworkImage(currentUser.profileImage!)
                                     : null,
                                 child: currentUser.profileImage == null
@@ -337,26 +345,28 @@ void _handleScroll() {
                         if (_userFamily != null) ...[
                           _buildAnimatedSection(
                             title: 'Family Members',
-                            child: _buildFamilyMembersSection(_userFamily!, currentUser),
+                            child: _buildFamilyMembersSection(
+                                _userFamily!, currentUser),
                             delay: 200,
                           ),
                           Gap.s24H(),
                         ],
-                        if(_currentUser!.userType == 'ADMIN' || _currentUser!.userType == 'HEAD') ...[
-                        _buildAnimatedSection(
-                          title: 'Actions',
-                          child: _buildActionsSection(currentUser),
-                          delay: 300,
-                        ),
-                        Gap.s30H(),
+                        if (_currentUser!.userType == 'ADMIN' ||
+                            _currentUser!.userType == 'HEAD') ...[
+                          _buildAnimatedSection(
+                            title: 'Actions',
+                            child: _buildActionsSection(currentUser),
+                            delay: 300,
+                          ),
+                          Gap.s30H(),
                         ],
-                        if(_currentUser!.userType == 'ADMIN') ...[
-                        _buildAnimatedSection(
-                          title: 'Super Admin Actions',
-                          child: _buildSuperAdminActionsSection(currentUser),
-                          delay: 300,
-                        ),
-                        Gap.s30H(),
+                        if (_currentUser!.userType == 'ADMIN') ...[
+                          _buildAnimatedSection(
+                            title: 'Super Admin Actions',
+                            child: _buildSuperAdminActionsSection(currentUser),
+                            delay: 300,
+                          ),
+                          Gap.s30H(),
                         ],
                       ],
                     ),
@@ -416,12 +426,19 @@ void _handleScroll() {
         ),
         child: Column(
           children: [
-            _buildAnimatedInfoRow(Icons.phone, 'Phone', user.phoneNumber, 0),
+            _buildAnimatedInfoRow(
+              Icons.phone,
+              'Phone',
+              user.phoneNumber,
+              0,
+              isPhone: true,
+            ),
             _buildAnimatedInfoRow(
               Icons.email,
               'Email',
               user.email ?? 'Not provided',
               100,
+              isEmail: true,
             ),
             _buildAnimatedInfoRow(
               Icons.work,
@@ -470,8 +487,10 @@ void _handleScroll() {
     IconData icon,
     String label,
     String value,
-    int delay,
-  ) {
+    int delay, {
+    bool? isEmail,
+    bool? isPhone,
+  }) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: Duration(milliseconds: 500 + delay),
@@ -480,56 +499,65 @@ void _handleScroll() {
         offset: Offset(50 * (1 - animation), 0),
         child: Opacity(opacity: animation, child: child),
       ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-          ),
+      child: GestureDetector(
+        onTap: () => _handleTap(
+          value,
+          isEmail: isEmail,
+          isPhone: isPhone,
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
-              ),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color:
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             ),
-            Gap.s16W(),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                  Gap.s4H(),
-                  Text(
-                    value,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
               ),
-            ),
-          ],
+              Gap.s16W(),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                    Gap.s4H(),
+                    Text(
+                      value,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -538,9 +566,10 @@ void _handleScroll() {
   Widget _buildFamilyMembersSection(Family family, User currentUser) {
     // Convert FamilyHead and FamilyMember to User objects
     final headUser = User.fromJson(family.head.toUserJson());
-    final memberUsers = family.members.map((m) => User.fromJson(m.toUserJson())).toList();
+    final memberUsers =
+        family.members.map((m) => User.fromJson(m.toUserJson())).toList();
     final allMembers = [headUser, ...memberUsers];
-    
+
     return Column(
       children: allMembers.asMap().entries.map((entry) {
         final index = entry.key;
