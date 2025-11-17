@@ -31,7 +31,7 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
         _societyGroups = societyGroups;
         _isLoading = false;
         for (final dynamic society in societyGroups.keys) {
-          _expandedSections[society] = true;
+          _expandedSections[society] = false;
         }
       });
     } catch (e) {

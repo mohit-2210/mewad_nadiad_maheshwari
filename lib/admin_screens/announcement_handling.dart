@@ -6,6 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/selct_image.dart';
+import 'package:mmsn/models/family.dart';
+import 'package:mmsn/models/user.dart';
+import 'package:mmsn/pages/family/services/family_api_services.dart';
+import 'package:multi_select_flutter/dialog/multi_select_dialog_field.dart';
+import 'package:multi_select_flutter/util/multi_select_item.dart';
 
 class AddAnnouncementPage extends StatefulWidget {
   const AddAnnouncementPage({super.key});
@@ -27,6 +32,29 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
 
   final String _date = DateFormat('dd/MM/yyyy').format(DateTime.now());
 
+  String? _sendToOption;
+  String? _selectedSociety;
+  User? _selectedHead;
+
+  // society data loaded from API
+  Map<String, List<Family>> _societyGroups = {};
+  List<String> _selectedSocieties = [];
+  bool _isSocietyLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSocietyGroups();
+  }
+
+  Future<void> _loadSocietyGroups() async {
+    final groups = await FamilyApiService.instance.getFamiliesBySociety();
+    setState(() {
+      _societyGroups = groups;
+      _isSocietyLoading = false;
+    });
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: source, imageQuality: 80);
@@ -46,20 +74,35 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
   void _clearImage() => setState(() => _imageFile = null);
   void _clearPdf() => setState(() => _pdfFile = null);
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
     FocusScope.of(context).unfocus();
+
     setState(() => _isSubmitting = true);
 
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() => _isSubmitting = false);
+    try {
+      // TODO: Replace this with your real API call
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (!mounted) return; // 👈 Prevents setState after dispose
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Announcement added successfully!')),
       );
-      FocusScope.of(context).unfocus();
-      Navigator.pop(context, true);
-    });
+
+      Navigator.pop(context, true); // Return success
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override
@@ -82,10 +125,19 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
         child: Scaffold(
           resizeToAvoidBottomInset: true,
           appBar: AppBar(
-            title: const Text('Add Announcement'),
+            title: const Text(
+              'Add Announcement',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             backgroundColor: Colors.deepPurple,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+              ),
               onPressed: () {
                 FocusScope.of(context).unfocus();
                 Navigator.pop(context);
@@ -115,15 +167,88 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
                                   "Date: $_date",
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.grey.shade600,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 Gap.s16H(),
 
+                                _sectionLabel("Send Announcement To"),
+                                Gap.s8H(),
+                                DropdownButtonFormField<String>(
+                                  value: _sendToOption,
+                                  items: const [
+                                    DropdownMenuItem(
+                                        value: "all_members",
+                                        child: Text("All Members")),
+                                    DropdownMenuItem(
+                                        value: "all_heads",
+                                        child: Text("All Heads")),
+                                    DropdownMenuItem(
+                                        value: "specific_society",
+                                        child: Text("Specific Society")),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _sendToOption = value;
+                                      _selectedSociety = null;
+                                      _selectedHead = null;
+                                    });
+                                  },
+                                  decoration: _inputDecoration("Select Option"),
+                                  validator: (v) => v == null
+                                      ? "Please select an option"
+                                      : null,
+                                ),
+                                Gap.s16H(),
+
+                                if (_sendToOption == "specific_society") ...[
+                                  _sectionLabel("Select Societies"),
+                                  Gap.s8H(),
+                                  if (_isSocietyLoading)
+                                    const Center(
+                                        child: CircularProgressIndicator())
+                                  else
+                                    MultiSelectDialogField<String>(
+                                      items: _societyGroups.keys
+                                          .map((s) =>
+                                              MultiSelectItem<String>(s, s))
+                                          .toList(),
+                                      initialValue: _selectedSocieties,
+                                      title: const Text("Select Societies"),
+                                      selectedColor:
+                                          Theme.of(context).colorScheme.primary,
+                                      decoration: BoxDecoration(
+                                        color: Colors.deepPurple.shade50,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.deepPurple.shade200,
+                                        ),
+                                      ),
+                                      buttonText:
+                                          const Text("Choose Societies"),
+                                      onConfirm: (values) {
+                                        setState(() {
+                                          _selectedSocieties = values;
+                                          _selectedHead = null;
+                                        });
+                                      },
+                                      validator: (values) {
+                                        if (_sendToOption ==
+                                                "specific_society" &&
+                                            (values == null ||
+                                                values.isEmpty)) {
+                                          return "Select at least one society";
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  Gap.s16H(),
+                                ],
+
                                 // Image Section
                                 _sectionLabel("Image (optional)"),
-                                Gap.s8W(),
+                                Gap.s8H(),
 
                                 if (_imageFile != null)
                                   Stack(
@@ -145,8 +270,11 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
                                           radius: 16,
                                           backgroundColor: Colors.black54,
                                           child: IconButton(
-                                            icon: const Icon(Icons.close,
-                                                color: Colors.white, size: 16),
+                                            icon: const Icon(
+                                              Icons.close,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
                                             onPressed: _clearImage,
                                           ),
                                         ),
@@ -189,7 +317,7 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
 
                                 // ---------- PDF Section ----------
                                 _sectionLabel("Attach PDF (optional)"),
-                                Gap.s16H(),
+                                Gap.s8H(),
                                 _buildPdfSelector(),
 
                                 Gap.s24H(),
