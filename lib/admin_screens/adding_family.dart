@@ -39,10 +39,8 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
 
   List<Map<String, dynamic>> familyMembers = [];
   String? selectedEditor;
-  bool _isLoading = false;
 
   Future<void> submitFamilyData() async {
-    setState(() => _isLoading = true);
     try {
       // Prepare request body
       final Map<String, dynamic> requestBody = {
@@ -95,7 +93,6 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
         ),
       );
     } finally {
-      setState(() => _isLoading = false);
     }
   }
 

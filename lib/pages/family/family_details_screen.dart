@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
+import 'package:mmsn/app/services/launchMap.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/family/member_details_screen.dart';
@@ -165,22 +166,33 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Address',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                            InkWell(
+                              onTap: () async {
+                                final address = _family!.head.address;
+                                openMap(address);
+                              },
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Address',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Gap.s4H(),
+                                  Text(
+                                    _family!.head.address,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            Gap.s4H(),
-                            Text(
-                              _family!.head.address,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
-                            ),
+                            )
                           ],
                         ),
                       ),
@@ -600,7 +612,8 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
           child: AnimatedOpacity(
             opacity: _isVisible ? 1 : 0,
             duration: const Duration(milliseconds: 600),
-            child: _buildMemberCard(User.fromJson(_family!.head.toUserJson()), isHead: true),
+            child: _buildMemberCard(User.fromJson(_family!.head.toUserJson()),
+                isHead: true),
           ),
         ),
       ],

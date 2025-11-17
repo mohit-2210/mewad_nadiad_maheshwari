@@ -24,10 +24,37 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
+	<key>FirebaseMessagingAutoInitEnabled</key>
+	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires camera access to take announcement images.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>This app needs access to your files to upload PDFs for announcements.</string>
+	<key>NSFileProviderPresenceUsageDescription</key>
+	<string>This app needs to browse and pick files from your device for announcements.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app requires access to save selected images to your gallery.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires photo library access to choose images for announcements.</string>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>This app needs notifications to receive OTP.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used for phone number verification.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -45,38 +72,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSCameraUsageDescription</key>
-<string>This app requires camera access to take announcement images.</string>
-
-<key>NSPhotoLibraryUsageDescription</key>
-<string>This app requires photo library access to choose images for announcements.</string>
-
-<key>NSPhotoLibraryAddUsageDescription</key>
-<string>This app requires access to save selected images to your gallery.</string>
-
-<key>NSDocumentsFolderUsageDescription</key>
-<string>This app needs access to your files to upload PDFs for announcements.</string>
-
-<key>NSFileProviderPresenceUsageDescription</key>
-<string>This app needs to browse and pick files from your device for announcements.</string>
-
-<key>NSUserTrackingUsageDescription</key>
-<string>This identifier will be used for phone number verification.</string>
-<key>FirebaseAppDelegateProxyEnabled</key>
-<true/>
-
-<key>UIBackgroundModes</key>
-<array>
-  <string>remote-notification</string>
-</array>
-
-<key>NSAppTransportSecurity</key>
-<dict>
-    <key>NSAllowsArbitraryLoads</key>
-    <true/>
-</dict>
-<key>NSUserNotificationUsageDescription</key>
-<string>This app needs notifications to receive OTP.</string>
-
 </dict>
 </plist>

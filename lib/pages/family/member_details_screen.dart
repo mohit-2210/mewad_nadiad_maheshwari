@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
+import 'package:mmsn/app/services/launchCall.dart';
+import 'package:mmsn/app/services/launchEmail.dart';
 import 'package:mmsn/models/user.dart';
-
 
 class MemberDetailsScreen extends StatefulWidget {
   const MemberDetailsScreen({required this.member, super.key});
@@ -13,7 +14,6 @@ class MemberDetailsScreen extends StatefulWidget {
     return _MemberDetailsScreenState();
   }
 }
-
 
 class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
   bool _isVisible = false;
@@ -86,7 +86,7 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
             'Occupation',
             widget.member.occupation!,
           ),
-        if(widget.member.occupationAddress != null)
+        if (widget.member.occupationAddress != null)
           _buildDetailRow(
             Icons.work,
             'Occupation Address',
@@ -128,9 +128,19 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
           ],
         ),
         Gap.s20H(),
-        _buildDetailRow(Icons.phone, 'Phone Number', widget.member.phoneNumber),
+        _buildDetailRow(
+          Icons.phone,
+          'Phone Number',
+          widget.member.phoneNumber,
+          isPhone: true,
+        ),
         if (widget.member.email != null)
-          _buildDetailRow(Icons.email, 'Email', widget.member.email!),
+          _buildDetailRow(
+            Icons.email,
+            'Email',
+            widget.member.email!,
+            isEmail: true,
+          ),
       ],
     );
   }
@@ -176,41 +186,58 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
   //   );
   // }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey[600], size: 20),
-          Gap.s12W(),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-                Gap.s4H(),
-                Text(
-                  value,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
+  Widget _buildDetailRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool isPhone = false,
+    bool isEmail = false,
+  }) {
+    return InkWell(
+      onTap: () async {
+        if (isPhone) {
+          launchPhone(value);
+        } else if (isEmail) {
+          launchEmail(value);
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.grey[600], size: 20),
+            Gap.s12W(),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                  Gap.s4H(),
+                  Text(
+                    value,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
