@@ -4,6 +4,7 @@ import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/announcement.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/announcement/announcement_details_screen.dart';
+import 'package:mmsn/pages/announcement/services/announcement_api_service.dart';
 import 'package:mmsn/pages/auth/services/auth_service.dart';
 import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 
@@ -19,6 +20,7 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
   bool _isLoading = true;
   User? _currentUser;
   bool _isLoadingUser = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -58,18 +60,39 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
   Future<void> _loadAnnouncements() async {
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
     
     try {
-      // TODO: Replace with your API call
-      // final announcements = await AnnouncementApiService.instance.getAnnouncements();
+      final announcements = await AnnouncementApiService.instance.getAnnouncements();
+      
+      // Sort announcements by date (newest first)
+      announcements.sort((a, b) => b.date.compareTo(a.date));
+      
       setState(() {
-        // _announcements = announcements;
+        _announcements = announcements;
         _isLoading = false;
       });
     } catch (e) {
       print('Error loading announcements: $e');
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load announcements: $e'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _loadAnnouncements,
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -245,16 +268,28 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                 ),
                                 Gap.s16H(),
                                 Text(
-                                  'No announcements yet',
+                                  _errorMessage != null 
+                                      ? 'Error loading announcements'
+                                      : 'No announcements yet',
                                   style: theme.textTheme.titleLarge
                                       ?.copyWith(color: Colors.grey[600]),
                                 ),
                                 Gap.s8H(),
                                 Text(
-                                  'Check back later for updates',
+                                  _errorMessage != null
+                                      ? 'Please try again later'
+                                      : 'Check back later for updates',
                                   style: theme.textTheme.bodyMedium
                                       ?.copyWith(color: Colors.grey[500]),
                                 ),
+                                if (_errorMessage != null) ...[
+                                  Gap.s16H(),
+                                  ElevatedButton.icon(
+                                    onPressed: _loadAnnouncements,
+                                    icon: const Icon(Icons.refresh),
+                                    label: const Text('Retry'),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -287,7 +322,6 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                     ),
                                   ),
                                 ).then((shouldRefresh) {
-                                  // Refresh list if announcement was edited/deleted
                                   if (shouldRefresh == true) {
                                     _loadAnnouncements();
                                   }
@@ -296,7 +330,6 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Admin badge overlay on image
                                   Stack(
                                     children: [
                                       if (announcement.image != null)
@@ -319,7 +352,6 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                             );
                                           },
                                         ),
-                                      // Admin edit badge
                                       if (_isAdmin && announcement.image != null)
                                         Positioned(
                                           top: 8,

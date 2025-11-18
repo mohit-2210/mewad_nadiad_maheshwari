@@ -26,3 +26,6 @@ final familyWiseEndpoint = '/api/v1/user/familyWise';
 
 //Announcement Endpoint
 final announcementEndpoint = '/api/v1/announcement';
+
+//upload photo and file endpoint
+final uploadEndpoint = '';

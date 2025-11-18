@@ -3,8 +3,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
-import 'package:mmsn/pages/announcement/pdf_viewer.dart';
 import 'package:mmsn/models/announcement.dart';
+import 'package:mmsn/pages/announcement/pdf_viewer.dart';
+import 'package:mmsn/pages/announcement/services/announcement_api_service.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -78,46 +79,88 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
   void _showDeleteConfirmation() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
         title: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
             Icon(Icons.warning, color: Colors.red),
             SizedBox(width: 8),
-            Text('Delete Announcement'),
+            Expanded(
+              child: Text(
+                'Delete Announcement',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                softWrap: true,
+              ),
+            ),
           ],
         ),
         content: const Text(
-          'Are you sure you want to delete this announcement? This action cannot be undone.',
+          'Are you sure you want to delete this announcement? '
+          'This action cannot be undone.',
           style: TextStyle(fontSize: 16),
+          softWrap: true,
         ),
+        actionsAlignment: MainAxisAlignment.end,
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
-              // TODO: Implement delete API call
-              // await AnnouncementApiService.instance.deleteAnnouncement(widget.announcement.id);
-              
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context, true); // Go back and refresh list
-              
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Announcement deleted successfully'),
-                  backgroundColor: Colors.red,
-                ),
+              Navigator.pop(dialogContext);
+
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) =>
+                    const Center(child: CircularProgressIndicator()),
               );
+
+              try {
+                await AnnouncementApiService.instance.deleteAnnouncement(
+                  widget.announcement.id,
+                );
+
+                if (!mounted) return;
+
+                Navigator.pop(context); // close loader
+                Navigator.pop(context, true); // close detail screen
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Announcement deleted successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+
+                Navigator.pop(context); // close loader
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to delete: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.all(Colors.red.shade400),
             ),
-            child: const Text('Delete'),
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
       ),
@@ -201,7 +244,10 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
               // Show edit and delete buttons only for admins
               if (widget.isAdmin) ...[
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.white),
+                  icon: const Icon(
+                    Icons.edit,
+                    color: Colors.black,
+                  ),
                   tooltip: 'Edit Announcement',
                   onPressed: () async {
                     final result = await Navigator.push(
@@ -214,7 +260,8 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                     );
 
                     if (result == true) {
-                      Navigator.pop(context, true); // Return true to refresh list
+                      Navigator.pop(
+                          context, true); // Return true to refresh list
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Announcement updated successfully'),
@@ -225,7 +272,10 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.white),
+                  icon: const Icon(
+                    Icons.delete,
+                    color: Colors.red,
+                  ),
                   tooltip: 'Delete Announcement',
                   onPressed: _showDeleteConfirmation,
                 ),
@@ -271,7 +321,8 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
@@ -283,7 +334,8 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                 Gap.s12W(),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const Text(
                                         'Admin Mode',
@@ -453,8 +505,8 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                   ),
                                   child: InkWell(
                                     onTap: () {
-                                      final pdfUrl = widget
-                                              .announcement.pdfUrl!;
+                                      final pdfUrl =
+                                          widget.announcement.pdfUrl!;
 
                                       Navigator.push(
                                         context,

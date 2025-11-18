@@ -8,6 +8,7 @@ import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/selct_image.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/models/user.dart';
+import 'package:mmsn/pages/announcement/services/announcement_api_service.dart';
 import 'package:mmsn/pages/family/services/family_api_services.dart';
 import 'package:multi_select_flutter/dialog/multi_select_dialog_field.dart';
 import 'package:multi_select_flutter/util/multi_select_item.dart';
@@ -78,25 +79,49 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
     if (!_formKey.currentState!.validate()) return;
 
     FocusScope.of(context).unfocus();
-
     setState(() => _isSubmitting = true);
 
     try {
-      // TODO: Replace this with your real API call
-      await Future.delayed(const Duration(seconds: 2));
+      // 1️⃣ Upload Image if selected
+      List<String>? imageUrls;
+      if (_imageFile != null) {
+        final uploadedImageUrl =
+            await AnnouncementApiService.instance.uploadFile(_imageFile!);
+        imageUrls = [uploadedImageUrl];
+      }
 
-      if (!mounted) return; // 👈 Prevents setState after dispose
+// 2️⃣ Upload PDF if selected
+      List<String>? pdfUrls;
+      if (_pdfFile != null) {
+        final uploadedPdfUrl =
+            await AnnouncementApiService.instance.uploadFile(_pdfFile!);
+        pdfUrls = [uploadedPdfUrl];
+      }
+
+// 3️⃣ Call Create Announcement API
+      await AnnouncementApiService.instance.createAnnouncement(
+        title: _titleController.text,
+        description: _descriptionController.text,
+        content: _contentController.text,
+        date: DateTime.now(),
+        // sendTo: _sendToOption!,
+        imageUrls: imageUrls,
+        pdfUrls: pdfUrls,
+        selectedSocieties:
+            _sendToOption == "specific_society" ? _selectedSocieties : null,
+      );
+
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Announcement added successfully!')),
       );
 
-      Navigator.pop(context, true); // Return success
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: $e')),
+        SnackBar(content: Text("Failed: $e")),
       );
     } finally {
       if (mounted) {
