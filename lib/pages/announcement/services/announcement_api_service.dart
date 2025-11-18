@@ -277,38 +277,41 @@ class AnnouncementApiService {
       });
 
       final response = await _dio.post(
-        uploadEndpoint, // <- make sure uploadEndpoint is defined in api_endpoint.dart
+        uploadEndpoint,
         data: formData,
         options: Options(
           headers: {
             'Authorization': 'Bearer $accessToken',
             'Content-Type': 'multipart/form-data',
           },
-          // adjust sendTimeout/receiveTimeout if your uploads are large
         ),
       );
 
-      // Accept 200 or 201 depending on backend
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
-        // adapt this depending on what your backend returns
-        // common shapes: { status: true, data: { url: '...' } } or { url: '...' }
+
         if (data is Map<String, dynamic>) {
-          // common: data['data']['url'] or data['url']
-          final url = data['data'] != null && data['data']['url'] != null
-              ? data['data']['url'] as String
-              : (data['url'] as String?);
-          if (url != null && url.isNotEmpty) return url;
+          final list = data['data'];
+
+          if (list is List && list.isNotEmpty) {
+            final first = list[0];
+
+            if (first is Map<String, dynamic>) {
+              final url = first['url'] ?? first['filePath'];
+              if (url != null && url.toString().isNotEmpty) {
+                return url.toString();
+              }
+            }
+          }
         }
-        // fallback: maybe backend returns string directly
-        if (data is String && data.isNotEmpty) return data;
+
+        throw ApiException('Invalid upload response format');
       }
 
       throw ApiException('Upload failed: ${response.statusCode}');
     } on DioException catch (e) {
       throw _handleDioError(e);
     } catch (e) {
-      print('Error uploading file: $e');
       throw ApiException('Failed to upload file: ${e.toString()}');
     }
   }

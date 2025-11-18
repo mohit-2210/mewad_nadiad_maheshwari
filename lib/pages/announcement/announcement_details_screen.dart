@@ -40,23 +40,37 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
     });
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = date.difference(now).inDays;
-    if (difference == 0) {
-      return 'Today';
+String _formatDate(DateTime date) {
+  final now = DateTime.now();
+  final difference =
+      date.difference(DateTime(now.year, now.month, now.day)).inDays;
+
+  if (difference == 0) {
+    return 'Today';
+  } else {
+    if (difference == 1) {
+      return 'Tomorrow';
     } else {
-      if (difference == 1) {
-        return 'Tomorrow';
-      } else {
-        if (difference < 7) {
-          return 'In $difference days';
-        } else {
-          return '${date.day}/${date.month}/${date.year}';
-        }
+      // FUTURE DATES -----------------------------------------------------
+      if (difference > 1 && difference <= 7) {
+        return 'In $difference days';
       }
+
+      // PAST DATES -------------------------------------------------------
+      if (difference == -1) {
+        return 'Yesterday';
+      }
+
+      if (difference < -1 && difference >= -7) {
+        return '${difference.abs()} days ago';
+      }
+
+      // DEFAULT ----------------------------------------------------------
+      return '${date.day}/${date.month}/${date.year}';
     }
   }
+}
+
 
   Future<void> openExternally(String url) async {
     try {
@@ -507,6 +521,8 @@ class _AnnouncementDetailsScreenState extends State<AnnouncementDetailsScreen> {
                                     onTap: () {
                                       final pdfUrl =
                                           widget.announcement.pdfUrl!;
+                                            print("PDF URL => $pdfUrl");  // <-- DEBUG
+
 
                                       Navigator.push(
                                         context,

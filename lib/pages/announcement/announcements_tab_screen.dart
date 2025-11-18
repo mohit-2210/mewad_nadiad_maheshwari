@@ -33,14 +33,14 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
     setState(() {
       _isLoadingUser = true;
     });
-    
+
     try {
       // Try to get user from storage first
       User? user = await AuthLocalStorage.getUser();
-      
+
       // If not in storage, get from AuthApiService
       user ??= AuthApiService.instance.currentUser;
-      
+
       setState(() {
         _currentUser = user;
         _isLoadingUser = false;
@@ -62,13 +62,14 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
       _isLoading = true;
       _errorMessage = null;
     });
-    
+
     try {
-      final announcements = await AnnouncementApiService.instance.getAnnouncements();
-      
+      final announcements =
+          await AnnouncementApiService.instance.getAnnouncements();
+
       // Sort announcements by date (newest first)
       announcements.sort((a, b) => b.date.compareTo(a.date));
-      
+
       setState(() {
         _announcements = announcements;
         _isLoading = false;
@@ -79,7 +80,7 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
         _isLoading = false;
         _errorMessage = e.toString();
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -98,10 +99,17 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
-    final difference = date.difference(now).inDays;
-    if (difference == 0) return 'Today';
-    if (difference == 1) return 'Tomorrow';
-    if (difference < 7) return 'In $difference days';
+    final diff = date.difference(DateTime(now.year, now.month, now.day)).inDays;
+
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Tomorrow';
+
+    if (diff > 1 && diff <= 7) return 'In $diff days';
+
+    // --- Past Dates ---
+    if (diff == -1) return 'Yesterday';
+    if (diff < -1 && diff >= -7) return '${diff.abs()} days ago';
+
     return '${date.day}/${date.month}/${date.year}';
   }
 
@@ -228,8 +236,9 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        icon: const Icon(Icons.lock, 
-                          color: Colors.grey, 
+                        icon: const Icon(
+                          Icons.lock,
+                          color: Colors.grey,
                           size: 18,
                         ),
                         label: const Text(
@@ -268,7 +277,7 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                 ),
                                 Gap.s16H(),
                                 Text(
-                                  _errorMessage != null 
+                                  _errorMessage != null
                                       ? 'Error loading announcements'
                                       : 'No announcements yet',
                                   style: theme.textTheme.titleLarge
@@ -338,7 +347,8 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                           height: 180,
                                           width: double.infinity,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
                                             return Container(
                                               height: 180,
                                               color: Colors.grey[300],
@@ -352,7 +362,8 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                             );
                                           },
                                         ),
-                                      if (_isAdmin && announcement.image != null)
+                                      if (_isAdmin &&
+                                          announcement.image != null)
                                         Positioned(
                                           top: 8,
                                           right: 8,
@@ -362,8 +373,10 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                               vertical: 4,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withOpacity(0.6),
-                                              borderRadius: BorderRadius.circular(8),
+                                              color:
+                                                  Colors.black.withOpacity(0.6),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
@@ -402,10 +415,9 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                                 style: theme
                                                     .textTheme.titleMedium
                                                     ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.black87,
-                                                    ),
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black87,
+                                                ),
                                               ),
                                             ),
                                             if (announcement.pdfUrl != null)
@@ -463,8 +475,7 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                             Gap.s4W(),
                                             Text(
                                               _formatDate(announcement.date),
-                                              style: theme
-                                                  .textTheme.bodySmall
+                                              style: theme.textTheme.bodySmall
                                                   ?.copyWith(
                                                       color: Colors.grey[600]),
                                             ),
