@@ -23,3 +23,6 @@ final addFamilyEndpoint = '/api/v1/dataEntry';
 
 // Fetching Families Endpoint
 final familyWiseEndpoint = '/api/v1/user/familyWise';
+
+//Announcement Endpoint
+final announcementEndpoint = '/api/v1/announcement';

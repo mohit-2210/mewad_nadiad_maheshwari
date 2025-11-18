@@ -1,45 +1,49 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:mmsn/app/Dio/dio_client.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/app/globals/api_endpoint.dart';
 import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 
 class FamilyApiService {
   static final FamilyApiService instance = FamilyApiService._internal();
-  
+  final Dio _dio = DioClient.instance;
+
   FamilyApiService._internal();
 
   Future<List<Family>> getFamilies() async {
     try {
       // Get auth token
-      final token = await AuthLocalStorage.getAccessToken();
-      
-      final response = await http.get(
-        Uri.parse('$baseUrl$familyWiseEndpoint'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+      final accessToken = await AuthLocalStorage.getAccessToken();
+
+      final response = await _dio.get(
+        familyWiseEndpoint,
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $accessToken",
+            "Content-Type": "application/json",
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        
+        final jsonData = response.data;
+
         if (jsonData['status'] == true && jsonData['data'] != null) {
           final List<dynamic> familiesData = jsonData['data'];
-          
+
           // Filter out entries without familyId (standalone users) or without head
           final validFamilies = familiesData
-              .where((item) => item['familyId'] != null && 
-                             item['familyId'].toString().isNotEmpty &&
-                             item['head'] != null)
+              .where((item) =>
+                  item['familyId'] != null &&
+                  item['familyId'].toString().isNotEmpty &&
+                  item['head'] != null)
               .toList();
-          
+
           return validFamilies.map((familyJson) {
             return Family.fromJson(familyJson);
           }).toList();
         }
-        
+
         return [];
       } else {
         throw Exception('Failed to load families: ${response.statusCode}');
@@ -98,7 +102,7 @@ class FamilyApiService {
     try {
       final families = await getFamilies();
       final Map<String, List<Family>> societyGroups = {};
-      
+
       for (final family in families) {
         final society = family.society;
         if (!societyGroups.containsKey(society)) {
@@ -106,7 +110,7 @@ class FamilyApiService {
         }
         societyGroups[society]!.add(family);
       }
-      
+
       return societyGroups;
     } catch (e) {
       print('Error grouping families by society: $e');

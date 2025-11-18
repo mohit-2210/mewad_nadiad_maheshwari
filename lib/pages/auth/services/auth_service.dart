@@ -188,7 +188,9 @@ class AuthApiService {
     try {
       return await _dio.post(
         checkUserEndpoint,
-        data: {"mobile": mobile},
+        data: {
+          "mobile": mobile,
+        },
       );
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -219,7 +221,9 @@ class AuthApiService {
       return await _dio.post(
         sendOtpEndpoint,
         //To change in prod data: {"mobile": mobile},
-        data: {"email": "test12@yopmail.com"},
+        data: {
+          "email": "test12@yopmail.com",
+        },
       );
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -318,7 +322,9 @@ class AuthApiService {
     try {
       return await _dio.post(
         refreshTokenEndpoint,
-        data: {"refreshToken": refreshToken},
+        data: {
+          "refreshToken": refreshToken,
+        },
       );
     } on DioException catch (e) {
       throw _handleDioError(e);
@@ -348,7 +354,9 @@ class AuthApiService {
     try {
       return await _dio.post(
         forgetPasswordEndpoint,
-        data: {"mobile": mobile},
+        data: {
+          "mobile": mobile,
+        },
       );
     } on DioException catch (e) {
       throw _handleDioError(e);
