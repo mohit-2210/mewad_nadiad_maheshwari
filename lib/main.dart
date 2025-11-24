@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmsn/app/globals/app_navigator.dart';
 import 'package:mmsn/app/services/device_service.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
         final appState = Provider.of<AppState>(context);
         
         return MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'Mewad Maheshwari Samaj Nadiad',
           theme: appState.theme,
           home: const SplashScreen(),

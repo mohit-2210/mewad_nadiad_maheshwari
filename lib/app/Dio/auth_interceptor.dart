@@ -1,6 +1,7 @@
-// lib/app/Dio/auth_interceptor.dart
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_navigator.dart';
 import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
 
@@ -46,6 +47,30 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
+    // Handle API Timeout (connect/send/receive)
+    if (err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.sendTimeout ||
+        err.type == DioExceptionType.receiveTimeout) {
+      print("⏳ API timeout on: ${err.requestOptions.path}");
+
+      // Ask user whether to retry (Dialog)
+      final shouldRetry = await onTimeoutDialog();
+
+      if (shouldRetry) {
+        try {
+          print("🔁 Retrying after timeout...");
+
+          final response = await dio.fetch(err.requestOptions);
+          return handler.resolve(response);
+        } catch (e) {
+          return handler.next(e as DioException);
+        }
+      }
+
+      // User cancelled → continue error flow
+      return handler.next(err);
+    }
+
     // Handle 401 Unauthorized - token expired
     if (err.response?.statusCode == 401) {
       // Don't retry on auth endpoints
@@ -54,7 +79,7 @@ class AuthInterceptor extends Interceptor {
         '/api/v1/auth/register',
         '/api/v1/auth/refreshTokens',
       ];
-      
+
       final isAuthEndpoint = authEndpoints.any(
         (endpoint) => err.requestOptions.path.contains(endpoint),
       );
@@ -149,4 +174,30 @@ class _PendingRequest {
   final Completer<Response> completer;
 
   _PendingRequest(this.requestOptions, this.completer);
+}
+
+Future<bool> onTimeoutDialog() async {
+  BuildContext? ctx = navigatorKey.currentContext;
+  if (ctx == null) return false;
+
+  return await showDialog<bool>(
+    context: ctx,
+    barrierDismissible: false,
+    builder: (_) => AlertDialog(
+      title: const Text("Server Timeout"),
+      content: const Text(
+        "The server is taking too long to respond.\nWould you like to retry?",
+      ),
+      actions: [
+        TextButton(
+          child: const Text("Cancel"),
+          onPressed: () => Navigator.pop(_, false),
+        ),
+        ElevatedButton(
+          child: const Text("Retry"),
+          onPressed: () => Navigator.pop(_, true),
+        ),
+      ],
+    ),
+  ) ?? false;
 }
