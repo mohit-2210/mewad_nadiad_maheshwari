@@ -302,14 +302,14 @@ class AuthRepository {
         final user = User.fromJson(userDataFromResponse);
 
         // Parse tokens
-        final tokens = TokenModel.fromJson(data);
+        // final tokens = TokenModel.fromJson(data);
 
-        if (tokens.accessToken.isEmpty || tokens.refreshToken.isEmpty) {
-          throw AuthenticationException('Token data is missing');
-        }
+        // if (tokens.accessToken.isEmpty || tokens.refreshToken.isEmpty) {
+        //   throw AuthenticationException('Token data is missing');
+        // }
 
-        await AuthLocalStorage.saveTokens(
-            tokens.accessToken, tokens.refreshToken);
+        // await AuthLocalStorage.saveTokens(
+        //     tokens.accessToken, tokens.refreshToken);
         await AuthLocalStorage.saveUser(user);
 
         // Also update AuthApiService

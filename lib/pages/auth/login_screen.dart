@@ -8,6 +8,7 @@ import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
 import 'package:mmsn/pages/auth/o_t_p_verification_screen.dart';
+import 'package:mmsn/pages/auth/register_screen.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -33,7 +34,7 @@ class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _pinController = TextEditingController();
-  
+
   bool _showPinField = false;
   bool _obscurePin = true;
 
@@ -46,17 +47,17 @@ class _LoginViewState extends State<LoginView> {
 
   void _handleContinue() {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final mobile = _phoneController.text.trim();
     context.read<AuthCubit>().checkUser(mobile);
   }
 
   void _handleLogin() {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final mobile = _phoneController.text.trim();
     final pin = _pinController.text.trim();
-    
+
     context.read<AuthCubit>().loginWithPin(mobile, pin);
   }
 
@@ -123,7 +124,10 @@ class _LoginViewState extends State<LoginView> {
                       Gap.s16H(),
                       Text(
                         AppStrings.loginTitle,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                         textAlign: TextAlign.center,
@@ -137,7 +141,7 @@ class _LoginViewState extends State<LoginView> {
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: size.height * 0.08),
-                      
+
                       // Phone Number Field
                       TextFormField(
                         controller: _phoneController,
@@ -167,7 +171,7 @@ class _LoginViewState extends State<LoginView> {
                           return null;
                         },
                       ),
-                      
+
                       // PIN Field (shown only after user check)
                       if (_showPinField) ...[
                         Gap.s16H(),
@@ -208,9 +212,9 @@ class _LoginViewState extends State<LoginView> {
                           },
                         ),
                       ],
-                      
+
                       Gap.s32H(),
-                      
+
                       // Action Button
                       SizedBox(
                         width: double.infinity,
@@ -218,7 +222,9 @@ class _LoginViewState extends State<LoginView> {
                         child: ElevatedButton(
                           onPressed: isLoading
                               ? null
-                              : (_showPinField ? _handleLogin : _handleContinue),
+                              : (_showPinField
+                                  ? _handleLogin
+                                  : _handleContinue),
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -233,12 +239,14 @@ class _LoginViewState extends State<LoginView> {
                                   ),
                                 )
                               : Text(
-                                  _showPinField ? AppStrings.loginButton : 'Continue',
+                                  _showPinField
+                                      ? AppStrings.loginButton
+                                      : 'Continue',
                                   style: const TextStyle(fontSize: 18),
                                 ),
                         ),
                       ),
-                      
+
                       if (_showPinField) ...[
                         Gap.s16H(),
                         TextButton(
@@ -284,8 +292,14 @@ class _LoginViewState extends State<LoginView> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              // Send OTP for registration
-              context.read<AuthCubit>().sendOtp(mobile, isNewUser: true);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RegisterScreen(
+                    phoneNumber: _phoneController.text.trim(),
+                  ),
+                ),
+              );
             },
             child: const Text('Create Account'),
           ),

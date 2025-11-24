@@ -7,7 +7,7 @@ import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
-import 'package:mmsn/pages/home/main_screen.dart';
+import 'package:mmsn/pages/auth/login_screen.dart';
 
 class RegisterScreen extends StatelessWidget {
   final String phoneNumber;
@@ -66,13 +66,12 @@ class _RegisterViewState extends State<RegisterView> {
     }
 
     final userData = {
-      'fullName': _nameController.text.trim(),
+      'name': _nameController.text.trim(),
       'mobile': widget.phoneNumber,
-      'pin': _pinController.text.trim(),
-      'userType': 'member',
-      'status': 'active',
-      'deviceId': deviceId,
-      'deviceToken': deviceToken,
+      'password': _pinController.text.trim(),
+      'userType': 'MEMBER',
+      // 'deviceId': deviceId,
+      // 'deviceToken': deviceToken,
     };
 
     context.read<AuthCubit>().register(userData);
@@ -100,7 +99,7 @@ class _RegisterViewState extends State<RegisterView> {
           } else if (state is AuthSuccess) {
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const MainScreen()),
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
               (route) => false,
             );
           }

@@ -7,13 +7,13 @@ abstract class AuthState extends Equatable {
   List<Object?> get props => [];
 }
 
-// Initial State
+// Initial
 class AuthInitial extends AuthState {}
 
-// Loading State
+// Loading
 class AuthLoading extends AuthState {}
 
-// Error State
+// Error
 class AuthError extends AuthState {
   final String message;
   AuthError(this.message);
@@ -22,7 +22,7 @@ class AuthError extends AuthState {
   List<Object?> get props => [message];
 }
 
-// User Check States
+// User Check
 class UserExistsWithPin extends AuthState {
   final String mobile;
   UserExistsWithPin(this.mobile);
@@ -48,7 +48,7 @@ class UserDoesNotExist extends AuthState {
   List<Object?> get props => [mobile];
 }
 
-// OTP States
+// OTP Sent
 class OtpSent extends AuthState {
   final String mobile;
   final bool isNewUser;
@@ -58,6 +58,7 @@ class OtpSent extends AuthState {
   List<Object?> get props => [mobile, isNewUser];
 }
 
+// OTP Verified
 class OtpVerified extends AuthState {
   final String mobile;
   final bool needsPin;
@@ -68,7 +69,23 @@ class OtpVerified extends AuthState {
   List<Object?> get props => [mobile, needsPin, isNewUser];
 }
 
-// Success State
+// Registration success but OTP pending
+class RegisterSuccessPendingOtp extends AuthState {
+  final String mobile;
+  final String otpSession;
+  final String otpToken;
+
+  RegisterSuccessPendingOtp({
+    required this.mobile,
+    required this.otpSession,
+    required this.otpToken,
+  });
+
+  @override
+  List<Object?> get props => [mobile, otpSession, otpToken];
+}
+
+// Logged In
 class AuthSuccess extends AuthState {
   final User user;
   AuthSuccess(this.user);
