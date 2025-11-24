@@ -1,4 +1,3 @@
-// lib/pages/auth/cubit/auth_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmsn/app/services/device_service.dart';
 import 'package:mmsn/models/exceptions.dart';
@@ -32,8 +31,6 @@ class AuthCubit extends Cubit<AuthState> {
           break;
       }
     } on ApiException catch (e) {
-      // For checkUser, if it's a 404 or similar, we treat it as user not found
-      // Other errors are shown
       if (e.statusCode == 404) {
         emit(UserDoesNotExist(mobile));
       } else {
@@ -44,6 +41,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  // Login with mobile and PIN
   Future<void> loginWithPin(String mobile, String password) async {
     emit(AuthLoading());
     try {
@@ -64,7 +62,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Step 2b: Send OTP (for users without PIN or new users)
+  // Send OTP (for users without PIN or new users)
   Future<void> sendOtp(String mobile, {bool isNewUser = false}) async {
     emit(AuthLoading());
     try {
@@ -77,15 +75,14 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Step 3: Verify OTP
+  // Verify OTP
   Future<void> verifyOtp(String mobile, String otp,
       {bool isNewUser = false}) async {
     emit(AuthLoading());
     try {
-      final isValid = await _repo.verifyOtp(mobile, otp);
+      final isValid = await _repo.verifyOtp(otp);
 
       if (isValid) {
-        // OTP verified - now user needs to set PIN or register
         emit(OtpVerified(mobile, needsPin: !isNewUser, isNewUser: isNewUser));
       } else {
         emit(AuthError("Invalid OTP"));
@@ -97,7 +94,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Step 4a: Set PIN for existing user (after OTP verification)
+  // Set PIN for existing user (after OTP verification)
   Future<void> setPin(String mobile, String pin) async {
     emit(AuthLoading());
     try {
@@ -110,14 +107,20 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Step 4b: Register new user (after OTP verification)
+  // Register new user - just creates user, doesn't log in
   Future<void> register(Map<String, dynamic> userData) async {
     emit(AuthLoading());
     try {
-      final user = await _repo.register(userData);
-      emit(AuthSuccess(user));
+      // Call register API which creates the user
+      await _repo.register(userData);
+
+      // Registration successful - emit state with mobile and PIN
+      // This will trigger navigation to OTP screen
+      emit(RegistrationSuccess(
+        mobile: userData['mobile'] as String,
+        pin: userData['password'] as String,
+      ));
     } on ValidationException catch (e) {
-      // Handle validation errors with field-specific messages
       final errorMessage = e.errors != null && e.errors!.isNotEmpty
           ? e.errors!.values.first.toString()
           : e.message;
@@ -126,6 +129,27 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthError(e.message));
     } catch (e) {
       emit(AuthError('Registration failed: ${e.toString()}'));
+    }
+  }
+
+  // Auto-login after successful OTP verification (for new users)
+  Future<void> loginAfterRegistration(String mobile, String pin) async {
+    emit(AuthLoading());
+    try {
+      final deviceId = DeviceService.instance.deviceId;
+      final deviceToken = DeviceService.instance.deviceToken;
+
+      if (deviceId == null || deviceToken == null) {
+        emit(AuthError("Device details not ready. Please try again."));
+        return;
+      }
+
+      final user = await _repo.login(mobile, pin, deviceId, deviceToken);
+      emit(AuthSuccess(user));
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
+    } catch (e) {
+      emit(AuthError('Auto-login failed: ${e.toString()}'));
     }
   }
 
@@ -152,7 +176,6 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthInitial());
       }
     } catch (e) {
-      // On error, just go to initial state
       emit(AuthInitial());
     }
   }

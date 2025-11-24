@@ -1,4 +1,4 @@
-// lib/pages/auth/otp_verification_screen.dart
+// lib/pages/auth/o_t_p_verification_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
@@ -8,16 +8,19 @@ import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
 import 'package:mmsn/pages/auth/pin_setup_screen.dart';
-import 'package:mmsn/pages/auth/register_screen.dart';
+import 'package:mmsn/pages/home/main_screen.dart';
 
 class OTPVerificationScreen extends StatelessWidget {
   final String phoneNumber;
   final bool isNewUser;
+  final String? userPin; // PIN for new users to auto-login after OTP
+
 
   const OTPVerificationScreen({
     super.key,
     required this.phoneNumber,
     this.isNewUser = false,
+    this.userPin,
   });
 
   @override
@@ -27,6 +30,7 @@ class OTPVerificationScreen extends StatelessWidget {
       child: OTPVerificationView(
         phoneNumber: phoneNumber,
         isNewUser: isNewUser,
+        userPin: userPin,
       ),
     );
   }
@@ -35,11 +39,13 @@ class OTPVerificationScreen extends StatelessWidget {
 class OTPVerificationView extends StatefulWidget {
   final String phoneNumber;
   final bool isNewUser;
+  final String? userPin;
 
   const OTPVerificationView({
     super.key,
     required this.phoneNumber,
     required this.isNewUser,
+    this.userPin,
   });
 
   @override
@@ -140,17 +146,32 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
             _focusNodes[0].requestFocus();
           } else if (state is OtpVerified) {
             if (state.isNewUser) {
-              // Navigate to registration screen
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RegisterScreen(
-                    phoneNumber: widget.phoneNumber,
+              // New user - OTP verified, now login automatically
+              if (widget.userPin != null && widget.userPin!.isNotEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('OTP verified! Logging you in...'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 2),
                   ),
-                ),
-              );
+                );
+                
+                // Auto-login with the PIN from registration
+                context.read<AuthCubit>().loginAfterRegistration(
+                  widget.phoneNumber,
+                  widget.userPin!,
+                );
+              } else {
+                // No PIN provided - show error
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Registration error: PIN not found'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             } else if (state.needsPin) {
-              // Navigate to PIN setup screen
+              // Existing user without PIN - navigate to PIN setup
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -160,6 +181,21 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                 ),
               );
             }
+          } else if (state is AuthSuccess) {
+            // Successfully logged in - navigate to main screen
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Login successful!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 1),
+              ),
+            );
+            
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MainScreen()),
+              (route) => false,
+            );
           } else if (state is OtpSent) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -172,7 +208,6 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
         child: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {
             final isLoading = state is AuthLoading;
-            final isResending = state is AuthLoading;
 
             return SafeArea(
               child: SingleChildScrollView(
@@ -251,6 +286,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                                 _focusNodes[index - 1].requestFocus();
                               }
                               
+                              // Auto-verify when all 6 digits are entered
                               if (index == 5 && value.isNotEmpty) {
                                 final otp = _controllers.map((c) => c.text).join();
                                 if (otp.length == 6) {
@@ -301,7 +337,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                           )
                         else
                           TextButton(
-                            onPressed: isResending ? null : _resendOTP,
+                            onPressed: isLoading ? null : _resendOTP,
                             child: const Text(AppStrings.resend),
                           ),
                       ],

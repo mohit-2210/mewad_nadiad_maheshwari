@@ -1,4 +1,3 @@
-// lib/pages/auth/register_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +6,7 @@ import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
-import 'package:mmsn/pages/auth/login_screen.dart';
+import 'package:mmsn/pages/auth/o_t_p_verification_screen.dart';
 
 class RegisterScreen extends StatelessWidget {
   final String phoneNumber;
@@ -41,9 +40,6 @@ class _RegisterViewState extends State<RegisterView> {
   bool _obscurePin = true;
   bool _obscureConfirmPin = true;
 
-  String? deviceId;
-  String? deviceToken;
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -70,8 +66,6 @@ class _RegisterViewState extends State<RegisterView> {
       'mobile': widget.phoneNumber,
       'password': _pinController.text.trim(),
       'userType': 'MEMBER',
-      // 'deviceId': deviceId,
-      // 'deviceToken': deviceToken,
     };
 
     context.read<AuthCubit>().register(userData);
@@ -96,11 +90,43 @@ class _RegisterViewState extends State<RegisterView> {
                 backgroundColor: Colors.red,
               ),
             );
-          } else if (state is AuthSuccess) {
-            Navigator.pushAndRemoveUntil(
+          } else if (state is RegistrationSuccess) {
+            // Registration successful - show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Registration successful! Sending OTP...'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 1),
+              ),
+            );
+            
+            // Send OTP automatically
+            context.read<AuthCubit>().sendOtp(
+              state.mobile,
+              isNewUser: true,
+            );
+          } else if (state is OtpSent && state.isNewUser) {
+            // Get the registration state to retrieve the PIN
+            final registrationState = context.read<AuthCubit>().state;
+            String? userPin;
+            
+            // Try to get PIN from the previous state or current controllers
+            if (registrationState is RegistrationSuccess) {
+              userPin = registrationState.pin;
+            } else {
+              userPin = _pinController.text.trim();
+            }
+            
+            // Navigate to OTP verification screen
+            Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
-              (route) => false,
+              MaterialPageRoute(
+                builder: (context) => OTPVerificationScreen(
+                  phoneNumber: state.mobile,
+                  isNewUser: true,
+                  userPin: userPin,
+                ),
+              ),
             );
           }
         },

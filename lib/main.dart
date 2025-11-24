@@ -63,3 +63,10 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+// flutter clean 
+// flutter pub get 
+// cd ios 
+// pod install 
+// cd ..
+// flutter run 

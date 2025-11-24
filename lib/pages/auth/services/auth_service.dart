@@ -220,9 +220,8 @@ class AuthApiService {
     try {
       return await _dio.post(
         sendOtpEndpoint,
-        //To change in prod data: {"mobile": mobile},
         data: {
-          "email": "test12@yopmail.com",
+          "mobile": mobile,
         },
       );
     } on DioException catch (e) {
@@ -231,18 +230,21 @@ class AuthApiService {
   }
 
   // Verify OTP
-  Future<Response> verifyOtp(String mobile, String otp) async {
-    try {
-      return await _dio.post(
-        verifyOtpEndpoint,
-        data: {
-          "mobile": mobile,
-          "otp": otp,
+  Future<Response> verifyOtp(String otp) async {
+    final prefs = await SharedPreferences.getInstance();
+    final otpToken = prefs.getString("otpVerificationToken");
+    return await _dio.post(
+      verifyOtpEndpoint,
+      data: {
+        "otp": otp,
+        "isIncludeTokens": true,
+      },
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $otpToken",
         },
-      );
-    } on DioException catch (e) {
-      throw _handleDioError(e);
-    }
+      ),
+    );
   }
 
   // Reset/Set password (used for setting PIN after OTP verification)
@@ -271,13 +273,23 @@ class AuthApiService {
     }
   }
 
-  // Register new user
   Future<Response> register(Map<String, dynamic> data) async {
     try {
-      return await _dio.post(
+      final response = await _dio.post(
         registerEndpoint,
         data: data,
       );
+
+      // Extract otpVerificationToken from response
+      final otpToken =
+          response.data["data"]["tokens"]["otpVerificationToken"]["token"];
+
+      if (otpToken != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("otpVerificationToken", otpToken);
+      }
+
+      return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
     }

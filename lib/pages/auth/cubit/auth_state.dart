@@ -1,4 +1,3 @@
-// lib/pages/auth/cubit/auth_state.dart
 import 'package:equatable/equatable.dart';
 import 'package:mmsn/models/user.dart';
 
@@ -22,7 +21,7 @@ class AuthError extends AuthState {
   List<Object?> get props => [message];
 }
 
-// User Check
+// User Check States
 class UserExistsWithPin extends AuthState {
   final String mobile;
   UserExistsWithPin(this.mobile);
@@ -48,7 +47,7 @@ class UserDoesNotExist extends AuthState {
   List<Object?> get props => [mobile];
 }
 
-// OTP Sent
+// OTP States
 class OtpSent extends AuthState {
   final String mobile;
   final bool isNewUser;
@@ -58,7 +57,6 @@ class OtpSent extends AuthState {
   List<Object?> get props => [mobile, isNewUser];
 }
 
-// OTP Verified
 class OtpVerified extends AuthState {
   final String mobile;
   final bool needsPin;
@@ -69,23 +67,21 @@ class OtpVerified extends AuthState {
   List<Object?> get props => [mobile, needsPin, isNewUser];
 }
 
-// Registration success but OTP pending
-class RegisterSuccessPendingOtp extends AuthState {
+// Registration State - User created successfully, now needs OTP verification
+class RegistrationSuccess extends AuthState {
   final String mobile;
-  final String otpSession;
-  final String otpToken;
-
-  RegisterSuccessPendingOtp({
+  final String pin; // Store PIN to auto-login after OTP verification
+  
+  RegistrationSuccess({
     required this.mobile,
-    required this.otpSession,
-    required this.otpToken,
+    required this.pin,
   });
 
   @override
-  List<Object?> get props => [mobile, otpSession, otpToken];
+  List<Object?> get props => [mobile, pin];
 }
 
-// Logged In
+// Success States
 class AuthSuccess extends AuthState {
   final User user;
   AuthSuccess(this.user);
