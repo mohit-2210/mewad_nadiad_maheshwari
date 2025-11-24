@@ -348,17 +348,23 @@ class AuthApiService {
     required String oldPassword,
     required String newPassword,
   }) async {
-    try {
-      return await _dio.post(
-        changePasswordEndpoint,
-        data: {
-          "oldPassword": oldPassword,
-          "newPassword": newPassword,
+    final accessToken = await AuthLocalStorage.getAccessToken();
+    print(
+      'tooken $accessToken'
+    );
+
+    return await _dio.post(
+      changePasswordEndpoint,
+      data: {
+        "oldPassword": oldPassword,
+        "newPassword": newPassword,
+      },
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $accessToken",
         },
-      );
-    } on DioException catch (e) {
-      throw _handleDioError(e);
-    }
+      ),
+    );
   }
 
   // Forgot password

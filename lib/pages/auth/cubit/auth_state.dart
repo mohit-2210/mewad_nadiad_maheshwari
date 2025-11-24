@@ -92,3 +92,6 @@ class AuthSuccess extends AuthState {
 
 // Logged Out
 class AuthLoggedOut extends AuthState {}
+
+//Change Password
+class PasswordChanged extends AuthState {}

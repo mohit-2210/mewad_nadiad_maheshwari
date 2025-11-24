@@ -81,10 +81,11 @@ class AuthRepository {
   }
 
   // Login with mobile and PIN
-  Future<User> login(
-      String mobile, String password, String deviceId, String deviceToken) async {
+  Future<User> login(String mobile, String password, String deviceId,
+      String deviceToken) async {
     try {
-      final response = await _api.login(mobile, password, deviceId, deviceToken);
+      final response =
+          await _api.login(mobile, password, deviceId, deviceToken);
 
       final responseData = response.data as Map<String, dynamic>?;
 
@@ -165,30 +166,28 @@ class AuthRepository {
 
   // Verify OTP
   Future<bool> verifyOtp(String otp) async {
-  try {
-    final response =
-        await _api.verifyOtp(otp);
+    try {
+      final response = await _api.verifyOtp(otp);
 
-    final responseData = response.data as Map<String, dynamic>?;
+      final responseData = response.data as Map<String, dynamic>?;
 
-    if (responseData == null) {
-      throw AuthenticationException('Invalid response from server');
+      if (responseData == null) {
+        throw AuthenticationException('Invalid response from server');
+      }
+
+      final apiResponse = ApiResponse.fromJson(responseData, null);
+
+      if (apiResponse.isSuccess) {
+        return true;
+      } else {
+        throw AuthenticationException(
+          apiResponse.message ?? 'Invalid OTP',
+        );
+      }
+    } catch (e) {
+      throw AuthenticationException('OTP verification failed: $e');
     }
-
-    final apiResponse = ApiResponse.fromJson(responseData, null);
-
-    if (apiResponse.isSuccess) {
-      return true;
-    } else {
-      throw AuthenticationException(
-        apiResponse.message ?? 'Invalid OTP',
-      );
-    }
-  } catch (e) {
-    throw AuthenticationException('OTP verification failed: $e');
   }
-}
-
 
   // Set PIN for existing user (after OTP verification)
   Future<User> setPin(String mobile, String pin, {String? otp}) async {
@@ -343,6 +342,26 @@ class AuthRepository {
         'Failed to refresh token: ${e.toString()}',
         originalError: e,
       );
+    }
+  }
+
+// AuthRepository.dart
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    try {
+      final response = await _api.changePassword(
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      );
+
+      final data = response.data as Map?;
+
+      if (data == null || data['status'] != true) {
+        throw ApiException(data?['message'] ?? "Failed to change password");
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException("Failed to change password: ${e.toString()}");
     }
   }
 }

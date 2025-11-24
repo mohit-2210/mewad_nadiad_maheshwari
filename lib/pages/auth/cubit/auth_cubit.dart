@@ -179,4 +179,21 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthInitial());
     }
   }
+
+  Future<void> changePassword(
+    String oldPassword,
+    String newPassword,
+  ) async {
+    emit(AuthLoading());
+
+    try {
+      await _repo.changePassword(oldPassword, newPassword);
+
+      emit(PasswordChanged()); // Create this state in AuthState
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
+    } catch (e) {
+      emit(AuthError("Failed to change password: ${e.toString()}"));
+    }
+  }
 }
