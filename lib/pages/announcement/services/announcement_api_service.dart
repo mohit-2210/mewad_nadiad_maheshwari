@@ -98,7 +98,7 @@ class AnnouncementApiService {
     required DateTime date,
     List<String>? imageUrls,
     List<String>? pdfUrls,
-    // required String sendTo,
+    required List<String> userIds,
     List<String>? selectedSocieties,
   }) async {
     try {
@@ -110,7 +110,7 @@ class AnnouncementApiService {
         "description": description.trim(),
         "content": content.trim(),
         "date": date.toIso8601String().split('T')[0], // YYYY-MM-DD format
-        // "sendTo": sendTo,
+        "userIds": userIds,
       };
 
       // Add images if provided
@@ -173,7 +173,7 @@ class AnnouncementApiService {
     required DateTime date,
     List<String>? imageUrls,
     List<String>? pdfUrls,
-    required String sendTo,
+    required String userIds,
     List<String>? selectedSocieties,
   }) async {
     try {
@@ -184,7 +184,7 @@ class AnnouncementApiService {
         "description": description.trim(),
         "content": content.trim(),
         "date": date.toIso8601String().split('T')[0],
-        "sendTo": sendTo,
+        "userIds": userIds,
       };
 
       if (imageUrls != null && imageUrls.isNotEmpty) {
@@ -195,7 +195,7 @@ class AnnouncementApiService {
         requestBody["pdf"] = pdfUrls;
       }
 
-      if (sendTo == "specific_society" &&
+      if (userIds == "specific_society" &&
           selectedSocieties != null &&
           selectedSocieties.isNotEmpty) {
         requestBody["selectedSocieties"] = selectedSocieties;

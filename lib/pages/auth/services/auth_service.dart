@@ -349,9 +349,6 @@ class AuthApiService {
     required String newPassword,
   }) async {
     final accessToken = await AuthLocalStorage.getAccessToken();
-    print(
-      'tooken $accessToken'
-    );
 
     return await _dio.post(
       changePasswordEndpoint,
