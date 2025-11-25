@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/app/globals/app_spacing.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/intro/intro_page.dart';
-import 'package:mmsn/main.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
 
 
@@ -72,7 +71,6 @@ class _IntroScreenState extends State<IntroScreen> {
   }
 
   void _finishIntro() {
-    sharedPrefs.setBool('hasSeenIntro', true);
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -85,13 +83,13 @@ class _IntroScreenState extends State<IntroScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: _finishIntro,
-                child: const Text('Skip'),
-              ),
-            ),
+            // Align(
+            //   alignment: Alignment.topRight,
+            //   child: TextButton(
+            //     onPressed: _finishIntro,
+            //     child: const Text('Skip'),
+            //   ),
+            // ),
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
