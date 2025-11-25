@@ -72,34 +72,34 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
     }
   }
 
-  Future<List<String>> _getUserIdsToSend() async {
-  List<String> userIds = [];
+//   Future<List<String>> _getUserIdsToSend() async {
+//   List<String> userIds = [];
 
-  if (_sendToOption == "all_members") {
-    // fetch all members
-    final members = await FamilyApiService.instance.getAllMembers();
-    userIds = members.map((u) => u.id!).toList();
-  }
+//   if (_sendToOption == "all_members") {
+//     // fetch all members
+//     final members = await FamilyApiService.instance.getAllMembers();
+//     userIds = members.map((u) => u.id!).toList();
+//   }
 
-  else if (_sendToOption == "all_heads") {
-    // fetch only heads
-    final heads = await FamilyApiService.instance.getAllHeads();
-    userIds = heads.map((u) => u.id!).toList();
-  }
+//   else if (_sendToOption == "all_heads") {
+//     // fetch only heads
+//     final heads = await FamilyApiService.instance.getAllHeads();
+//     userIds = heads.map((u) => u.id!).toList();
+//   }
 
-  else if (_sendToOption == "specific_society") {
-    for (final society in _selectedSocieties) {
-      final families = _societyGroups[society] ?? [];
-      for (final family in families) {
-        if (family.user != null && family.user!.id != null) {
-          userIds.add(family.user!.id!);
-        }
-      }
-    }
-  }
+//   else if (_sendToOption == "specific_society") {
+//     for (final society in _selectedSocieties) {
+//       final families = _societyGroups[society] ?? [];
+//       for (final family in families) {
+//         if (family.user != null && family.user!.id != null) {
+//           userIds.add(family.user!.id!);
+//         }
+//       }
+//     }
+//   }
 
-  return userIds;
-}
+//   return userIds;
+// }
 
 
   void _clearImage() => setState(() => _imageFile = null);
@@ -128,7 +128,7 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
         pdfUrls = [uploadedPdfUrl];
       }
 
-      final userIds = await _getUserIdsToSend();
+      // final userIds = await _getUserIdsToSend();
 
 // 3️⃣ Call Create Announcement API
       await AnnouncementApiService.instance.createAnnouncement(
@@ -136,7 +136,7 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
         description: _descriptionController.text,
         content: _contentController.text,
         date: DateTime.now(),
-        userIds: userIds,
+        // userIds: userIds,
         imageUrls: imageUrls,
         pdfUrls: pdfUrls,
         selectedSocieties:

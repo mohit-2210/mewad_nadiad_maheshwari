@@ -1,3 +1,4 @@
+// lib/pages/auth/data/auth_repository.dart
 import 'package:mmsn/app/services/device_service.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/models/token_model.dart';
@@ -22,7 +23,8 @@ class CheckUserResult {
 class AuthRepository {
   final AuthApiService _api = AuthApiService.instance;
 
-  // Check if user exists and status
+  // ==================== Check User ====================
+  
   Future<CheckUserResult> checkUser(String mobile) async {
     try {
       final response = await _api.checkUser(mobile);
@@ -43,6 +45,14 @@ class AuthRepository {
         try {
           final user = User.fromJson(userData);
 
+          // Save OTP session token if present (for users without PIN)
+          final otpSession = userData["otpSession"];
+          if (otpSession != null && otpSession.toString().isNotEmpty) {
+            await AuthLocalStorage.saveOtpSession(otpSession.toString());
+            print('✓ OTP session saved from checkUser response');
+          }
+
+          // Check if user has password/PIN
           final password = userData["password"];
           final hasPassword = password != null &&
               password.toString().isNotEmpty &&
@@ -59,6 +69,7 @@ class AuthRepository {
               user: user,
             );
           } else {
+            // User exists but no PIN - OTP session already saved above
             return CheckUserResult(
               status: UserExistsStatus.existsWithoutPin,
               user: user,
@@ -80,13 +91,16 @@ class AuthRepository {
     }
   }
 
-  // Login with mobile and PIN
-  Future<User> login(String mobile, String password, String deviceId,
-      String deviceToken) async {
+  // ==================== Login ====================
+  
+  Future<User> login(
+    String mobile,
+    String password,
+    String deviceId,
+    String deviceToken,
+  ) async {
     try {
-      final response =
-          await _api.login(mobile, password, deviceId, deviceToken);
-
+      final response = await _api.login(mobile, password, deviceId, deviceToken);
       final responseData = response.data as Map<String, dynamic>?;
 
       if (responseData == null) {
@@ -101,32 +115,31 @@ class AuthRepository {
       if (apiResponse.isSuccess && apiResponse.data != null) {
         final data = apiResponse.data!;
 
+        // Extract user
         final userData = data['user'] as Map<String, dynamic>? ?? data;
         final user = User.fromJson(userData);
 
+        // Extract tokens
         final tokens = TokenModel.fromJson(data);
 
         if (tokens.accessToken.isEmpty || tokens.refreshToken.isEmpty) {
           throw AuthenticationException('Token data is missing');
         }
 
-        await AuthLocalStorage.saveTokens(
-            tokens.accessToken, tokens.refreshToken);
+        // Save tokens and user
+        await AuthLocalStorage.saveTokens(tokens.accessToken, tokens.refreshToken);
         await AuthLocalStorage.saveUser(user);
-        await _api.updateCurrentUser(user);
+        _api.updateCurrentUser(user);
 
+        print('✓ Login successful');
         return user;
       } else {
-        throw AuthenticationException(
-          apiResponse.message ?? 'Login failed',
-        );
+        throw AuthenticationException(apiResponse.message ?? 'Login failed');
       }
     } on ApiException {
       rethrow;
     } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
+      if (e is ApiException) rethrow;
       throw AuthenticationException(
         'Login failed: ${e.toString()}',
         originalError: e,
@@ -134,7 +147,8 @@ class AuthRepository {
     }
   }
 
-  // Send OTP
+  // ==================== Send OTP ====================
+  
   Future<void> sendOtp(String mobile) async {
     try {
       final response = await _api.sendOtp(mobile);
@@ -144,19 +158,27 @@ class AuthRepository {
         throw ApiException('Invalid response from server');
       }
 
-      final apiResponse = ApiResponse.fromJson(responseData, null);
+      final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+        responseData,
+        (data) => data as Map<String, dynamic>,
+      );
 
-      if (!apiResponse.isSuccess) {
-        throw ApiException(
-          apiResponse.message ?? 'Failed to send OTP',
-        );
+      if (apiResponse.isSuccess) {
+        // Save OTP verification token from sendOtp response
+        final otpToken = apiResponse.data?['otpVerificationToken']?['token'];
+        if (otpToken != null && otpToken.toString().isNotEmpty) {
+          await AuthLocalStorage.saveOtpSession(otpToken.toString());
+          print('✓ OTP verification token saved from sendOtp');
+        }
+        
+        print('✓ OTP sent successfully');
+      } else {
+        throw ApiException(apiResponse.message ?? 'Failed to send OTP');
       }
     } on ApiException {
       rethrow;
     } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
+      if (e is ApiException) rethrow;
       throw ApiException(
         'Failed to send OTP: ${e.toString()}',
         originalError: e,
@@ -164,40 +186,20 @@ class AuthRepository {
     }
   }
 
-  // Verify OTP
-  Future<bool> verifyOtp(String otp) async {
+  // ==================== Verify OTP ====================
+  
+  Future<Map<String, dynamic>?> verifyOtp(String otp, {bool includeTokens = true}) async {
     try {
-      final response = await _api.verifyOtp(otp);
-
-      final responseData = response.data as Map<String, dynamic>?;
-
-      if (responseData == null) {
-        throw AuthenticationException('Invalid response from server');
+      // Get the OTP session token
+      final otpSession = await AuthLocalStorage.getOtpSession();
+      
+      if (otpSession == null || otpSession.isEmpty) {
+        throw AuthenticationException('OTP session expired. Please request a new OTP.');
       }
 
-      final apiResponse = ApiResponse.fromJson(responseData, null);
-
-      if (apiResponse.isSuccess) {
-        return true;
-      } else {
-        throw AuthenticationException(
-          apiResponse.message ?? 'Invalid OTP',
-        );
-      }
-    } catch (e) {
-      throw AuthenticationException('OTP verification failed: $e');
-    }
-  }
-
-  // Set PIN for existing user (after OTP verification)
-  Future<User> setPin(String mobile, String pin, {String? otp}) async {
-    try {
-      final response = await _api.resetPassword(
-        mobile: mobile,
-        newPassword: pin,
-        otp: otp,
-      );
-
+      print('🔑 Using OTP session for verification');
+      
+      final response = await _api.verifyOtp(otp, otpSession, includeTokens: includeTokens);
       final responseData = response.data as Map<String, dynamic>?;
 
       if (responseData == null) {
@@ -210,26 +212,62 @@ class AuthRepository {
       );
 
       if (apiResponse.isSuccess) {
-        final deviceId = DeviceService.instance.deviceId;
-        final deviceToken = DeviceService.instance.deviceToken;
-
-        if (deviceId == null || deviceToken == null) {
-          throw AuthenticationException("Device details not ready");
-        }
-
-        // Login after setting PIN
-        final loggedInUser = await login(mobile, pin, deviceId, deviceToken);
-        return loggedInUser;
+        // Clear OTP session after successful verification
+        // await AuthLocalStorage.clearOtpSession();
+        
+        print('✓ OTP verified successfully');
+        return apiResponse.data;
       } else {
-        throw AuthenticationException(
-          apiResponse.message ?? 'Failed to set PIN',
-        );
+        throw AuthenticationException(apiResponse.message ?? 'Invalid OTP');
       }
     } on ApiException {
       rethrow;
     } catch (e) {
       if (e is ApiException) rethrow;
+      throw AuthenticationException(
+        'OTP verification failed: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
 
+  // ==================== Set PIN (Existing User) ====================
+  
+  Future<User> setPin(String mobile, String pin) async {
+    try {
+      // First set the PIN via reset password endpoint
+      final response = await _api.resetPassword(
+        mobile: mobile,
+        newPassword: pin,
+      );
+
+      final responseData = response.data as Map<String, dynamic>?;
+
+      if (responseData == null) {
+        throw AuthenticationException('Invalid response from server');
+      }
+
+      final apiResponse = ApiResponse.fromJson(responseData, null);
+
+      if (!apiResponse.isSuccess) {
+        throw AuthenticationException(apiResponse.message ?? 'Failed to set PIN');
+      }
+
+      // After setting PIN, login the user
+      final deviceId = DeviceService.instance.deviceId;
+      final deviceToken = DeviceService.instance.deviceToken;
+
+      if (deviceId == null || deviceToken == null) {
+        throw AuthenticationException("Device details not ready");
+      }
+
+      final user = await login(mobile, pin, deviceId, deviceToken);
+      print('✓ PIN set and user logged in');
+      return user;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      if (e is ApiException) rethrow;
       throw AuthenticationException(
         'Failed to set PIN: ${e.toString()}',
         originalError: e,
@@ -237,7 +275,8 @@ class AuthRepository {
     }
   }
 
-  // Register new user - ONLY creates user, does NOT log them in
+  // ==================== Register ====================
+  
   Future<User> register(Map<String, dynamic> userData) async {
     try {
       final response = await _api.register(userData);
@@ -254,13 +293,18 @@ class AuthRepository {
 
       if (apiResponse.isSuccess && apiResponse.data != null) {
         final data = apiResponse.data!;
-
-        final userDataFromResponse =
-            data['user'] as Map<String, dynamic>? ?? data;
+        
+        // Save OTP verification token from registration
+        final otpToken = data['tokens']?['otpVerificationToken']?['token'];
+        if (otpToken != null && otpToken.toString().isNotEmpty) {
+          await AuthLocalStorage.saveOtpSession(otpToken.toString());
+          print('✓ OTP verification token saved from registration');
+        }
+        
+        final userDataFromResponse = data['user'] as Map<String, dynamic>? ?? data;
         final user = User.fromJson(userDataFromResponse);
 
-        // DON'T save tokens or log in - just return the user
-        // OTP verification and login will happen next
+        print('✓ User registered successfully');
         return user;
       } else {
         throw ValidationException(
@@ -271,9 +315,7 @@ class AuthRepository {
     } on ApiException {
       rethrow;
     } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
+      if (e is ApiException) rethrow;
       throw ApiException(
         'Registration failed: ${e.toString()}',
         originalError: e,
@@ -281,71 +323,21 @@ class AuthRepository {
     }
   }
 
-  // Logout
-  Future<void> logout() async {
-    try {
-      await _api.logout();
-    } catch (e) {
-      print('Logout API error: $e');
+  // ==================== Login After Registration ====================
+  
+  Future<User> loginAfterRegistration(String mobile, String pin) async {
+    final deviceId = DeviceService.instance.deviceId;
+    final deviceToken = DeviceService.instance.deviceToken;
+
+    if (deviceId == null || deviceToken == null) {
+      throw AuthenticationException("Device details not ready");
     }
 
-    await AuthLocalStorage.clear();
+    return await login(mobile, pin, deviceId, deviceToken);
   }
 
-  // Get current user
-  Future<User?> getCurrentUser() async {
-    return await AuthLocalStorage.getUser();
-  }
-
-  // Refresh token
-  Future<void> refreshAccessToken() async {
-    try {
-      final refreshToken = await AuthLocalStorage.getRefreshToken();
-
-      if (refreshToken == null || refreshToken.isEmpty) {
-        throw AuthenticationException('No refresh token available');
-      }
-
-      final response = await _api.refreshToken(refreshToken);
-      final responseData = response.data as Map<String, dynamic>?;
-
-      if (responseData == null) {
-        throw AuthenticationException('Invalid response from server');
-      }
-
-      final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
-        responseData,
-        (data) => data as Map<String, dynamic>,
-      );
-
-      if (apiResponse.isSuccess && apiResponse.data != null) {
-        final tokens = TokenModel.fromJson(apiResponse.data!);
-
-        if (tokens.accessToken.isEmpty || tokens.refreshToken.isEmpty) {
-          throw AuthenticationException('Token data is missing');
-        }
-
-        await AuthLocalStorage.saveTokens(
-            tokens.accessToken, tokens.refreshToken);
-      } else {
-        throw AuthenticationException(
-          apiResponse.message ?? 'Failed to refresh token',
-        );
-      }
-    } on ApiException {
-      rethrow;
-    } catch (e) {
-      if (e is ApiException) {
-        rethrow;
-      }
-      throw AuthenticationException(
-        'Failed to refresh token: ${e.toString()}',
-        originalError: e,
-      );
-    }
-  }
-
-// AuthRepository.dart
+  // ==================== Change Password ====================
+  
   Future<void> changePassword(String oldPassword, String newPassword) async {
     try {
       final response = await _api.changePassword(
@@ -358,10 +350,55 @@ class AuthRepository {
       if (data == null || data['status'] != true) {
         throw ApiException(data?['message'] ?? "Failed to change password");
       }
+      
+      print('✓ Password changed successfully');
     } on ApiException {
       rethrow;
     } catch (e) {
       throw ApiException("Failed to change password: ${e.toString()}");
+    }
+  }
+
+  // ==================== Logout ====================
+  
+  Future<void> logout() async {
+    try {
+      await _api.logout();
+    } catch (e) {
+      print('Logout error: $e');
+    } finally {
+      await AuthLocalStorage.clear();
+      _api.clearCurrentUser();
+      print('✓ Logged out successfully');
+    }
+  }
+
+  // ==================== Get Current User ====================
+  
+  Future<User?> getCurrentUser() async {
+    return await AuthLocalStorage.getUser();
+  }
+
+  // ==================== Refresh Token ====================
+  
+  Future<void> refreshAccessToken() async {
+    try {
+      final refreshToken = await AuthLocalStorage.getRefreshToken();
+
+      if (refreshToken == null || refreshToken.isEmpty) {
+        throw AuthenticationException('No refresh token available');
+      }
+
+      await _api.refreshToken(refreshToken);
+      print('✓ Access token refreshed');
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw AuthenticationException(
+        'Failed to refresh token: ${e.toString()}',
+        originalError: e,
+      );
     }
   }
 }

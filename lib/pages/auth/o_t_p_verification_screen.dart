@@ -1,4 +1,3 @@
-// lib/pages/auth/o_t_p_verification_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
@@ -13,8 +12,7 @@ import 'package:mmsn/pages/home/main_screen.dart';
 class OTPVerificationScreen extends StatelessWidget {
   final String phoneNumber;
   final bool isNewUser;
-  final String? userPin; // PIN for new users to auto-login after OTP
-
+  final String? userPin;
 
   const OTPVerificationScreen({
     super.key,
@@ -98,14 +96,13 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
   void _verifyOTP() {
     final otp = _controllers.map((c) => c.text).join();
     if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter complete OTP'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('Please enter complete OTP', isError: true);
       return;
     }
+
+    print('🔐 Verifying OTP: $otp for ${widget.phoneNumber}');
+    print('📱 Is new user: ${widget.isNewUser}');
+    print('🔑 User PIN available: ${widget.userPin != null}');
 
     context.read<AuthCubit>().verifyOtp(
           widget.phoneNumber,
@@ -115,11 +112,29 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
   }
 
   void _resendOTP() {
+    print('📤 Resending OTP to ${widget.phoneNumber}');
     context.read<AuthCubit>().sendOtp(
           widget.phoneNumber,
           isNewUser: widget.isNewUser,
         );
     _startResendTimer();
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        duration: Duration(seconds: isError ? 3 : 2),
+      ),
+    );
+  }
+
+  void _clearOTPFields() {
+    for (var controller in _controllers) {
+      controller.clear();
+    }
+    _focusNodes[0].requestFocus();
   }
 
   @override
@@ -132,46 +147,28 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
       ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
+          print('🔄 OTP Screen State: ${state.runtimeType}');
+
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-            // Clear OTP fields on error
-            for (var controller in _controllers) {
-              controller.clear();
-            }
-            _focusNodes[0].requestFocus();
+            _showSnackBar(state.message, isError: true);
+            _clearOTPFields();
           } else if (state is OtpVerified) {
+            print('✅ OTP Verified - isNewUser: ${state.isNewUser}, needsPin: ${state.needsPin}');
+
             if (state.isNewUser) {
-              // New user - OTP verified, now login automatically
+              // New user - auto-login with PIN from registration
               if (widget.userPin != null && widget.userPin!.isNotEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('OTP verified! Logging you in...'),
-                    backgroundColor: Colors.green,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-                
-                // Auto-login with the PIN from registration
+                _showSnackBar('OTP verified! Logging you in...');
                 context.read<AuthCubit>().loginAfterRegistration(
-                  widget.phoneNumber,
-                  widget.userPin!,
-                );
+                      widget.phoneNumber,
+                      widget.userPin!,
+                    );
               } else {
-                // No PIN provided - show error
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Registration error: PIN not found'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                _showSnackBar('Registration error: PIN not found', isError: true);
               }
             } else if (state.needsPin) {
               // Existing user without PIN - navigate to PIN setup
+              _showSnackBar('OTP verified! Please set your PIN');
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -182,27 +179,15 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
               );
             }
           } else if (state is AuthSuccess) {
-            // Successfully logged in - navigate to main screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Login successful!'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 1),
-              ),
-            );
-            
+            print('✅ Auth Success - Navigating to home');
+            _showSnackBar('Login successful!');
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const MainScreen()),
               (route) => false,
             );
           } else if (state is OtpSent) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('OTP sent successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
+            _showSnackBar('OTP sent successfully');
           }
         },
         child: BlocBuilder<AuthCubit, AuthState>(
@@ -246,7 +231,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                       ),
                     ),
                     Gap.s48H(),
-                    
+
                     // OTP Input Fields
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -260,6 +245,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                             textAlign: TextAlign.center,
                             keyboardType: TextInputType.number,
                             maxLength: 1,
+                            enabled: !isLoading,
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -277,7 +263,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                                 ),
                               ),
                               filled: true,
-                              fillColor: Colors.grey[50],
+                              fillColor: isLoading ? Colors.grey[200] : Colors.grey[50],
                             ),
                             onChanged: (value) {
                               if (value.length == 1 && index < 5) {
@@ -285,11 +271,11 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                               } else if (value.isEmpty && index > 0) {
                                 _focusNodes[index - 1].requestFocus();
                               }
-                              
+
                               // Auto-verify when all 6 digits are entered
                               if (index == 5 && value.isNotEmpty) {
                                 final otp = _controllers.map((c) => c.text).join();
-                                if (otp.length == 6) {
+                                if (otp.length == 6 && !isLoading) {
                                   _verifyOTP();
                                 }
                               }
@@ -299,7 +285,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                       }),
                     ),
                     Gap.s32H(),
-                    
+
                     // Verify Button
                     SizedBox(
                       width: double.infinity,
@@ -324,7 +310,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                       ),
                     ),
                     Gap.s24H(),
-                    
+
                     // Resend OTP
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

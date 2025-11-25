@@ -9,17 +9,21 @@ class AuthCubit extends Cubit<AuthState> {
 
   final AuthRepository _repo;
 
-  // Step 1: Check if user exists
+  // ==================== Check User ====================
+  
   Future<void> checkUser(String mobile) async {
     emit(AuthLoading());
     try {
+      print('🔍 Checking user: $mobile');
       final result = await _repo.checkUser(mobile);
 
       switch (result.status) {
         case UserExistsStatus.existsWithPin:
+          print('✅ User exists with PIN');
           emit(UserExistsWithPin(mobile));
           break;
         case UserExistsStatus.existsWithoutPin:
+          print('⚠️ User exists without PIN');
           if (result.user != null) {
             emit(UserExistsWithoutPin(mobile, result.user!));
           } else {
@@ -27,6 +31,7 @@ class AuthCubit extends Cubit<AuthState> {
           }
           break;
         case UserExistsStatus.doesNotExist:
+          print('❌ User does not exist');
           emit(UserDoesNotExist(mobile));
           break;
       }
@@ -41,10 +46,13 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Login with mobile and PIN
+  // ==================== Login with PIN ====================
+  
   Future<void> loginWithPin(String mobile, String password) async {
     emit(AuthLoading());
     try {
+      print('🔐 Logging in with PIN: $mobile');
+      
       final deviceId = DeviceService.instance.deviceId;
       final deviceToken = DeviceService.instance.deviceToken;
 
@@ -54,6 +62,7 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       final user = await _repo.login(mobile, password, deviceId, deviceToken);
+      print('✅ Login successful');
       emit(AuthSuccess(user));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
@@ -62,11 +71,14 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Send OTP (for users without PIN or new users)
+  // ==================== Send OTP ====================
+  
   Future<void> sendOtp(String mobile, {bool isNewUser = false}) async {
     emit(AuthLoading());
     try {
+      print('📤 Sending OTP to: $mobile (isNewUser: $isNewUser)');
       await _repo.sendOtp(mobile);
+      print('✅ OTP sent successfully');
       emit(OtpSent(mobile, isNewUser: isNewUser));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
@@ -75,30 +87,51 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Verify OTP
-  Future<void> verifyOtp(String mobile, String otp,
-      {bool isNewUser = false}) async {
+  // ==================== Verify OTP ====================
+  
+  Future<void> verifyOtp(
+    String mobile,
+    String otp, {
+    bool isNewUser = false,
+  }) async {
     emit(AuthLoading());
     try {
-      final isValid = await _repo.verifyOtp(otp);
+      print('🔐 Verifying OTP: $otp for $mobile (isNewUser: $isNewUser)');
+      
+      // Verify OTP with tokens included for new users
+      final result = await _repo.verifyOtp(otp, includeTokens: isNewUser);
 
-      if (isValid) {
-        emit(OtpVerified(mobile, needsPin: !isNewUser, isNewUser: isNewUser));
+      if (result != null) {
+        print('✅ OTP verified successfully');
+        
+        if (isNewUser) {
+          // For new users, tokens are already saved, emit verified state
+          // The UI will trigger auto-login with the PIN
+          emit(OtpVerified(mobile, needsPin: false, isNewUser: true));
+        } else {
+          // For existing users without PIN, they need to set PIN
+          emit(OtpVerified(mobile, needsPin: true, isNewUser: false));
+        }
       } else {
         emit(AuthError("Invalid OTP"));
       }
     } on ApiException catch (e) {
+      print('❌ OTP verification failed: ${e.message}');
       emit(AuthError(e.message));
     } catch (e) {
+      print('❌ OTP verification error: $e');
       emit(AuthError('OTP verification failed: ${e.toString()}'));
     }
   }
 
-  // Set PIN for existing user (after OTP verification)
+  // ==================== Set PIN ====================
+  
   Future<void> setPin(String mobile, String pin) async {
     emit(AuthLoading());
     try {
+      print('🔑 Setting PIN for: $mobile');
       final user = await _repo.setPin(mobile, pin);
+      print('✅ PIN set and user logged in');
       emit(AuthSuccess(user));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
@@ -107,15 +140,17 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Register new user - just creates user, doesn't log in
+  // ==================== Register ====================
+  
   Future<void> register(Map<String, dynamic> userData) async {
     emit(AuthLoading());
     try {
-      // Call register API which creates the user
+      print('📝 Registering user: ${userData['mobile']}');
+      
+      // Register user - this will also save OTP token
       await _repo.register(userData);
 
-      // Registration successful - emit state with mobile and PIN
-      // This will trigger navigation to OTP screen
+      print('✅ Registration successful');
       emit(RegistrationSuccess(
         mobile: userData['mobile'] as String,
         pin: userData['password'] as String,
@@ -132,10 +167,13 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Auto-login after successful OTP verification (for new users)
+  // ==================== Login After Registration ====================
+  
   Future<void> loginAfterRegistration(String mobile, String pin) async {
     emit(AuthLoading());
     try {
+      print('🔐 Auto-login after registration: $mobile');
+      
       final deviceId = DeviceService.instance.deviceId;
       final deviceToken = DeviceService.instance.deviceToken;
 
@@ -144,52 +182,62 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      final user = await _repo.login(mobile, pin, deviceId, deviceToken);
+      final user = await _repo.loginAfterRegistration(mobile, pin);
+      print('✅ Auto-login successful');
       emit(AuthSuccess(user));
     } on ApiException catch (e) {
+      print('❌ Auto-login failed: ${e.message}');
       emit(AuthError(e.message));
     } catch (e) {
+      print('❌ Auto-login error: $e');
       emit(AuthError('Auto-login failed: ${e.toString()}'));
     }
   }
 
-  // Logout
+  // ==================== Logout ====================
+  
   Future<void> logout() async {
     emit(AuthLoading());
     try {
+      print('🚪 Logging out');
       await _repo.logout();
+      print('✅ Logged out successfully');
       emit(AuthLoggedOut());
     } catch (e) {
-      // Even if API fails, clear local data
+      print('⚠️ Logout error (clearing local data anyway): $e');
       emit(AuthLoggedOut());
     }
   }
 
-  // Check if already logged in
+  // ==================== Check Auth Status ====================
+  
   Future<void> checkAuthStatus() async {
     emit(AuthLoading());
     try {
+      print('🔍 Checking auth status');
       final user = await _repo.getCurrentUser();
       if (user != null) {
+        print('✅ User is logged in: ${user.fullName}');
         emit(AuthSuccess(user));
       } else {
+        print('❌ No user logged in');
         emit(AuthInitial());
       }
     } catch (e) {
+      print('⚠️ Auth check error: $e');
       emit(AuthInitial());
     }
   }
 
-  Future<void> changePassword(
-    String oldPassword,
-    String newPassword,
-  ) async {
+  // ==================== Change Password ====================
+  
+  Future<void> changePassword(String oldPassword, String newPassword) async {
     emit(AuthLoading());
-
     try {
+      print('🔑 Changing password');
       await _repo.changePassword(oldPassword, newPassword);
-
-      emit(PasswordChanged()); // Create this state in AuthState
+      print('✅ Password changed successfully');
+      emit(PasswordChanged());
     } on ApiException catch (e) {
       emit(AuthError(e.message));
     } catch (e) {

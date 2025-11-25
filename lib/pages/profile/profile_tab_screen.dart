@@ -113,7 +113,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
         if (apiUser != null) {
           // Update storage with fresh data from API
           await AuthLocalStorage.saveUser(apiUser);
-          await AuthApiService.instance.updateCurrentUser(apiUser);
+          AuthApiService.instance.updateCurrentUser(apiUser);
           user = apiUser; // Use the fresh data from API
         }
       } catch (e) {

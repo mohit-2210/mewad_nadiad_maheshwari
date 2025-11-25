@@ -98,7 +98,7 @@ class AnnouncementApiService {
     required DateTime date,
     List<String>? imageUrls,
     List<String>? pdfUrls,
-    required List<String> userIds,
+    // required List<String> userIds,
     List<String>? selectedSocieties,
   }) async {
     try {
@@ -110,7 +110,7 @@ class AnnouncementApiService {
         "description": description.trim(),
         "content": content.trim(),
         "date": date.toIso8601String().split('T')[0], // YYYY-MM-DD format
-        "userIds": userIds,
+        // "userIds": userIds,
       };
 
       // Add images if provided

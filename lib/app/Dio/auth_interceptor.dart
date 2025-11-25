@@ -186,7 +186,7 @@ Future<bool> onTimeoutDialog() async {
     builder: (_) => AlertDialog(
       title: const Text("Server Timeout"),
       content: const Text(
-        "The server is taking too long to respond.\nWould you like to retry?",
+        "We are connecting to server.\nPress Retry to build connection",
       ),
       actions: [
         TextButton(

@@ -141,7 +141,7 @@ class Announcement {
     String? pdfUrl,
     List<String>? images,
     List<String>? pdfs,
-    String? sendTo,
+    // String? sendTo,
     List<String>? selectedSocieties,
   }) {
     return Announcement(
@@ -154,7 +154,7 @@ class Announcement {
       pdfUrl: pdfUrl ?? this.pdfUrl,
       images: images ?? this.images,
       pdfs: pdfs ?? this.pdfs,
-      sendTo: sendTo ?? this.sendTo,
+      // sendTo: sendTo ?? this.sendTo,
       selectedSocieties: selectedSocieties ?? this.selectedSocieties,
     );
   }
