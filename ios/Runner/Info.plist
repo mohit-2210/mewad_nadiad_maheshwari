@@ -47,8 +47,6 @@
 	<string>This app requires photo library access to choose images for announcements.</string>
 	<key>NSUserNotificationUsageDescription</key>
 	<string>This app needs notifications to receive OTP.</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>This identifier will be used for phone number verification.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
