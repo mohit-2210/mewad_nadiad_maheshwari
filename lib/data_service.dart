@@ -1,4 +1,4 @@
-import 'package:mmsn/app/AppImages.dart';
+import 'package:mmsn/app/globals/AppImages.dart';
 
 class DataService {
   DataService._();

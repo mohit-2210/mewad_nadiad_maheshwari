@@ -15,7 +15,26 @@ class AppImages {
 
 
   static const String profileAvatar = 'assets/carouselImages1.jpeg';
-  static const String logo = 'assets/images/logo.png';
+  static const String logo = 'assets/AppIcon.png';
   static const String background = 'assets/images/bg.png';
+
+
+  // Global People List (local assets)
+  static const List<Map<String, String>> peopleList = [
+    {"name": "John", "image": "assets/AppIcon.webp"},
+    {"name": "Emma", "image": "assets/AppIcon.webp"},
+    {"name": "Alex", "image": "assets/AppIcon.webp"},
+    {"name": "Sophia", "image": "assets/AppIcon.webp"},
+    {"name": "David", "image": "assets/AppIcon.webp"},
+    {"name": "Mia", "image": "assets/AppIcon.webp"},
+    {"name": "Liam", "image": "assets/AppIcon.webp"},
+    {"name": "Liam", "image": "assets/AppIcon.webp"},
+    {"name": "Liam", "image": "assets/AppIcon.webp"},
+    {"name": "Liam", "image": "assets/AppIcon.webp"},
+    {"name": "Liam", "image": "assets/AppIcon.webp"},
+    {"name": "Olivia", "image": "assets/people/olivia.webp"},
+    // add as many people as needed (scalable)
+  ];
+
 
 }
