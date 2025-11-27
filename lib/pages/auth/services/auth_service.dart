@@ -151,7 +151,12 @@ class AuthApiService {
   /// Send OTP to mobile
   Future<Response> sendOtp(String mobile) async {
     try {
-      return await _dio.post(sendOtpEndpoint, data: {"mobile": mobile});
+      return await _dio.post(
+        sendOtpEndpoint,
+        data: {
+          "mobile": mobile,
+        },
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -210,46 +215,46 @@ class AuthApiService {
 
   /// Reset/Set password (for existing users without PIN)
   Future<Response> resetPassword({
-  required String mobile,
-  required String newPassword,
-  String? otp,
-}) async {
-  try {
-    // Get OTP token
-    final otpSession = await AuthLocalStorage.getOtpSession();
+    required String mobile,
+    required String newPassword,
+    String? otp,
+  }) async {
+    try {
+      // Get OTP token
+      final otpSession = await AuthLocalStorage.getOtpSession();
 
-    if (otpSession == null) {
-      throw AuthenticationException("OTP session expired. Please request OTP again.");
+      if (otpSession == null) {
+        throw AuthenticationException(
+            "OTP session expired. Please request OTP again.");
+      }
+
+      final data = {
+        "mobile": mobile,
+        "newPassword": newPassword,
+      };
+
+      if (otp != null && otp.isNotEmpty) {
+        data["otp"] = otp;
+      }
+
+      final response = await _dio.post(
+        resetPasswordEndpoint,
+        data: data,
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $otpSession",
+          },
+        ),
+      );
+
+      // After success → clear OTP session
+      await AuthLocalStorage.clearOtpSession();
+
+      return response;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
     }
-
-    final data = {
-      "mobile": mobile,
-      "newPassword": newPassword,
-    };
-
-    if (otp != null && otp.isNotEmpty) {
-      data["otp"] = otp;
-    }
-
-    final response = await _dio.post(
-      resetPasswordEndpoint,
-      data: data,
-      options: Options(
-        headers: {
-          "Authorization": "Bearer $otpSession",
-        },
-      ),
-    );
-
-    // After success → clear OTP session
-    await AuthLocalStorage.clearOtpSession();
-
-    return response;
-  } on DioException catch (e) {
-    throw _handleDioError(e);
   }
-}
-
 
   /// Change password (for logged-in users)
   Future<Response> changePassword({
