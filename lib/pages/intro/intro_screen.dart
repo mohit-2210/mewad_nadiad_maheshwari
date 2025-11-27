@@ -14,19 +14,9 @@ class _IntroScreenState extends State<IntroScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // List of widgets for PageView
-  final List<Widget> _pages = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Add intro slides
-    _pages.addAll(
-      [
-        /// 🔥 1ts Page → People Intro Page
+  // ---- PAGES LIST (built safely inside build using getter) ----
+  List<Widget> get _pages => [
         PeopleIntroPage(people: AppImages.peopleList),
-
         buildIntroSlide(
           image: 'assets/intro/intro1.webp',
           title: 'Welcome to Family Directory',
@@ -51,11 +41,9 @@ class _IntroScreenState extends State<IntroScreen> {
           description:
               'Join your community today and make meaningful connections with your neighbors.',
         ),
-      ],
-    );
-  }
+      ];
 
-  // --- Navigation functions ---
+  // ---- Navigation ----
   void _nextPage() {
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(
@@ -83,7 +71,7 @@ class _IntroScreenState extends State<IntroScreen> {
     );
   }
 
-  // --- BUILD SLIDE FUNCTION ---
+  // ---- SLIDE BUILDER ----
   Widget buildIntroSlide({
     required String image,
     required String title,
@@ -92,53 +80,65 @@ class _IntroScreenState extends State<IntroScreen> {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.asset(
-              image,
-              height: MediaQuery.of(context).size.height * 0.4,
-              width: double.infinity,
-              fit: BoxFit.cover,
+          Expanded(
+            flex: 5,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                image,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-          const SizedBox(height: 40),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+          const SizedBox(height: 32),
+          Expanded(
+            flex: 3,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                  textAlign: TextAlign.center,
                 ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
+                const SizedBox(height: 16),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                  textAlign: TextAlign.center,
                 ),
-            textAlign: TextAlign.center,
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  // --- MAIN WIDGET ---
+  // ---- MAIN UI ----
   @override
   Widget build(BuildContext context) {
+    final pages = _pages; // Cached for performance
+
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
+            // PAGE VIEW
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _pages.length,
+                itemCount: pages.length,
                 onPageChanged: (index) {
                   setState(() => _currentPage = index);
                 },
-                itemBuilder: (context, index) => _pages[index],
+                itemBuilder: (context, index) => pages[index],
               ),
             ),
 
@@ -146,7 +146,7 @@ class _IntroScreenState extends State<IntroScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                _pages.length,
+                pages.length,
                 (index) => AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -162,7 +162,7 @@ class _IntroScreenState extends State<IntroScreen> {
               ),
             ),
 
-            // BUTTONS (Back / Next / Get Started)
+            // BUTTONS
             Padding(
               padding: const EdgeInsets.all(24),
               child: Row(
@@ -178,9 +178,7 @@ class _IntroScreenState extends State<IntroScreen> {
                   ElevatedButton(
                     onPressed: _nextPage,
                     child: Text(
-                      _currentPage == _pages.length - 1
-                          ? 'Get Started'
-                          : 'Next',
+                      _currentPage == pages.length - 1 ? 'Get Started' : 'Next',
                     ),
                   ),
                 ],

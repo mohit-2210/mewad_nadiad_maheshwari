@@ -5,14 +5,15 @@ import 'package:mmsn/app/globals/api_endpoint.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/models/exceptions.dart';
 import 'package:mmsn/models/api_response.dart';
+import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 
 class UserService {
   final Dio _dio = DioClient.instance;
-  
+
   // Singleton pattern
   static final UserService _instance = UserService._internal();
   static UserService get instance => _instance;
-  
+
   UserService._internal();
 
   // Get current user from API
@@ -42,7 +43,7 @@ class UserService {
       if (e.type == DioExceptionType.badResponse) {
         final statusCode = e.response?.statusCode;
         final data = e.response?.data;
-        
+
         if (statusCode == 401) {
           throw AuthenticationException(
             _extractErrorMessage(data) ?? 'Authentication failed',
@@ -65,6 +66,26 @@ class UserService {
     }
   }
 
+  Future<bool> updateUser(String userId, Map<String, dynamic> data) async {
+    final accessToken = AuthLocalStorage.getAccessToken();
+    final response = await _dio.put(
+      updateUserEndpoint,
+      data: data,
+      options: Options(
+        headers: {
+          "Authorization": "Bearer $accessToken",
+          "Content-Type": "application/json",
+        },
+      ),
+    );
+
+    if (response.statusCode == 200 && response.data['status'] == true) {
+      return true;
+    } else {
+      throw Exception(response.data['message'] ?? 'Failed to update user');
+    }
+  }
+
   String? _extractErrorMessage(dynamic data) {
     if (data is Map<String, dynamic>) {
       return data['message'] as String?;
@@ -72,4 +93,3 @@ class UserService {
     return null;
   }
 }
-

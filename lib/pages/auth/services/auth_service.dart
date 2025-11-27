@@ -104,7 +104,22 @@ class AuthApiService {
   /// Check if user exists
   Future<Response> checkUser(String mobile) async {
     try {
-      return await _dio.post(checkUserEndpoint, data: {"mobile": mobile});
+      final accessToken = await AuthLocalStorage.getAccessToken();
+      final response = await _dio.post(
+        checkUserEndpoint,
+        data: {"mobile": mobile},
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $accessToken",
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data['status'] == true) {
+        return response;
+      }
+
+      throw Exception(response.data['message'] ?? 'Failed to check user');
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -149,31 +164,75 @@ class AuthApiService {
   }
 
   /// Send OTP to mobile
-  Future<Response> sendOtp(String mobile) async {
+  Future<Response> sendOtp(String mobile, {bool isReset = false}) async {
     try {
-      return await _dio.post(
+      final accessToken = await AuthLocalStorage.getAccessToken();
+      final body = {
+        "mobile": mobile,
+      };
+
+      if (isReset) {
+        body["tokenType"] = "PASSWORD_RESET_TOKEN"; // For password reset
+      }
+      final response = await _dio.post(
         sendOtpEndpoint,
-        data: {
-          "mobile": mobile,
-        },
+        data: body,
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $accessToken",
+          },
+        ),
       );
+      // ------ HANDLE RESPONSE ------
+      if (response.statusCode == 200 && response.data["status"] == true) {
+        final data = response.data["data"];
+
+        if (!isReset) {
+          // NORMAL LOGIN — store otpVerificationToken
+          if (data?["otpVerificationToken"]?["token"] != null) {
+            final otpToken = data["otpVerificationToken"]["token"];
+            await AuthLocalStorage.saveOtpVerificationToken(otpToken);
+            print(
+                "✓ OTP Verification Token Saved: ${otpToken.substring(0, 20)}...");
+          }
+        } else {
+          // RESET PASSWORD — store passwordResetToken
+          if (data?["passwordResetToken"]?["token"] != null) {
+            final resetToken = data["passwordResetToken"]["token"];
+            await AuthLocalStorage.savePasswordResetToken(resetToken);
+            print(
+                "✓ Password Reset Token Saved: ${resetToken.substring(0, 20)}...");
+          }
+        }
+      }
+      return response;
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
   }
 
   /// Verify OTP
-  Future<Response> verifyOtp(String otp, String otpSession,
-      {bool includeTokens = true}) async {
+  Future<Response> verifyOtp(
+    String otp,
+    String otpSession, {
+    bool includeTokens = true,
+    String? otpType, // e.g. "FORGET_PASSWORD" for reset flow
+  }) async {
     try {
       print('🔑 Verifying OTP with session: ${otpSession.substring(0, 20)}...');
 
+      final body = {
+        "otp": otp,
+        "isIncludeTokens": includeTokens,
+      };
+
+      if (otpType != null) {
+        body["otpType"] = otpType;
+      }
+
       final response = await _dio.post(
         verifyOtpEndpoint,
-        data: {
-          "otp": otp,
-          "isIncludeTokens": includeTokens,
-        },
+        data: body,
         options: Options(
           headers: {
             "Authorization": "Bearer $otpSession",
@@ -181,19 +240,28 @@ class AuthApiService {
         ),
       );
 
-      // If verification successful and tokens included, save them
       if (includeTokens) {
-        final data = response.data as Map<String, dynamic>?;
-        if (data != null && data['status'] == true) {
-          final tokens = data['data']?['tokens'];
-          if (tokens != null) {
-            final accessToken = tokens['access']?['token'];
-            final refreshToken = tokens['refresh']?['token'];
+        final data = response.data["data"];
+        final tokens = data?["tokens"];
 
-            if (accessToken != null && refreshToken != null) {
-              await AuthLocalStorage.saveTokens(accessToken, refreshToken);
-              print('✓ Auth tokens saved from OTP verification');
-            }
+        if (tokens != null) {
+          final accessToken = tokens["accessToken"]?["token"];
+          final refreshToken = tokens["refreshToken"]?["token"];
+          final passwordResetToken = tokens["passwordResetToken"]?["token"];
+
+          if (accessToken is String) {
+            await AuthLocalStorage.saveAccessToken(accessToken);
+            print("✓ Access token saved from verifyOtp");
+          }
+
+          if (refreshToken is String) {
+            await AuthLocalStorage.saveRefreshToken(refreshToken);
+            print("✓ Refresh token saved from verifyOtp");
+          }
+
+          if (passwordResetToken is String) {
+            await AuthLocalStorage.savePasswordResetToken(passwordResetToken);
+            print("✓ Password reset token saved from verifyOtp");
           }
         }
       }
@@ -220,12 +288,12 @@ class AuthApiService {
     String? otp,
   }) async {
     try {
-      // Get OTP token
-      final otpSession = await AuthLocalStorage.getOtpSession();
+      final passwordResetToken = await AuthLocalStorage.getPasswordResetToken();
 
-      if (otpSession == null) {
+      if (passwordResetToken == null) {
         throw AuthenticationException(
-            "OTP session expired. Please request OTP again.");
+          "Password Reset session expired. Please request OTP again.",
+        );
       }
 
       final data = {
@@ -242,13 +310,12 @@ class AuthApiService {
         data: data,
         options: Options(
           headers: {
-            "Authorization": "Bearer $otpSession",
+            "Authorization": "Bearer $passwordResetToken",
           },
         ),
       );
 
-      // After success → clear OTP session
-      await AuthLocalStorage.clearOtpSession();
+      await AuthLocalStorage.clearPasswordResetToken();
 
       return response;
     } on DioException catch (e) {

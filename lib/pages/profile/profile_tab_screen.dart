@@ -726,7 +726,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (currentUser.isHeadOfFamily == true)
+                            if (currentUser.userType == "HEAD" || currentUser.userType == "EDITOR")
                               IconButton(
                                 onPressed: () => _editMember(member),
                                 icon: Icon(
@@ -757,7 +757,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   Widget _buildActionsSection(User currentUser) {
     return Column(
       children: [
-        if (currentUser.isHeadOfFamily) ...[
+        if (currentUser.userType == 'HEAD' || currentUser.userType == 'EDITOR') ...[
           _buildAnimatedActionButton(
             icon: Icons.person_add,
             title: 'Add Family Member',

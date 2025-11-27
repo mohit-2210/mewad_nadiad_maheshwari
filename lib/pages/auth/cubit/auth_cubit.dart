@@ -10,9 +10,10 @@ class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _repo;
 
   // ==================== Check User ====================
-  
+
   Future<void> checkUser(String mobile) async {
     emit(AuthLoading());
+
     try {
       print('🔍 Checking user: $mobile');
       final result = await _repo.checkUser(mobile);
@@ -22,14 +23,12 @@ class AuthCubit extends Cubit<AuthState> {
           print('✅ User exists with PIN');
           emit(UserExistsWithPin(mobile));
           break;
+
         case UserExistsStatus.existsWithoutPin:
           print('⚠️ User exists without PIN');
-          if (result.user != null) {
-            emit(UserExistsWithoutPin(mobile, result.user!));
-          } else {
-            emit(AuthError('User data is missing'));
-          }
+          emit(UserExistsWithoutPin(mobile, result.user!));
           break;
+
         case UserExistsStatus.doesNotExist:
           print('❌ User does not exist');
           emit(UserDoesNotExist(mobile));
@@ -42,17 +41,17 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthError(e.message));
       }
     } catch (e) {
-      emit(AuthError('Failed to check user: ${e.toString()}'));
+      emit(AuthError('Failed to check user: $e'));
     }
   }
 
   // ==================== Login with PIN ====================
-  
+
   Future<void> loginWithPin(String mobile, String password) async {
     emit(AuthLoading());
     try {
       print('🔐 Logging in with PIN: $mobile');
-      
+
       final deviceId = DeviceService.instance.deviceId;
       final deviceToken = DeviceService.instance.deviceToken;
 
@@ -72,7 +71,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // ==================== Send OTP ====================
-  
+
   Future<void> sendOtp(String mobile, {bool isNewUser = false}) async {
     emit(AuthLoading());
     try {
@@ -88,7 +87,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // ==================== Verify OTP ====================
-  
+
   Future<void> verifyOtp(
     String mobile,
     String otp, {
@@ -96,36 +95,42 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
-      print('🔐 Verifying OTP: $otp for $mobile (isNewUser: $isNewUser)');
-      
-      // Verify OTP with tokens included for new users
-      final result = await _repo.verifyOtp(otp, includeTokens: isNewUser);
+      print("🔐 Verifying OTP for $mobile ...");
 
-      if (result != null) {
-        print('✅ OTP verified successfully');
-        
-        if (isNewUser) {
-          // For new users, tokens are already saved, emit verified state
-          // The UI will trigger auto-login with the PIN
-          emit(OtpVerified(mobile, needsPin: false, isNewUser: true));
-        } else {
-          // For existing users without PIN, they need to set PIN
-          emit(OtpVerified(mobile, needsPin: true, isNewUser: false));
-        }
-      } else {
+      final data = await _repo.verifyOtp(
+        otp,
+        includeTokens: true,
+      );
+
+      if (data == null) {
         emit(AuthError("Invalid OTP"));
+        return;
       }
-    } on ApiException catch (e) {
-      print('❌ OTP verification failed: ${e.message}');
-      emit(AuthError(e.message));
+
+      final user = data["user"];
+      final needsPin = user?["pin"] == null && user?["password"] == null;
+
+      print("OTP Verified → needsPin: $needsPin");
+
+      // ✅ If user needs PIN, request passwordResetToken
+      if (needsPin && !isNewUser) {
+        print("📤 Requesting password reset token for PIN setup...");
+        await _repo.requestPasswordResetToken(mobile);
+        print("✅ Password reset token obtained");
+      }
+
+      emit(OtpVerified(
+        mobile,
+        needsPin: needsPin,
+        isNewUser: isNewUser,
+      ));
     } catch (e) {
-      print('❌ OTP verification error: $e');
-      emit(AuthError('OTP verification failed: ${e.toString()}'));
+      emit(AuthError("OTP verification failed: $e"));
     }
   }
 
   // ==================== Set PIN ====================
-  
+
   Future<void> setPin(String mobile, String pin) async {
     emit(AuthLoading());
     try {
@@ -141,13 +146,12 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // ==================== Register ====================
-  
+
   Future<void> register(Map<String, dynamic> userData) async {
     emit(AuthLoading());
     try {
       print('📝 Registering user: ${userData['mobile']}');
-      
-      // Register user - this will also save OTP token
+
       await _repo.register(userData);
 
       print('✅ Registration successful');
@@ -168,12 +172,12 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // ==================== Login After Registration ====================
-  
+
   Future<void> loginAfterRegistration(String mobile, String pin) async {
     emit(AuthLoading());
     try {
       print('🔐 Auto-login after registration: $mobile');
-      
+
       final deviceId = DeviceService.instance.deviceId;
       final deviceToken = DeviceService.instance.deviceToken;
 
@@ -195,7 +199,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // ==================== Logout ====================
-  
+
   Future<void> logout() async {
     emit(AuthLoading());
     try {
@@ -210,7 +214,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // ==================== Check Auth Status ====================
-  
+
   Future<void> checkAuthStatus() async {
     emit(AuthLoading());
     try {
@@ -230,7 +234,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   // ==================== Change Password ====================
-  
+
   Future<void> changePassword(String oldPassword, String newPassword) async {
     emit(AuthLoading());
     try {
