@@ -84,7 +84,7 @@ class _FamilyDirectoryScreenState extends State<FamilyDirectoryScreen> {
         _filteredFamilies = _allFamilies
             .where(
               (family) =>
-                  family.head.fullName.toLowerCase().contains(query) ||
+                  family.head.name.toLowerCase().contains(query) ||
                   family.head.phoneNumber.contains(query) ||
                   family.society.toLowerCase().contains(query) ||
                   family.area.toLowerCase().contains(query),

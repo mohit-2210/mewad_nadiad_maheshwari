@@ -67,9 +67,10 @@ class UserService {
   }
 
   Future<bool> updateUser(String userId, Map<String, dynamic> data) async {
-    final accessToken = AuthLocalStorage.getAccessToken();
+    final accessToken = await AuthLocalStorage.getAccessToken(); // MUST await
+
     final response = await _dio.put(
-      updateUserEndpoint,
+      updateUserEndpoint(userId), // <-- dynamic id here
       data: data,
       options: Options(
         headers: {

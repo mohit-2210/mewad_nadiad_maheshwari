@@ -14,7 +14,7 @@ final checkUserEndpoint = '/api/v1/auth/user';
 
 // User Endpoints
 final getAllUsersEndpoint = '/api/v1/user';
-final updateUserEndpoint = '/api/v1/user/{id}';
+String updateUserEndpoint(String id) => '/api/v1/user/$id';
 final getCurrentUserEndpoint = '/api/v1/user/me';
 final getAllUsersWithoutPaginationEndpoint = '/api/v1/user/paginatedRecords?page=1&limit=2';
 

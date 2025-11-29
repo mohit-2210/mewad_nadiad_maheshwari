@@ -86,7 +86,7 @@ class _FamilyCardState extends State<FamilyCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.family.head.fullName,
+                        widget.family.head.name,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               fontWeight: FontWeight.bold,

@@ -541,7 +541,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
             backgroundColor: Theme.of(context).colorScheme.primary,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                '${_family?.head.fullName}\'s Family',
+                '${_family?.head.name}\'s Family',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

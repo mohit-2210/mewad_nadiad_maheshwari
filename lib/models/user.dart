@@ -16,10 +16,10 @@ class User {
   final String? occupation;
   final String? occupationAddress;
   final DateTime? dateOfBirth;
-  final String userType; // 'admin', 'editor', 'member', 'HEAD'
-  final String status; // 'active', 'inactive', 'pending', 'ACTIVE'
-  final String? mobileVerification; // 'ACCEPTED', 'PENDING', 'REJECTED'
-  final String? emailVerification; // 'ACCEPTED', 'PENDING', 'REJECTED'
+  final String userType;
+  final String status;
+  final String? mobileVerification;
+  final String? emailVerification;
   final String? familyId;
   final String? refId;
   final String? education;
@@ -40,8 +40,8 @@ class User {
     this.occupation,
     this.occupationAddress,
     this.dateOfBirth,
-    this.userType = 'member',
-    this.status = 'active',
+    this.userType = 'MEMBER',
+    this.status = 'ACTIVE',
     this.mobileVerification,
     this.emailVerification,
     this.familyId,
@@ -49,23 +49,14 @@ class User {
     this.education,
   });
 
-  // Helper getter to check if phone is verified
-  bool get isPhoneVerified {
-    return mobileVerification?.toUpperCase() == 'ACCEPTED';
-  }
-
-  // Helper getter to check if email is verified
-  bool get isEmailVerified {
-    return emailVerification?.toUpperCase() == 'ACCEPTED';
-  }
+  bool get isPhoneVerified => mobileVerification?.toUpperCase() == 'ACCEPTED';
+  bool get isEmailVerified => emailVerification?.toUpperCase() == 'ACCEPTED';
 
   factory User.fromJson(Map<String, dynamic> json) {
-    // Handle date parsing safely
     DateTime? parseDate(dynamic dateValue) {
       if (dateValue == null) return null;
       try {
         if (dateValue is String) {
-          // Handle DD/MM/YYYY format from API
           if (dateValue.contains('/')) {
             final parts = dateValue.split('/');
             if (parts.length == 3) {
@@ -77,112 +68,101 @@ class User {
               }
             }
           }
-          // Try ISO format
           return DateTime.parse(dateValue);
-        } else if (dateValue is DateTime) {
-          return dateValue;
         }
       } catch (e) {
         print('Error parsing date: $e');
-        return null;
       }
       return null;
     }
 
-    // Combine firstName and lastName if they exist
     String getFullName() {
+      final name = json['name']?.toString() ?? '';
       final firstName = json['firstName']?.toString() ?? '';
       final lastName = json['lastName']?.toString() ?? '';
-      
+
+      if (name.isNotEmpty) return name;
       if (firstName.isNotEmpty && lastName.isNotEmpty) {
         return '$firstName $lastName'.trim();
-      } else if (firstName.isNotEmpty) {
-        return firstName;
-      } else if (lastName.isNotEmpty) {
-        return lastName;
       }
-      
-      // Fallback to other field names
-      return json['fullName']?.toString() ?? 
-             json['name']?.toString() ?? 
-             '';
+      return firstName.isNotEmpty ? firstName : lastName;
     }
 
-    // Determine if user is head of family
     bool getIsHeadOfFamily() {
-      // Check explicit field first
-      if (json['isHeadOfFamily'] != null) {
-        return json['isHeadOfFamily'] as bool;
-      }
-      if (json['is_head_of_family'] != null) {
-        return json['is_head_of_family'] as bool;
-      }
-      
-      // Check if userType is HEAD
-      final userType = json['userType']?.toString()?.toUpperCase() ?? 
-                      json['user_type']?.toString()?.toUpperCase() ?? '';
-      
+      final userType = json['userType']?.toString()?.toUpperCase() ?? '';
       return userType == 'HEAD';
     }
 
     return User(
-      id: json['id']?.toString() ?? 
-          json['_id']?.toString() ?? 
-          '',
+      id: json['id']?.toString() ?? '',
       fullName: getFullName(),
-      phoneNumber: json['phoneNumber']?.toString() ?? 
-                   json['mobile']?.toString() ?? 
-                   json['phone']?.toString() ?? 
-                   '',
+      phoneNumber:
+          json['mobile']?.toString() ?? json['phoneNumber']?.toString() ?? '',
       email: json['email']?.toString(),
-      profileImage: json['profileImage']?.toString() ?? 
-                    json['profile_image']?.toString() ??
-                    json['profile']?.toString() ??
-                    json['avatar']?.toString(),
-      pin: json['pin']?.toString() ?? json['password']?.toString(),
+      profileImage:
+          json['profile']?.toString() ?? json['profileImage']?.toString(),
+      pin: json['password']?.toString(),
       isHeadOfFamily: getIsHeadOfFamily(),
       relation: json['relation']?.toString(),
-      society: json['society']?.toString() ?? 
-               json['societyName']?.toString(),
+      society: json['societyName']?.toString() ?? json['society']?.toString(),
       area: json['area']?.toString(),
       address: json['address']?.toString(),
-      nativePlace: json['nativePlace']?.toString() ?? 
-                   json['native_place']?.toString(),
+      nativePlace: json['nativePlace']?.toString(),
       occupation: json['occupation']?.toString(),
-      occupationAddress: json['occupationAddress']?.toString() ?? 
-                         json['occupation_address']?.toString(),
-      dateOfBirth: parseDate(json['dateOfBirth'] ?? json['date_of_birth'] ?? json['dob']),
-      userType: json['userType']?.toString() ?? 
-                json['user_type']?.toString() ?? 
-                'member',
-      status: json['status']?.toString() ?? 'active',
-      mobileVerification: json['mobileVerification']?.toString() ??
-                         json['mobile_verification']?.toString(),
-      emailVerification: json['emailVerification']?.toString() ??
-                        json['email_verification']?.toString(),
-      familyId: json['familyId']?.toString() ?? json['family_id']?.toString(),
-      refId: json['refId']?.toString() ?? json['ref_id']?.toString(),
+      occupationAddress: json['occupationAddress']?.toString(),
+      dateOfBirth: parseDate(json['dob'] ?? json['dateOfBirth']),
+      userType: json['userType']?.toString() ?? 'MEMBER',
+      status: json['status']?.toString() ?? 'ACTIVE',
+      mobileVerification: json['mobileVerification']?.toString(),
+      emailVerification: json['emailVerification']?.toString(),
+      familyId: json['familyId']?.toString(),
+      refId: json['refId']?.toString(),
       education: json['education']?.toString(),
     );
   }
 
+  // IMPORTANT: Format for API updates (using API field names)
+  Map<String, dynamic> toUpdateJson() {
+    return {
+      'name': fullName,
+      'mobile': phoneNumber,
+      if (email != null) 'email': email,
+      if (profileImage != null) 'profile': profileImage,
+      if (relation != null && !isHeadOfFamily) 'relation': relation,
+      if (address != null) 'address': address,
+      if (nativePlace != null) 'nativePlace': nativePlace,
+      if (occupation != null) 'occupation': occupation,
+      if (occupationAddress != null) 'occupationAddress': occupationAddress,
+      if (dateOfBirth != null)
+        'dob': '${dateOfBirth!.day.toString().padLeft(2, '0')}/'
+            '${dateOfBirth!.month.toString().padLeft(2, '0')}/'
+            '${dateOfBirth!.year}',
+      if (education != null) 'education': education,
+    };
+  }
+
+  // For local storage
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'fullName': fullName,
-      'phoneNumber': phoneNumber,
+      'name': fullName,
+      'mobile': phoneNumber,
       'email': email,
-      'profileImage': profileImage,
-      'pin': pin,
+      'profile': profileImage,
+      'password': pin,
       'isHeadOfFamily': isHeadOfFamily,
       'relation': relation,
-      'society': society,
+      'societyName': society,
       'area': area,
       'address': address,
       'nativePlace': nativePlace,
       'occupation': occupation,
       'occupationAddress': occupationAddress,
-      'dateOfBirth': dateOfBirth?.toIso8601String(),
+      'dob': dateOfBirth != null
+          ? '${dateOfBirth!.day.toString().padLeft(2, '0')}/'
+              '${dateOfBirth!.month.toString().padLeft(2, '0')}/'
+              '${dateOfBirth!.year}'
+          : null,
       'userType': userType,
       'status': status,
       'mobileVerification': mobileVerification,
@@ -192,11 +172,6 @@ class User {
       'education': education,
     };
   }
-
-  String toJsonString() => jsonEncode(toJson());
-
-  static User fromJsonString(String jsonString) =>
-      User.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
 
   User copyWith({
     String? id,
@@ -247,4 +222,8 @@ class User {
       education: education ?? this.education,
     );
   }
+
+  String toJsonString() => jsonEncode(toJson());
+  static User fromJsonString(String jsonString) =>
+      User.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
 }
