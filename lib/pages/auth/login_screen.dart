@@ -75,10 +75,24 @@ class _LoginViewState extends State<LoginView> {
               ),
             );
           } else if (state is UserExistsWithPin) {
-            setState(() => _showPinField = true);
+            if (state.isPhoneVerified) {
+              // Phone verified, show PIN field for direct login
+              setState(() => _showPinField = true);
+            }
+            // If phone not verified, OTP will be sent automatically
+            // and OtpSent state will be emitted
           } else if (state is UserExistsWithoutPin) {
-            // User exists but no PIN - send OTP
-            context.read<AuthCubit>().sendOtp(state.mobile);
+            // User exists but no PIN - send OTP with PASSWORD_RESET_TOKEN
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please set up your PIN'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            context.read<AuthCubit>().sendOtp(
+              state.mobile,
+              isForPinSetup: true,
+            );
           } else if (state is UserDoesNotExist) {
             // Show dialog to create account
             _showNewUserDialog(context, state.mobile);
@@ -90,11 +104,12 @@ class _LoginViewState extends State<LoginView> {
                 builder: (context) => OTPVerificationScreen(
                   phoneNumber: state.mobile,
                   isNewUser: state.isNewUser,
+                  isForPinSetup: state.isForPinSetup,
                 ),
               ),
             );
           } else if (state is AuthSuccess) {
-            // Navigate to main screen based on role
+            // Navigate to main screen
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const MainScreen()),

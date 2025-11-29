@@ -283,7 +283,7 @@ class AuthApiService {
 
   /// Reset/Set password (for existing users without PIN)
   Future<Response> resetPassword({
-    required String mobile,
+    // required String mobile,
     required String newPassword,
     String? otp,
   }) async {
@@ -297,7 +297,7 @@ class AuthApiService {
       }
 
       final data = {
-        "mobile": mobile,
+        // "mobile": mobile,
         "newPassword": newPassword,
       };
 

@@ -24,10 +24,11 @@ class AuthError extends AuthState {
 // User Check States
 class UserExistsWithPin extends AuthState {
   final String mobile;
-  UserExistsWithPin(this.mobile);
+  final bool isPhoneVerified;
+  UserExistsWithPin(this.mobile, {required this.isPhoneVerified});
 
   @override
-  List<Object?> get props => [mobile];
+  List<Object?> get props => [mobile, isPhoneVerified];
 }
 
 class UserExistsWithoutPin extends AuthState {
@@ -51,17 +52,26 @@ class UserDoesNotExist extends AuthState {
 class OtpSent extends AuthState {
   final String mobile;
   final bool isNewUser;
-  OtpSent(this.mobile, {this.isNewUser = false});
+  final bool isForPinSetup; // True when user exists but needs PIN
+  OtpSent(
+    this.mobile, {
+    this.isNewUser = false,
+    this.isForPinSetup = false,
+  });
 
   @override
-  List<Object?> get props => [mobile, isNewUser];
+  List<Object?> get props => [mobile, isNewUser, isForPinSetup];
 }
 
 class OtpVerified extends AuthState {
   final String mobile;
   final bool needsPin;
   final bool isNewUser;
-  OtpVerified(this.mobile, {this.needsPin = false, this.isNewUser = false});
+  OtpVerified(
+    this.mobile, {
+    this.needsPin = false,
+    this.isNewUser = false,
+  });
 
   @override
   List<Object?> get props => [mobile, needsPin, isNewUser];
@@ -70,7 +80,7 @@ class OtpVerified extends AuthState {
 // Registration State - User created successfully, now needs OTP verification
 class RegistrationSuccess extends AuthState {
   final String mobile;
-  final String pin; // Store PIN to auto-login after OTP verification
+  final String pin;
   
   RegistrationSuccess({
     required this.mobile,
@@ -93,5 +103,5 @@ class AuthSuccess extends AuthState {
 // Logged Out
 class AuthLoggedOut extends AuthState {}
 
-//Change Password
+// Change Password
 class PasswordChanged extends AuthState {}

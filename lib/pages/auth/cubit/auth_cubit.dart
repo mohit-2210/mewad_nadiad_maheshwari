@@ -19,13 +19,20 @@ class AuthCubit extends Cubit<AuthState> {
       final result = await _repo.checkUser(mobile);
 
       switch (result.status) {
-        case UserExistsStatus.existsWithPin:
-          print('✅ User exists with PIN');
-          emit(UserExistsWithPin(mobile));
+        case UserExistsStatus.existsWithPinVerified:
+          print('✅ User exists with PIN and phone verified - Direct login');
+          emit(UserExistsWithPin(mobile, isPhoneVerified: true));
+          break;
+
+        case UserExistsStatus.existsWithPinNotVerified:
+          print('⚠️ User exists with PIN but phone not verified - Send OTP first');
+          emit(UserExistsWithPin(mobile, isPhoneVerified: false));
+          // Automatically send OTP for verification
+          await sendOtp(mobile, isForPinSetup: false);
           break;
 
         case UserExistsStatus.existsWithoutPin:
-          print('⚠️ User exists without PIN');
+          print('⚠️ User exists without PIN - Need to set PIN');
           emit(UserExistsWithoutPin(mobile, result.user!));
           break;
 
@@ -72,13 +79,26 @@ class AuthCubit extends Cubit<AuthState> {
 
   // ==================== Send OTP ====================
 
-  Future<void> sendOtp(String mobile, {bool isNewUser = false}) async {
+  Future<void> sendOtp(
+    String mobile, {
+    bool isNewUser = false,
+    bool isForPinSetup = false,
+  }) async {
     emit(AuthLoading());
     try {
-      print('📤 Sending OTP to: $mobile (isNewUser: $isNewUser)');
-      await _repo.sendOtp(mobile);
+      print('📤 Sending OTP to: $mobile');
+      print('   - isNewUser: $isNewUser');
+      print('   - isForPinSetup: $isForPinSetup');
+      
+      // If user exists without PIN, use PASSWORD_RESET_TOKEN type
+      await _repo.sendOtp(mobile, isReset: isForPinSetup);
+      
       print('✅ OTP sent successfully');
-      emit(OtpSent(mobile, isNewUser: isNewUser));
+      emit(OtpSent(
+        mobile,
+        isNewUser: isNewUser,
+        isForPinSetup: isForPinSetup,
+      ));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
     } catch (e) {
@@ -92,10 +112,13 @@ class AuthCubit extends Cubit<AuthState> {
     String mobile,
     String otp, {
     bool isNewUser = false,
+    bool isForPinSetup = false,
   }) async {
     emit(AuthLoading());
     try {
-      print("🔐 Verifying OTP for $mobile ...");
+      print("🔐 Verifying OTP for $mobile");
+      print("   - isNewUser: $isNewUser");
+      print("   - isForPinSetup: $isForPinSetup");
 
       final data = await _repo.verifyOtp(
         otp,
@@ -107,23 +130,32 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      final user = data["user"];
-      final needsPin = user?["pin"] == null && user?["password"] == null;
+      print("✅ OTP Verified successfully");
 
-      print("OTP Verified → needsPin: $needsPin");
-
-      // ✅ If user needs PIN, request passwordResetToken
-      if (needsPin && !isNewUser) {
-        print("📤 Requesting password reset token for PIN setup...");
-        await _repo.requestPasswordResetToken(mobile);
-        print("✅ Password reset token obtained");
+      // Case 1: New user registration flow - has PIN, needs to login
+      if (isNewUser) {
+        emit(OtpVerified(
+          mobile,
+          needsPin: false,
+          isNewUser: true,
+        ));
       }
-
-      emit(OtpVerified(
-        mobile,
-        needsPin: needsPin,
-        isNewUser: isNewUser,
-      ));
+      // Case 2: Existing user without PIN - needs to set PIN
+      else if (isForPinSetup) {
+        emit(OtpVerified(
+          mobile,
+          needsPin: true,
+          isNewUser: false,
+        ));
+      }
+      // Case 3: Existing user with PIN, just verifying phone - proceed to login
+      else {
+        emit(OtpVerified(
+          mobile,
+          needsPin: false,
+          isNewUser: false,
+        ));
+      }
     } catch (e) {
       emit(AuthError("OTP verification failed: $e"));
     }

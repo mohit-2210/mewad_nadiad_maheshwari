@@ -12,12 +12,14 @@ import 'package:mmsn/pages/home/main_screen.dart';
 class OTPVerificationScreen extends StatelessWidget {
   final String phoneNumber;
   final bool isNewUser;
+  final bool isForPinSetup;
   final String? userPin;
 
   const OTPVerificationScreen({
     super.key,
     required this.phoneNumber,
     this.isNewUser = false,
+    this.isForPinSetup = false,
     this.userPin,
   });
 
@@ -28,6 +30,7 @@ class OTPVerificationScreen extends StatelessWidget {
       child: OTPVerificationView(
         phoneNumber: phoneNumber,
         isNewUser: isNewUser,
+        isForPinSetup: isForPinSetup,
         userPin: userPin,
       ),
     );
@@ -37,12 +40,14 @@ class OTPVerificationScreen extends StatelessWidget {
 class OTPVerificationView extends StatefulWidget {
   final String phoneNumber;
   final bool isNewUser;
+  final bool isForPinSetup;
   final String? userPin;
 
   const OTPVerificationView({
     super.key,
     required this.phoneNumber,
     required this.isNewUser,
+    required this.isForPinSetup,
     this.userPin,
   });
 
@@ -102,12 +107,14 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
 
     print('🔐 Verifying OTP: $otp for ${widget.phoneNumber}');
     print('📱 Is new user: ${widget.isNewUser}');
+    print('🔧 Is for PIN setup: ${widget.isForPinSetup}');
     print('🔑 User PIN available: ${widget.userPin != null}');
 
     context.read<AuthCubit>().verifyOtp(
           widget.phoneNumber,
           otp,
           isNewUser: widget.isNewUser,
+          isForPinSetup: widget.isForPinSetup,
         );
   }
 
@@ -116,6 +123,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
     context.read<AuthCubit>().sendOtp(
           widget.phoneNumber,
           isNewUser: widget.isNewUser,
+          isForPinSetup: widget.isForPinSetup,
         );
     _startResendTimer();
   }
@@ -153,7 +161,9 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
             _showSnackBar(state.message, isError: true);
             _clearOTPFields();
           } else if (state is OtpVerified) {
-            print('✅ OTP Verified - isNewUser: ${state.isNewUser}, needsPin: ${state.needsPin}');
+            print('✅ OTP Verified:');
+            print('   - isNewUser: ${state.isNewUser}');
+            print('   - needsPin: ${state.needsPin}');
 
             if (state.isNewUser) {
               // New user - auto-login with PIN from registration
@@ -177,6 +187,10 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                   ),
                 ),
               );
+            } else {
+              // Existing user with PIN, phone verification complete - proceed to login
+              _showSnackBar('Phone verified! Please enter your PIN');
+              Navigator.pop(context); // Go back to login screen with PIN field
             }
           } else if (state is AuthSuccess) {
             print('✅ Auth Success - Navigating to home');

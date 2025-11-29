@@ -1,4 +1,3 @@
-// lib/pages/auth/data/auth_repository.dart
 import 'package:mmsn/app/services/device_service.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/models/token_model.dart';
@@ -8,9 +7,10 @@ import 'package:mmsn/pages/auth/services/auth_service.dart';
 import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 
 enum UserExistsStatus {
-  existsWithPin,
-  existsWithoutPin,
-  doesNotExist,
+  existsWithPinVerified,     // Has PIN and phone is verified
+  existsWithPinNotVerified,  // Has PIN but phone not verified
+  existsWithoutPin,          // No PIN set
+  doesNotExist,              // User not registered
 }
 
 class CheckUserResult {
@@ -39,57 +39,61 @@ class AuthRepository {
         (data) => data as Map<String, dynamic>,
       );
 
-      // No user found
       if (!apiResponse.isSuccess || apiResponse.data == null) {
         return CheckUserResult(status: UserExistsStatus.doesNotExist);
       }
 
       final userData = apiResponse.data!;
-
-      // Safely parse user model (your class)
       final user = User.fromJson(userData);
 
-      // Save OTP session IF it exists (only in auth users)
+      // Save OTP session if exists
       final otpSession = userData["otpSession"];
       if (otpSession != null && otpSession.toString().isNotEmpty) {
         await AuthLocalStorage.saveOtpVerificationToken(otpSession.toString());
         print("✓ OTP session saved");
       }
 
-      // Logic: User exists → does he have PIN/password?
+      // Check if user has PIN/password
       final password = userData["password"];
       final hasPassword = password != null && password.toString().isNotEmpty;
-
       final hasPin = hasPassword ||
           userData["hasPin"] == true ||
           userData["has_pin"] == true ||
           (user.pin != null && user.pin!.isNotEmpty);
 
-      // CASE 1 → User exists WITH PIN
-      if (hasPin) {
+      // Check if phone is verified
+      // Use the mobileVerification field from API
+      final mobileVerification = userData["mobileVerification"]?.toString()?.toUpperCase() ??
+          userData["mobile_verification"]?.toString()?.toUpperCase() ?? '';
+      final isPhoneVerified = mobileVerification == 'ACCEPTED' || user.isPhoneVerified;
+
+      if (!hasPin) {
+        // User exists but has no PIN
         return CheckUserResult(
-          status: UserExistsStatus.existsWithPin,
+          status: UserExistsStatus.existsWithoutPin,
           user: user,
         );
       }
 
-      // CASE 2 → User exists WITHOUT PIN
-      return CheckUserResult(
-        status: UserExistsStatus.existsWithoutPin,
-        user: user,
-      );
-    }
-
-    // API 404 → User does not exist
-    on ApiException catch (e) {
+      if (isPhoneVerified) {
+        // User has PIN and phone is verified - can login directly
+        return CheckUserResult(
+          status: UserExistsStatus.existsWithPinVerified,
+          user: user,
+        );
+      } else {
+        // User has PIN but phone not verified - needs OTP verification first
+        return CheckUserResult(
+          status: UserExistsStatus.existsWithPinNotVerified,
+          user: user,
+        );
+      }
+    } on ApiException catch (e) {
       if (e.statusCode == 404) {
         return CheckUserResult(status: UserExistsStatus.doesNotExist);
       }
       rethrow;
-    }
-
-    // Any other error → treat as does not exist
-    catch (e) {
+    } catch (e) {
       return CheckUserResult(status: UserExistsStatus.doesNotExist);
     }
   }
@@ -103,8 +107,7 @@ class AuthRepository {
     String deviceToken,
   ) async {
     try {
-      final response =
-          await _api.login(mobile, password, deviceId, deviceToken);
+      final response = await _api.login(mobile, password, deviceId, deviceToken);
       final responseData = response.data as Map<String, dynamic>?;
 
       if (responseData == null) {
@@ -118,19 +121,14 @@ class AuthRepository {
 
       if (apiResponse.isSuccess && apiResponse.data != null) {
         final data = apiResponse.data!;
-
-        // Extract user
         final userData = data['user'] as Map<String, dynamic>? ?? data;
         final user = User.fromJson(userData);
-
-        // Extract tokens
         final tokens = TokenModel.fromJson(data);
 
         if (tokens.accessToken.isEmpty || tokens.refreshToken.isEmpty) {
           throw AuthenticationException('Token data is missing');
         }
 
-        // Save tokens and user
         await AuthLocalStorage.saveTokens(
             tokens.accessToken, tokens.refreshToken);
         await AuthLocalStorage.saveUser(user);
@@ -154,9 +152,9 @@ class AuthRepository {
 
   // ==================== Send OTP ====================
 
-  Future<void> sendOtp(String mobile) async {
+  Future<void> sendOtp(String mobile, {bool isReset = false}) async {
     try {
-      final response = await _api.sendOtp(mobile);
+      final response = await _api.sendOtp(mobile, isReset: isReset);
       final responseData = response.data as Map<String, dynamic>?;
 
       if (responseData == null) {
@@ -169,14 +167,7 @@ class AuthRepository {
       );
 
       if (apiResponse.isSuccess) {
-        // Save OTP verification token from sendOtp response
-        final otpToken = apiResponse.data?['otpVerificationToken']?['token'];
-        if (otpToken != null && otpToken.toString().isNotEmpty) {
-          await AuthLocalStorage.saveOtpVerificationToken(otpToken.toString());
-          print('✓ OTP verification token saved from sendOtp');
-        }
-
-        print('✓ OTP sent successfully');
+        print('✓ OTP sent successfully${isReset ? ' (for PIN setup)' : ''}');
       } else {
         throw ApiException(apiResponse.message ?? 'Failed to send OTP');
       }
@@ -193,19 +184,27 @@ class AuthRepository {
 
   // ==================== Verify OTP ====================
 
-  Future<Map<String, dynamic>?> verifyOtp(String otp,
-      {bool includeTokens = true}) async {
+  Future<Map<String, dynamic>?> verifyOtp(
+    String otp, {
+    bool includeTokens = true,
+  }) async {
     try {
       final otpToken = await AuthLocalStorage.getOtpVerificationToken();
+      final resetToken = await AuthLocalStorage.getPasswordResetToken();
 
-      if (otpToken == null || otpToken.isEmpty) {
+      // Use whichever token is available
+      final sessionToken = resetToken ?? otpToken;
+
+      if (sessionToken == null || sessionToken.isEmpty) {
         throw AuthenticationException(
             "OTP session expired. Please request new OTP.");
       }
 
+      print("🔐 Using token for verification: ${sessionToken.substring(0, 20)}...");
+
       final response = await _api.verifyOtp(
         otp,
-        otpToken,
+        sessionToken,
         includeTokens: includeTokens,
       );
 
@@ -214,67 +213,21 @@ class AuthRepository {
         throw AuthenticationException("Invalid OTP");
       }
 
-      final data = res["data"];
-
-      // ✅ Extract and save passwordResetToken if it exists
-      final tokens = data?["tokens"];
-      if (tokens != null) {
-        final passwordResetToken = tokens["passwordResetToken"]?["token"];
-        if (passwordResetToken != null &&
-            passwordResetToken.toString().isNotEmpty) {
-          await AuthLocalStorage.savePasswordResetToken(
-              passwordResetToken.toString());
-          print("✓ Password reset token saved from verifyOtp");
-        }
-      }
-
       print("✓ OTP verified successfully");
-      return data;
+      return res["data"];
     } catch (e) {
       throw AuthenticationException("OTP verification failed: $e");
     }
   }
 
-  // Request password reset token (called after OTP verification for PIN setup)
-  Future<void> requestPasswordResetToken(String mobile) async {
-    try {
-      final response = await _api.sendOtp(mobile, isReset: true);
-      final responseData = response.data as Map<String, dynamic>?;
-
-      if (responseData == null) {
-        throw ApiException('Invalid response from server');
-      }
-
-      final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
-        responseData,
-        (data) => data as Map<String, dynamic>,
-      );
-
-      if (apiResponse.isSuccess) {
-        // passwordResetToken is already saved in AuthApiService.sendOtp
-        print('✓ Password reset token obtained for PIN setup');
-      } else {
-        throw ApiException(
-            apiResponse.message ?? 'Failed to get password reset token');
-      }
-    } on ApiException {
-      rethrow;
-    } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException(
-        'Failed to get password reset token: ${e.toString()}',
-        originalError: e,
-      );
-    }
-  }
-
-// ==================== Set PIN  ====================
+  // ==================== Set PIN ====================
 
   Future<User> setPin(String mobile, String pin) async {
     try {
-      // Now resetPassword will have the passwordResetToken already saved!
+      print('🔑 Setting PIN using password reset token');
+      
       final response = await _api.resetPassword(
-        mobile: mobile,
+        // mobile: mobile,
         newPassword: pin,
       );
 
