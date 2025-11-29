@@ -110,13 +110,11 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
       // Always try to fetch from API to get latest/complete user data
       try {
         final apiUser = await UserService.instance.getCurrentUser();
-        if (apiUser != null) {
-          // Update storage with fresh data from API
-          await AuthLocalStorage.saveUser(apiUser);
-          AuthApiService.instance.updateCurrentUser(apiUser);
-          user = apiUser; // Use the fresh data from API
-        }
-      } catch (e) {
+        // Update storage with fresh data from API
+        await AuthLocalStorage.saveUser(apiUser);
+        AuthApiService.instance.updateCurrentUser(apiUser);
+        user = apiUser; // Use the fresh data from API
+            } catch (e) {
         print('Error fetching user from API: $e');
         // If API fails, use stored user if available
         if (user == null) {
