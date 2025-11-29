@@ -41,7 +41,6 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
   String? selectedEditor;
 
   Future<void> submitFamilyData() async {
-    final bool isHeadEditor = headNameController.text.trim() == selectedEditor;
     try {
       // Prepare request body
       final Map<String, dynamic> requestBody = {
@@ -51,7 +50,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
         "headName": headNameController.text.trim(),
         "phoneNumber": int.tryParse(phoneController.text.trim()),
         "dob": dobController.text.trim(),
-        "role": isHeadEditor ? "HEAD" : "HEAD",
+        "role": "HEAD",
         "education": educationController.text.trim(),
         "occupation": occupationController.text.trim(),
         "occupationAddress": occupationAddressController.text.trim(),

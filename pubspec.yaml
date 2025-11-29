@@ -61,7 +61,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/intro/
+    # - assets/intro/
     - assets/people/
     - assets/carouselImages1.jpeg
     - assets/carouselImages2.jpeg

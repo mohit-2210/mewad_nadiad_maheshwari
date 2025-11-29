@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/announcement.dart';
@@ -84,7 +85,11 @@ String _formatDate(DateTime date) {
         await dio.download(url, filePath);
       }
 
-      await OpenFilex.open(file.path);
+      if (!kIsWeb){
+        await OpenFilex.open(file.path);
+      }else{
+        print("To be implemented in web");
+      }
     } catch (e) {
       debugPrint('Error opening file externally: $e');
     }
