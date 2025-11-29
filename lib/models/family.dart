@@ -23,25 +23,14 @@ class Family {
       throw Exception('Family head cannot be null');
     }
 
-    // Helper function to get full name from API response
-    String getFullName(Map<String, dynamic> data) {
-      final firstName = data['firstName']?.toString() ?? '';
-      final lastName = data['lastName']?.toString() ?? '';
-      final name = data['name']?.toString() ?? '';
-      
-      if (firstName.isNotEmpty && lastName.isNotEmpty) {
-        return '$firstName $lastName'.trim();
-      } else if (firstName.isNotEmpty) {
-        return firstName;
-      } else if (name.isNotEmpty) {
-        return name;
-      }
-      return '';
+    // Get name directly - no firstName/lastName logic needed
+    String getName(Map<String, dynamic> data) {
+      return data['name']?.toString() ?? '';
     }
 
     final head = FamilyHead(
       id: headData['id']?.toString() ?? '',
-      fullName: getFullName(headData),
+      name: getName(headData),
       phoneNumber: headData['mobile']?.toString() ?? '',
       nativePlace: headData['nativePlace']?.toString() ?? '',
       address: headData['address']?.toString() ?? '',
@@ -58,7 +47,7 @@ class Family {
         .map((memberJson) {
       return FamilyMember(
         id: memberJson['id']?.toString() ?? '',
-        name: getFullName(memberJson),
+        name: getName(memberJson),
         relation: memberJson['relation']?.toString() ?? 'Member',
         phoneNumber: memberJson['mobile']?.toString() ?? '',
         education: memberJson['education']?.toString(),
@@ -94,7 +83,7 @@ class Family {
 
 class FamilyHead {
   final String id;
-  final String fullName;
+  final String name;
   final String phoneNumber;
   final String nativePlace;
   final String address;
@@ -104,7 +93,7 @@ class FamilyHead {
 
   FamilyHead({
     required this.id,
-    required this.fullName,
+    required this.name,
     required this.phoneNumber,
     required this.nativePlace,
     required this.address,
@@ -115,7 +104,8 @@ class FamilyHead {
 
   Map<String, dynamic> toJson() {
     return {
-      'name': fullName,
+      'id': id,
+      'name': name,
       'mobile': phoneNumber,
       'nativePlace': nativePlace,
       'address': address,
@@ -129,12 +119,13 @@ class FamilyHead {
   Map<String, dynamic> toUserJson() {
     return {
       'id': id,
-      'fullName': fullName,
-      'phoneNumber': phoneNumber,
-      'profileImage': profileImage,
+      'name': name,  // Just 'name', nothing else
+      'mobile': phoneNumber,
+      'profile': profileImage,
       'nativePlace': nativePlace,
       'address': address,
       'isHeadOfFamily': true,
+      'userType': 'HEAD',
       'relation': 'Head',
       'education': education,
       'dob': dob,
@@ -169,6 +160,7 @@ class FamilyMember {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'relation': relation,
       'mobile': phoneNumber,
@@ -185,12 +177,13 @@ class FamilyMember {
   Map<String, dynamic> toUserJson() {
     return {
       'id': id,
-      'fullName': name,
-      'phoneNumber': phoneNumber,
-      'profileImage': profileImage,
+      'name': name,  // Just 'name', nothing else
+      'mobile': phoneNumber,
+      'profile': profileImage,
       'nativePlace': nativePlace,
       'address': address,
       'isHeadOfFamily': false,
+      'userType': 'MEMBER',
       'relation': relation,
       'education': education,
       'occupation': occupation,

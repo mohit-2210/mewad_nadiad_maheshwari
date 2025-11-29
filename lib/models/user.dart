@@ -2,7 +2,7 @@ import 'dart:convert';
 
 class User {
   final String id;
-  final String fullName;
+  final String fullName; // Internal field name, but maps to 'name' in API
   final String phoneNumber;
   final String? email;
   final String? profileImage;
@@ -76,26 +76,28 @@ class User {
       return null;
     }
 
-    String getFullName() {
-      final name = json['name']?.toString() ?? '';
-      final firstName = json['firstName']?.toString() ?? '';
-      final lastName = json['lastName']?.toString() ?? '';
-
-      if (name.isNotEmpty) return name;
-      if (firstName.isNotEmpty && lastName.isNotEmpty) {
-        return '$firstName $lastName'.trim();
-      }
-      return firstName.isNotEmpty ? firstName : lastName;
+    // Simply get the name - API uses 'name', that's it
+    final name = json['name']?.toString() ?? '';
+    
+    if (name.isEmpty) {
+      print('⚠ WARNING: Empty name in User.fromJson');
+      print('Available keys: ${json.keys.toList()}');
+      print('JSON data: $json');
     }
 
     bool getIsHeadOfFamily() {
+      // Check if explicitly set (for local data)
+      if (json['isHeadOfFamily'] != null) {
+        return json['isHeadOfFamily'] == true;
+      }
+      // Check userType (for API data)
       final userType = json['userType']?.toString()?.toUpperCase() ?? '';
       return userType == 'HEAD';
     }
 
     return User(
       id: json['id']?.toString() ?? '',
-      fullName: getFullName(),
+      fullName: name.isNotEmpty ? name : 'Unknown',
       phoneNumber:
           json['mobile']?.toString() ?? json['phoneNumber']?.toString() ?? '',
       email: json['email']?.toString(),
@@ -145,7 +147,7 @@ class User {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': fullName,
+      'name': fullName,  // API expects 'name'
       'mobile': phoneNumber,
       'email': email,
       'profile': profileImage,
@@ -226,4 +228,4 @@ class User {
   String toJsonString() => jsonEncode(toJson());
   static User fromJsonString(String jsonString) =>
       User.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
-}
+} 
