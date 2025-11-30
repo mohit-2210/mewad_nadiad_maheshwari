@@ -91,7 +91,6 @@ class _RegisterViewState extends State<RegisterView> {
               ),
             );
           } else if (state is RegistrationSuccess) {
-            // Registration successful - show success message
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Registration successful! Sending OTP...'),
@@ -99,32 +98,28 @@ class _RegisterViewState extends State<RegisterView> {
                 duration: Duration(seconds: 1),
               ),
             );
-            
-            // Send OTP automatically
-            context.read<AuthCubit>().sendOtp(
-              state.mobile,
-              isNewUser: true,
-            );
+
+            // Send OTP via Firebase automatically
+            context.read<AuthCubit>().sendOtpViaFirebase(
+                  state.mobile,
+                  isNewUser: true,
+                );
           } else if (state is OtpSent && state.isNewUser) {
-            // Get the registration state to retrieve the PIN
-            final registrationState = context.read<AuthCubit>().state;
-            String? userPin;
-            
-            // Try to get PIN from the previous state or current controllers
-            if (registrationState is RegistrationSuccess) {
-              userPin = registrationState.pin;
-            } else {
-              userPin = _pinController.text.trim();
-            }
-            
-            // Navigate to OTP verification screen
+            // Get PIN from controller
+            String? userPin = _pinController.text.trim();
+
+            // Navigate to OTP verification screen with BlocProvider.value
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => OTPVerificationScreen(
-                  phoneNumber: state.mobile,
-                  isNewUser: true,
-                  userPin: userPin,
+                builder: (newContext) => BlocProvider.value(
+                  value: context.read<AuthCubit>(), // ✅ Pass existing cubit
+                  child: OTPVerificationScreen(
+                    phoneNumber: state.mobile,
+                    isNewUser: true,
+                    userPin: userPin,
+                    verificationId: state.verificationId,
+                  ),
                 ),
               ),
             );

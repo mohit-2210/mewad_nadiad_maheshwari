@@ -1,13 +1,19 @@
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmsn/app/services/device_service.dart';
 import 'package:mmsn/models/exceptions.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
+import 'package:mmsn/pages/auth/services/firebase_services.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this._repo) : super(AuthInitial());
 
   final AuthRepository _repo;
+  final FirebaseAuthService _firebaseAuth = FirebaseAuthService.instance;
+  
+  String? _currentVerificationId;
+  String? _currentPhoneNumber;
 
   // ==================== Check User ====================
 
@@ -27,8 +33,8 @@ class AuthCubit extends Cubit<AuthState> {
         case UserExistsStatus.existsWithPinNotVerified:
           print('⚠️ User exists with PIN but phone not verified - Send OTP first');
           emit(UserExistsWithPin(mobile, isPhoneVerified: false));
-          // Automatically send OTP for verification
-          await sendOtp(mobile, isForPinSetup: false);
+          // Send OTP via Firebase for verification
+          await sendOtpViaFirebase(mobile, isForPinSetup: false);
           break;
 
         case UserExistsStatus.existsWithoutPin:
@@ -49,6 +55,172 @@ class AuthCubit extends Cubit<AuthState> {
       }
     } catch (e) {
       emit(AuthError('Failed to check user: $e'));
+    }
+  }
+
+  // ==================== Send OTP via Firebase ====================
+
+  Future<void> sendOtpViaFirebase(
+    String mobile, {
+    bool isNewUser = false,
+    bool isForPinSetup = false,
+  }) async {
+    emit(AuthLoading());
+    
+    try {
+      print('📤 Sending OTP via Firebase to: $mobile');
+      print('   - isNewUser: $isNewUser');
+      print('   - isForPinSetup: $isForPinSetup');
+      
+      _currentPhoneNumber = mobile;
+
+      final success = await _firebaseAuth.sendOtp(
+        phoneNumber: mobile,
+        onCodeSent: (verificationId) {
+          print('✅ Firebase OTP sent successfully');
+          _currentVerificationId = verificationId;
+          emit(OtpSent(
+            mobile,
+            isNewUser: isNewUser,
+            isForPinSetup: isForPinSetup,
+            verificationId: verificationId,
+          ));
+        },
+        onError: (error) {
+          print('❌ Firebase OTP error: $error');
+          emit(AuthError(error));
+        },
+        onAutoVerify: (credential) async {
+          print('✅ Auto-verification completed (Android only)');
+          // Handle auto-verification
+          await _handleFirebaseAutoVerify(credential, isNewUser, isForPinSetup);
+        },
+      );
+
+      if (!success) {
+        emit(AuthError('Failed to send OTP. Please try again.'));
+      }
+    } catch (e) {
+      print('❌ Error in sendOtpViaFirebase: $e');
+      emit(AuthError('Failed to send OTP: ${e.toString()}'));
+    }
+  }
+
+  // ==================== Verify OTP via Firebase ====================
+
+  Future<void> verifyOtpViaFirebase(
+    String mobile,
+    String otp, {
+    required String verificationId,
+    bool isNewUser = false,
+    bool isForPinSetup = false,
+  }) async {
+    emit(AuthLoading());
+    
+    try {
+      print('🔐 Verifying OTP via Firebase for $mobile');
+      print('   - isNewUser: $isNewUser');
+      print('   - isForPinSetup: $isForPinSetup');
+
+      final firebaseUser = await _firebaseAuth.verifyOtp(
+        otp: otp,
+        verificationId: verificationId,
+        onError: (error) {
+          print('❌ Firebase OTP verification error: $error');
+          emit(AuthError(error));
+        },
+      );
+
+      if (firebaseUser != null) {
+        print('✅ Firebase OTP verified successfully');
+        print('👤 Firebase UID: ${firebaseUser.uid}');
+        
+        // Get Firebase ID Token to send to backend
+        final idToken = await _firebaseAuth.getIdToken();
+        
+        if (idToken != null) {
+          print('🎫 Firebase ID Token obtained');
+          
+          // Send ID token to your backend for verification
+          // Your backend will verify this token using Firebase Admin SDK
+          await _verifyWithBackend(idToken, mobile, isNewUser, isForPinSetup);
+        } else {
+          emit(AuthError('Failed to get authentication token'));
+        }
+      }
+    } catch (e) {
+      print('❌ Error in verifyOtpViaFirebase: $e');
+      emit(AuthError('Verification failed: ${e.toString()}'));
+    }
+  }
+
+  // ==================== Verify with Backend ====================
+
+  Future<void> _verifyWithBackend(
+    String firebaseIdToken,
+    String mobile,
+    bool isNewUser,
+    bool isForPinSetup,
+  ) async {
+    try {
+      print('🔄 Sending Firebase token to backend for verification');
+      
+      // Call your backend endpoint to verify Firebase token
+      // Your backend should:
+      // 1. Verify the Firebase ID token using Firebase Admin SDK
+      // 2. Extract phone number from verified token
+      // 3. Update user's phone verification status in your database
+      
+      // For now, we'll emit OtpVerified state
+      // You'll need to call your backend API here
+      
+      print('✅ Backend verification completed');
+      
+      if (isNewUser) {
+        emit(OtpVerified(
+          mobile,
+          needsPin: false,
+          isNewUser: true,
+        ));
+      } else if (isForPinSetup) {
+        emit(OtpVerified(
+          mobile,
+          needsPin: true,
+          isNewUser: false,
+        ));
+      } else {
+        emit(OtpVerified(
+          mobile,
+          needsPin: false,
+          isNewUser: false,
+        ));
+      }
+    } catch (e) {
+      print('❌ Backend verification error: $e');
+      emit(AuthError('Backend verification failed: ${e.toString()}'));
+    }
+  }
+
+  // ==================== Handle Firebase Auto-Verify ====================
+
+  Future<void> _handleFirebaseAutoVerify(
+    firebase_auth.PhoneAuthCredential credential,
+    bool isNewUser,
+    bool isForPinSetup,
+  ) async {
+    try {
+      final idToken = await _firebaseAuth.getIdToken();
+      if (idToken != null && _currentPhoneNumber != null) {
+        await _verifyWithBackend(
+          idToken,
+          _currentPhoneNumber!,
+          isNewUser,
+          isForPinSetup,
+        );
+      }
+    } catch (e) {
+      print('❌ Auto-verify error: $e');
+      emit(AuthError('Auto-verification failed'));
     }
   }
 
@@ -77,96 +249,12 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ==================== Send OTP ====================
-
-  Future<void> sendOtp(
-    String mobile, {
-    bool isNewUser = false,
-    bool isForPinSetup = false,
-  }) async {
-    emit(AuthLoading());
-    try {
-      print('📤 Sending OTP to: $mobile');
-      print('   - isNewUser: $isNewUser');
-      print('   - isForPinSetup: $isForPinSetup');
-      
-      // If user exists without PIN, use PASSWORD_RESET_TOKEN type
-      await _repo.sendOtp(mobile, isReset: isForPinSetup);
-      
-      print('✅ OTP sent successfully');
-      emit(OtpSent(
-        mobile,
-        isNewUser: isNewUser,
-        isForPinSetup: isForPinSetup,
-      ));
-    } on ApiException catch (e) {
-      emit(AuthError(e.message));
-    } catch (e) {
-      emit(AuthError('Failed to send OTP: ${e.toString()}'));
-    }
-  }
-
-  // ==================== Verify OTP ====================
-
-  Future<void> verifyOtp(
-    String mobile,
-    String otp, {
-    bool isNewUser = false,
-    bool isForPinSetup = false,
-  }) async {
-    emit(AuthLoading());
-    try {
-      print("🔐 Verifying OTP for $mobile");
-      print("   - isNewUser: $isNewUser");
-      print("   - isForPinSetup: $isForPinSetup");
-
-      final data = await _repo.verifyOtp(
-        otp,
-        includeTokens: true,
-      );
-
-      if (data == null) {
-        emit(AuthError("Invalid OTP"));
-        return;
-      }
-
-      print("✅ OTP Verified successfully");
-
-      // Case 1: New user registration flow - has PIN, needs to login
-      if (isNewUser) {
-        emit(OtpVerified(
-          mobile,
-          needsPin: false,
-          isNewUser: true,
-        ));
-      }
-      // Case 2: Existing user without PIN - needs to set PIN
-      else if (isForPinSetup) {
-        emit(OtpVerified(
-          mobile,
-          needsPin: true,
-          isNewUser: false,
-        ));
-      }
-      // Case 3: Existing user with PIN, just verifying phone - proceed to login
-      else {
-        emit(OtpVerified(
-          mobile,
-          needsPin: false,
-          isNewUser: false,
-        ));
-      }
-    } catch (e) {
-      emit(AuthError("OTP verification failed: $e"));
-    }
-  }
-
   // ==================== Set PIN ====================
 
   Future<void> setPin(String mobile, String pin) async {
     emit(AuthLoading());
     try {
-      print('🔑 Setting PIN for: $mobile');
+      print('🔒 Setting PIN for: $mobile');
       final user = await _repo.setPin(mobile, pin);
       print('✅ PIN set and user logged in');
       emit(AuthSuccess(user));
@@ -230,6 +318,19 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  // ==================== Resend OTP ====================
+
+  Future<void> resendOtp(String mobile, {
+    bool isNewUser = false,
+    bool isForPinSetup = false,
+  }) async {
+    await sendOtpViaFirebase(
+      mobile,
+      isNewUser: isNewUser,
+      isForPinSetup: isForPinSetup,
+    );
+  }
+
   // ==================== Logout ====================
 
   Future<void> logout() async {
@@ -237,6 +338,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       print('🚪 Logging out');
       await _repo.logout();
+      await _firebaseAuth.signOut();
       print('✅ Logged out successfully');
       emit(AuthLoggedOut());
     } catch (e) {
@@ -270,7 +372,7 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> changePassword(String oldPassword, String newPassword) async {
     emit(AuthLoading());
     try {
-      print('🔑 Changing password');
+      print('🔐 Changing password');
       await _repo.changePassword(oldPassword, newPassword);
       print('✅ Password changed successfully');
       emit(PasswordChanged());

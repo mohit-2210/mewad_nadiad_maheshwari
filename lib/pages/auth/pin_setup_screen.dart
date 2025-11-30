@@ -5,37 +5,24 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
-import 'package:mmsn/pages/auth/data/auth_repository.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 
-class PinSetupScreen extends StatelessWidget {
+/// PIN Setup Screen
+/// This screen receives the existing AuthCubit via BlocProvider.value
+class PinSetupScreen extends StatefulWidget {
   final String phoneNumber;
 
   const PinSetupScreen({super.key, required this.phoneNumber});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AuthCubit(AuthRepository()),
-      child: PinSetupView(phoneNumber: phoneNumber),
-    );
-  }
+  State<PinSetupScreen> createState() => _PinSetupScreenState();
 }
 
-class PinSetupView extends StatefulWidget {
-  final String phoneNumber;
-
-  const PinSetupView({super.key, required this.phoneNumber});
-
-  @override
-  State<PinSetupView> createState() => _PinSetupViewState();
-}
-
-class _PinSetupViewState extends State<PinSetupView> {
+class _PinSetupScreenState extends State<PinSetupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _pinController = TextEditingController();
   final _confirmPinController = TextEditingController();
-  
+
   bool _obscurePin = true;
   bool _obscureConfirmPin = true;
 
@@ -48,7 +35,7 @@ class _PinSetupViewState extends State<PinSetupView> {
 
   void _handleSetPin() {
     if (!_formKey.currentState!.validate()) return;
-    
+
     if (_pinController.text != _confirmPinController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -58,7 +45,8 @@ class _PinSetupViewState extends State<PinSetupView> {
       );
       return;
     }
-    
+
+    // Use existing cubit from parent context
     context.read<AuthCubit>().setPin(widget.phoneNumber, _pinController.text);
   }
 
@@ -80,6 +68,7 @@ class _PinSetupViewState extends State<PinSetupView> {
               ),
             );
           } else if (state is AuthSuccess) {
+            // Navigate to main screen
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const MainScreen()),
@@ -108,7 +97,10 @@ class _PinSetupViewState extends State<PinSetupView> {
                       Gap.s24H(),
                       Text(
                         'Create Your PIN',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                         textAlign: TextAlign.center,
@@ -122,20 +114,23 @@ class _PinSetupViewState extends State<PinSetupView> {
                         textAlign: TextAlign.center,
                       ),
                       Gap.s48H(),
-                      
                       TextFormField(
                         controller: _pinController,
                         obscureText: _obscurePin,
                         keyboardType: TextInputType.number,
                         maxLength: 4,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
                         decoration: InputDecoration(
                           labelText: 'Enter PIN',
                           hintText: 'Create 4-digit PIN',
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePin ? Icons.visibility : Icons.visibility_off,
+                              _obscurePin
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                             ),
                             onPressed: () {
                               setState(() => _obscurePin = !_obscurePin);
@@ -159,13 +154,14 @@ class _PinSetupViewState extends State<PinSetupView> {
                         },
                       ),
                       Gap.s16H(),
-                      
                       TextFormField(
                         controller: _confirmPinController,
                         obscureText: _obscureConfirmPin,
                         keyboardType: TextInputType.number,
                         maxLength: 4,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
                         decoration: InputDecoration(
                           labelText: 'Confirm PIN',
                           hintText: 'Re-enter PIN',
@@ -177,7 +173,8 @@ class _PinSetupViewState extends State<PinSetupView> {
                                   : Icons.visibility_off,
                             ),
                             onPressed: () {
-                              setState(() => _obscureConfirmPin = !_obscureConfirmPin);
+                              setState(() =>
+                                  _obscureConfirmPin = !_obscureConfirmPin);
                             },
                           ),
                           border: OutlineInputBorder(
@@ -198,7 +195,6 @@ class _PinSetupViewState extends State<PinSetupView> {
                         },
                       ),
                       Gap.s32H(),
-                      
                       SizedBox(
                         width: double.infinity,
                         height: 56,
@@ -213,7 +209,8 @@ class _PinSetupViewState extends State<PinSetupView> {
                               ? const SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Text(
                                   'Set PIN',

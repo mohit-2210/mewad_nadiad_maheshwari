@@ -82,29 +82,34 @@ class _LoginViewState extends State<LoginView> {
             // If phone not verified, OTP will be sent automatically
             // and OtpSent state will be emitted
           } else if (state is UserExistsWithoutPin) {
-            // User exists but no PIN - send OTP with PASSWORD_RESET_TOKEN
+            // User exists but no PIN - send OTP via Firebase with PASSWORD_RESET_TOKEN
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Please set up your PIN'),
                 backgroundColor: Colors.orange,
               ),
             );
-            context.read<AuthCubit>().sendOtp(
-              state.mobile,
-              isForPinSetup: true,
-            );
+            // Use Firebase OTP for PIN setup
+            context.read<AuthCubit>().sendOtpViaFirebase(
+                  state.mobile,
+                  isForPinSetup: true,
+                );
           } else if (state is UserDoesNotExist) {
             // Show dialog to create account
             _showNewUserDialog(context, state.mobile);
           } else if (state is OtpSent) {
-            // Navigate to OTP screen
+            // Navigate to OTP screen with BlocProvider.value
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => OTPVerificationScreen(
-                  phoneNumber: state.mobile,
-                  isNewUser: state.isNewUser,
-                  isForPinSetup: state.isForPinSetup,
+                builder: (newContext) => BlocProvider.value(
+                  value: context.read<AuthCubit>(), // ✅ Pass existing cubit
+                  child: OTPVerificationScreen(
+                    phoneNumber: state.mobile,
+                    isNewUser: state.isNewUser,
+                    isForPinSetup: state.isForPinSetup,
+                    verificationId: state.verificationId,
+                  ),
                 ),
               ),
             );
