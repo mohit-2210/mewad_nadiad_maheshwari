@@ -17,7 +17,6 @@ class AuthApiService {
   User? get currentUser => _currentUser;
 
   // ==================== Error Handling ====================
-
   ApiException _handleDioError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
@@ -107,10 +106,12 @@ class AuthApiService {
       final accessToken = await AuthLocalStorage.getAccessToken();
       final response = await _dio.post(
         checkUserEndpoint,
-        data: {"mobile": mobile},
+        data: {
+          "mobile": mobile,
+        },
         options: Options(
           headers: {
-            "Authorization": "Bearer $accessToken",
+            if (accessToken != null) "Authorization": "Bearer $accessToken",
           },
         ),
       );
@@ -120,6 +121,38 @@ class AuthApiService {
       }
 
       throw Exception(response.data['message'] ?? 'Failed to check user');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Verify Firebase ID Token with Backend
+  /// This sends the Firebase ID token to backend for verification
+  Future<Response> verifyFirebaseToken({
+    required String mobile,
+    required String firebaseIdToken,
+    required String
+        tokenType, // 'OTP_VERIFICATION_TOKEN' or 'PASSWORD_RESET_TOKEN'
+  }) async {
+    try {
+      print('🔄 Calling backend to verify Firebase token');
+
+      final response = await _dio.post(
+        sendOtpEndpoint,
+        data: {
+          "mobile": mobile,
+          "firebaseIdToken": firebaseIdToken,
+          "tokenType": tokenType,
+        },
+      );
+
+      if (response.statusCode == 200 && response.data['status'] == true) {
+        print('✅ Backend verified Firebase token successfully');
+        return response;
+      }
+
+      throw Exception(
+          response.data['message'] ?? 'Firebase token verification failed');
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -163,119 +196,13 @@ class AuthApiService {
     }
   }
 
-  /// Send OTP to mobile
-  Future<Response> sendOtp(String mobile, {bool isReset = false}) async {
-    try {
-      final accessToken = await AuthLocalStorage.getAccessToken();
-      final body = {
-        "mobile": mobile,
-      };
-
-      if (isReset) {
-        body["tokenType"] = "PASSWORD_RESET_TOKEN"; // For password reset
-      }
-      final response = await _dio.post(
-        sendOtpEndpoint,
-        data: body,
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $accessToken",
-          },
-        ),
-      );
-      // ------ HANDLE RESPONSE ------
-      if (response.statusCode == 200 && response.data["status"] == true) {
-        final data = response.data["data"];
-
-        if (!isReset) {
-          // NORMAL LOGIN — store otpVerificationToken
-          if (data?["otpVerificationToken"]?["token"] != null) {
-            final otpToken = data["otpVerificationToken"]["token"];
-            await AuthLocalStorage.saveOtpVerificationToken(otpToken);
-            print(
-                "✓ OTP Verification Token Saved: ${otpToken.substring(0, 20)}...");
-          }
-        } else {
-          // RESET PASSWORD — store passwordResetToken
-          if (data?["passwordResetToken"]?["token"] != null) {
-            final resetToken = data["passwordResetToken"]["token"];
-            await AuthLocalStorage.savePasswordResetToken(resetToken);
-            print(
-                "✓ Password Reset Token Saved: ${resetToken.substring(0, 20)}...");
-          }
-        }
-      }
-      return response;
-    } on DioException catch (e) {
-      throw _handleDioError(e);
-    }
-  }
-
-  /// Verify OTP
-  Future<Response> verifyOtp(
-    String otp,
-    String otpSession, {
-    bool includeTokens = true,
-    String? otpType, // e.g. "FORGET_PASSWORD" for reset flow
-  }) async {
-    try {
-      print('🔑 Verifying OTP with session: ${otpSession.substring(0, 20)}...');
-
-      final body = {
-        "otp": otp,
-        "isIncludeTokens": includeTokens,
-      };
-
-      if (otpType != null) {
-        body["otpType"] = otpType;
-      }
-
-      final response = await _dio.post(
-        verifyOtpEndpoint,
-        data: body,
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $otpSession",
-          },
-        ),
-      );
-
-      if (includeTokens) {
-        final data = response.data["data"];
-        final tokens = data?["tokens"];
-
-        if (tokens != null) {
-          final accessToken = tokens["accessToken"]?["token"];
-          final refreshToken = tokens["refreshToken"]?["token"];
-          final passwordResetToken = tokens["passwordResetToken"]?["token"];
-
-          if (accessToken is String) {
-            await AuthLocalStorage.saveAccessToken(accessToken);
-            print("✓ Access token saved from verifyOtp");
-          }
-
-          if (refreshToken is String) {
-            await AuthLocalStorage.saveRefreshToken(refreshToken);
-            print("✓ Refresh token saved from verifyOtp");
-          }
-
-          if (passwordResetToken is String) {
-            await AuthLocalStorage.savePasswordResetToken(passwordResetToken);
-            print("✓ Password reset token saved from verifyOtp");
-          }
-        }
-      }
-
-      return response;
-    } on DioException catch (e) {
-      throw _handleDioError(e);
-    }
-  }
-
   /// Register new user
   Future<Response> register(Map<String, dynamic> data) async {
     try {
-      return await _dio.post(registerEndpoint, data: data);
+      return await _dio.post(
+        registerEndpoint,
+        data: data,
+      );
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -283,7 +210,6 @@ class AuthApiService {
 
   /// Reset/Set password (for existing users without PIN)
   Future<Response> resetPassword({
-    // required String mobile,
     required String newPassword,
     String? otp,
   }) async {
@@ -297,7 +223,6 @@ class AuthApiService {
       }
 
       final data = {
-        // "mobile": mobile,
         "newPassword": newPassword,
       };
 

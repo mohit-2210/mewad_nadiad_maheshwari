@@ -53,24 +53,32 @@ class OtpSent extends AuthState {
   final String mobile;
   final bool isNewUser;
   final bool isForPinSetup;
-  final String? verificationId; // Firebase verification ID
-  
+  final bool isForPhoneVerification;
+  final String? verificationId;
+
   OtpSent(
     this.mobile, {
     this.isNewUser = false,
     this.isForPinSetup = false,
+    this.isForPhoneVerification = false,
     this.verificationId,
   });
 
   @override
-  List<Object?> get props => [mobile, isNewUser, isForPinSetup, verificationId];
+  List<Object?> get props => [
+        mobile,
+        isNewUser,
+        isForPinSetup,
+        isForPhoneVerification,
+        verificationId,
+      ];
 }
 
 class OtpVerified extends AuthState {
   final String mobile;
   final bool needsPin;
   final bool isNewUser;
-  
+
   OtpVerified(
     this.mobile, {
     this.needsPin = false,
@@ -85,7 +93,7 @@ class OtpVerified extends AuthState {
 class RegistrationSuccess extends AuthState {
   final String mobile;
   final String pin;
-  
+
   RegistrationSuccess({
     required this.mobile,
     required this.pin,

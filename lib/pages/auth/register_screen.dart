@@ -68,6 +68,7 @@ class _RegisterViewState extends State<RegisterView> {
       'userType': 'MEMBER',
     };
 
+    print('📝 Submitting registration for: ${widget.phoneNumber}');
     context.read<AuthCubit>().register(userData);
   }
 
@@ -83,6 +84,8 @@ class _RegisterViewState extends State<RegisterView> {
       ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
+          print('🔄 Register Screen State: ${state.runtimeType}');
+
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -91,6 +94,7 @@ class _RegisterViewState extends State<RegisterView> {
               ),
             );
           } else if (state is RegistrationSuccess) {
+            print('✅ Registration successful, sending Firebase OTP');
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Registration successful! Sending OTP...'),
@@ -99,21 +103,22 @@ class _RegisterViewState extends State<RegisterView> {
               ),
             );
 
-            // Send OTP via Firebase automatically
-            context.read<AuthCubit>().sendOtpViaFirebase(
+            // Send Firebase OTP automatically for new user
+            context.read<AuthCubit>().sendFirebaseOtp(
                   state.mobile,
                   isNewUser: true,
                 );
           } else if (state is OtpSent && state.isNewUser) {
-            // Get PIN from controller
+            // Get PIN from controller for auto-login after OTP verification
             String? userPin = _pinController.text.trim();
 
-            // Navigate to OTP verification screen with BlocProvider.value
+            print('📱 Navigating to OTP verification for new user');
+            // Navigate to OTP verification screen
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (newContext) => BlocProvider.value(
-                  value: context.read<AuthCubit>(), // ✅ Pass existing cubit
+                  value: context.read<AuthCubit>(),
                   child: OTPVerificationScreen(
                     phoneNumber: state.mobile,
                     isNewUser: true,

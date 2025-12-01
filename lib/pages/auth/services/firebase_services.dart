@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 
 /// Complete Firebase Phone Authentication Service
 /// Handles OTP sending and verification on client side

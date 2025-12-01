@@ -67,6 +67,8 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
+          print('🔄 Login Screen State: ${state.runtimeType}');
+
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -77,37 +79,42 @@ class _LoginViewState extends State<LoginView> {
           } else if (state is UserExistsWithPin) {
             if (state.isPhoneVerified) {
               // Phone verified, show PIN field for direct login
+              print('✅ Show PIN field for login');
               setState(() => _showPinField = true);
             }
-            // If phone not verified, OTP will be sent automatically
+            // If phone not verified, Firebase OTP will be sent automatically
             // and OtpSent state will be emitted
           } else if (state is UserExistsWithoutPin) {
-            // User exists but no PIN - send OTP via Firebase with PASSWORD_RESET_TOKEN
+            // User exists but no PIN
+            // Firebase OTP will be sent automatically for PIN setup flow
+            print('⚠️ User exists without PIN - Firebase OTP being sent');
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Please set up your PIN'),
+                content: Text('Please verify your phone and set up your PIN'),
                 backgroundColor: Colors.orange,
               ),
             );
-            // Use Firebase OTP for PIN setup
-            context.read<AuthCubit>().sendOtpViaFirebase(
-                  state.mobile,
-                  isForPinSetup: true,
-                );
           } else if (state is UserDoesNotExist) {
             // Show dialog to create account
             _showNewUserDialog(context, state.mobile);
           } else if (state is OtpSent) {
-            // Navigate to OTP screen with BlocProvider.value
+            // Navigate to OTP screen with correct flow flags
+            print('📱 Navigating to OTP screen');
+            print('   - isNewUser: ${state.isNewUser}');
+            print('   - isForPinSetup: ${state.isForPinSetup}');
+            print(
+                '   - isForPhoneVerification: ${state.isForPhoneVerification}');
+
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (newContext) => BlocProvider.value(
-                  value: context.read<AuthCubit>(), // ✅ Pass existing cubit
+                  value: context.read<AuthCubit>(),
                   child: OTPVerificationScreen(
                     phoneNumber: state.mobile,
                     isNewUser: state.isNewUser,
                     isForPinSetup: state.isForPinSetup,
+                    isForPhoneVerification: state.isForPhoneVerification,
                     verificationId: state.verificationId,
                   ),
                 ),
@@ -115,6 +122,7 @@ class _LoginViewState extends State<LoginView> {
             );
           } else if (state is AuthSuccess) {
             // Navigate to main screen
+            print('✅ Login successful, navigating to home');
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const MainScreen()),
@@ -191,7 +199,7 @@ class _LoginViewState extends State<LoginView> {
                         },
                       ),
 
-                      // PIN Field (shown only after user check)
+                      // PIN Field (shown only for verified users)
                       if (_showPinField) ...[
                         Gap.s16H(),
                         TextFormField(
@@ -253,9 +261,8 @@ class _LoginViewState extends State<LoginView> {
                               ? const SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : Text(
                                   _showPinField

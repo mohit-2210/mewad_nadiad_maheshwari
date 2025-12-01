@@ -9,11 +9,12 @@ import 'package:mmsn/pages/auth/pin_setup_screen.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 
 /// OTP Verification Screen
-/// This screen receives the existing AuthCubit via BlocProvider.value
+/// Handles Firebase OTP verification and backend token exchange
 class OTPVerificationScreen extends StatefulWidget {
   final String phoneNumber;
   final bool isNewUser;
   final bool isForPinSetup;
+  final bool isForPhoneVerification;
   final String? userPin;
   final String? verificationId;
 
@@ -22,6 +23,7 @@ class OTPVerificationScreen extends StatefulWidget {
     required this.phoneNumber,
     this.isNewUser = false,
     this.isForPinSetup = false,
+    this.isForPhoneVerification = false,
     this.userPin,
     this.verificationId,
   });
@@ -44,15 +46,12 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Get verification ID from widget parameter
     _currentVerificationId = widget.verificationId;
 
     if (_currentVerificationId == null) {
       print('⚠️ Warning: No verification ID provided to OTP screen');
     } else {
-      print(
-          '✅ OTP screen initialized with verification ID: ${_currentVerificationId!.substring(0, 20)}...');
+      print('✅ OTP screen initialized with verification ID');
     }
 
     _startResendTimer();
@@ -98,37 +97,37 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       return;
     }
 
-    print('🔐 Verifying Firebase OTP: $otp for ${widget.phoneNumber}');
-    print('📱 Is new user: ${widget.isNewUser}');
-    print('🔧 Is for PIN setup: ${widget.isForPinSetup}');
-    print('🔑 User PIN available: ${widget.userPin != null}');
-    print(
-        '🎫 Using Verification ID: ${_currentVerificationId!.substring(0, 20)}...');
+    print('🔐 Verifying Firebase OTP: $otp');
+    print('📱 Flow type:');
+    print('   - New user: ${widget.isNewUser}');
+    print('   - PIN setup: ${widget.isForPinSetup}');
+    print('   - Phone verification: ${widget.isForPhoneVerification}');
 
-    // Verify via Firebase using existing cubit
-    context.read<AuthCubit>().verifyOtpViaFirebase(
+    // Verify via Firebase which will then communicate with backend
+    context.read<AuthCubit>().verifyFirebaseOtp(
           widget.phoneNumber,
           otp,
           verificationId: _currentVerificationId!,
           isNewUser: widget.isNewUser,
           isForPinSetup: widget.isForPinSetup,
+          isForPhoneVerification: widget.isForPhoneVerification,
         );
   }
 
   void _resendOTP() {
     print('🔄 Resending OTP to ${widget.phoneNumber}');
 
-    // Clear current OTP fields
     for (var controller in _controllers) {
       controller.clear();
     }
     _focusNodes[0].requestFocus();
 
-    // Resend OTP via existing cubit
+    // Resend via existing cubit
     context.read<AuthCubit>().resendOtp(
           widget.phoneNumber,
           isNewUser: widget.isNewUser,
           isForPinSetup: widget.isForPinSetup,
+          isForPhoneVerification: widget.isForPhoneVerification,
         );
     _startResendTimer();
   }
@@ -152,6 +151,17 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     _focusNodes[0].requestFocus();
   }
 
+  String _getFlowDescription() {
+    if (widget.isNewUser) {
+      return 'Verifying your phone number for registration';
+    } else if (widget.isForPinSetup) {
+      return 'Verifying your phone to set up PIN';
+    } else if (widget.isForPhoneVerification) {
+      return 'Verifying your phone number';
+    }
+    return 'Verifying OTP';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,18 +182,17 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
             setState(() {
               _currentVerificationId = state.verificationId;
             });
-            print(
-                '✅ New verification ID received: ${state.verificationId?.substring(0, 20)}...');
+            print('✅ New verification ID received');
             _showSnackBar('OTP sent successfully');
           } else if (state is OtpVerified) {
-            print('✅ OTP Verified:');
+            print('✅ OTP Verified and Backend Notified');
             print('   - isNewUser: ${state.isNewUser}');
             print('   - needsPin: ${state.needsPin}');
 
             if (state.isNewUser) {
               // New user - auto-login with PIN from registration
               if (widget.userPin != null && widget.userPin!.isNotEmpty) {
-                _showSnackBar('OTP verified! Logging you in...');
+                _showSnackBar('Phone verified! Logging you in...');
                 context.read<AuthCubit>().loginAfterRegistration(
                       widget.phoneNumber,
                       widget.userPin!,
@@ -194,15 +203,13 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
               }
             } else if (state.needsPin) {
               // Existing user without PIN - navigate to PIN setup
-              _showSnackBar('OTP verified! Please set your PIN');
+              _showSnackBar('Phone verified! Please set your PIN');
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                   builder: (newContext) => BlocProvider.value(
                     value: context.read<AuthCubit>(),
-                    child: PinSetupScreen(
-                      phoneNumber: widget.phoneNumber,
-                    ),
+                    child: PinSetupScreen(phoneNumber: widget.phoneNumber),
                   ),
                 ),
               );
@@ -264,7 +271,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                     Gap.s16H(),
 
-                    // Firebase indicator
+                    // Flow indicator
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -279,7 +286,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'OTP sent via Firebase SMS',
+                              _getFlowDescription(),
                               style: TextStyle(
                                 color: Colors.blue.shade700,
                                 fontSize: 12,
