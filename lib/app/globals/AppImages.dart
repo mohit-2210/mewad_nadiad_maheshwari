@@ -26,55 +26,67 @@ class AppImages {
       "image": "assets/people/satyanarayan_heda.webp",
     },
     {
-      "name": "Satish ajmera",
+      "name": "Satish Ajmera",
       "image": "assets/people/satish_ajmera.webp",
     },
     {
-      "name": "Vinod jagetiya",
+      "name": "Harish Dhuppad",
+      "image": "assets/people/harish_dhuppad.webp",
+    },
+    {
+      "name": "Vinod Jagetiya",
       "image": "assets/people/vinod_jagetiya.webp",
     },
     {
-      "name": "Satish soni",
-      "image": "assets/people/satish_soni.webp",
-    },
-    {
-      "name": "Bharat heda",
-      "image": "assets/people/bharat_heda.webp",
-    },
-    {
-      "name": "Pradip asawa",
-      "image": "assets/people/pradip_asawa.webp",
-    },
-    {
-      "name": "Dipak inani",
+      "name": "Dinesh Inani",
       "image": "assets/people/dinesh_inani.webp",
     },
     {
-      "name": "Anil toshniwal",
+      "name": "Satish Soni",
+      "image": "assets/people/satish_soni.webp",
+    },
+    {
+      "name": "Yogesh Mundra",
+      "image": "assets/people/yogesh_mundra.webp",
+    },
+    {
+      "name": "Bharat Heda",
+      "image": "assets/people/bharat_heda.webp",
+    },
+    {
+      "name": "Pradip Asawa",
+      "image": "assets/people/pradip_asawa.webp",
+    },
+    {
+      "name": "Dipak Inani",
+      "image": "assets/people/dipak_inani.webp",
+    },
+    {
+      "name": "Anil Toshniwal",
       "image": "assets/people/anil_toshniwal.webp",
     },
     {
-      "name": "Vimal heda",
+      "name": "Vimal Heda",
       "image": "assets/people/vimal_heda.webp",
     },
     {
-      "name": "Ratnesh toshniwal",
+      "name": "Ratnesh Toshniwal",
       "image": "assets/people/ratnesh_toshniwal.webp",
     },
     {
-      "name": "Naresh toshniwal",
+      "name": "Naresh Toshniwal",
       "image": "assets/people/naresh_toshniwal.webp",
     },
     {
-      "name": "Nitin heda",
+      "name": "Nitin Heda",
       "image": "assets/people/nitin_heda.webp",
     },
     {
-      "name": "Vikas toshniwal",
+      "name": "Vikas Toshniwal",
       "image": "assets/people/vikas_toshniwal.webp",
     },
     {
-      "name": "Dinesh khatod",
+      "name": "Dinesh Khatod",
       "image": "assets/people/dinesh_khatod.webp",
     },
     // add as many people as needed (scalable)
