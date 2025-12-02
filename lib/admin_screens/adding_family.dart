@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:mmsn/app/Dio/dio_client.dart';
 import 'package:mmsn/app/globals/api_endpoint.dart';
@@ -25,17 +27,17 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
   TextEditingController occupationController = TextEditingController();
   TextEditingController occupationAddressController = TextEditingController();
 
-  // File? headImage;
-  // final ImagePicker _picker = ImagePicker();
+  File? headImage;
+  final ImagePicker _picker = ImagePicker();
 
-  // Future<void> pickHeadImage() async {
-  //   final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       headImage = File(pickedFile.path);
-  //     });
-  //   }
-  // }
+  Future<void> pickHeadImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        headImage = File(pickedFile.path);
+      });
+    }
+  }
 
   List<Map<String, dynamic>> familyMembers = [];
   String? selectedEditor;
@@ -54,7 +56,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
         "education": educationController.text.trim(),
         "occupation": occupationController.text.trim(),
         "occupationAddress": occupationAddressController.text.trim(),
-        "image": "", // handle image upload later
+        "image": headImage, // handle image upload later
         "familyMembers": familyMembers.map((mem) {
           return {
             "name": mem["name"].text.trim(),
@@ -63,9 +65,9 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
             "phoneNumber": mem["phone"].text.trim().isNotEmpty
                 ? int.tryParse(mem["phone"].text.trim())
                 : null,
-            "education": mem["education"].text.trim(),
-            "occupation": mem["occupation"].text.trim(),
-            "occupationAddress": mem["occupationAddress"].text.trim(),
+            "education": mem["education"].text.trim() ?? "",
+            "occupation": mem["occupation"].text.trim() ?? "",
+            "occupationAddress": mem["occupationAddress"].text.trim() ?? "",
             "image": "", // handle later
             "role":
                 mem["name"].text.trim() == selectedEditor ? "EDITOR" : "MEMBER",
@@ -174,8 +176,8 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildSectionHeader("Head of Family", Icons.person),
-              // SizedBox(height: 12),
-              // _buildImagePicker(headImage, pickHeadImage),
+              SizedBox(height: 12),
+              _buildImagePicker(headImage, pickHeadImage),
               SizedBox(height: 16),
               _buildTextField(
                 headNameController,
@@ -307,38 +309,38 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
     );
   }
 
-  // Widget _buildImagePicker(File? image, VoidCallback onPick) {
-  //   return Center(
-  //     child: GestureDetector(
-  //       onTap: onPick,
-  //       child: Container(
-  //         width: 120,
-  //         height: 120,
-  //         decoration: BoxDecoration(
-  //           color: Colors.grey[200],
-  //           borderRadius: BorderRadius.circular(12),
-  //           border: Border.all(color: Colors.teal, width: 2),
-  //         ),
-  //         child: image != null
-  //             ? ClipRRect(
-  //                 borderRadius: BorderRadius.circular(10),
-  //                 child: Image.file(image, fit: BoxFit.cover),
-  //               )
-  //             : Column(
-  //                 mainAxisAlignment: MainAxisAlignment.center,
-  //                 children: [
-  //                   Icon(Icons.camera_alt, size: 40, color: Colors.teal),
-  //                   SizedBox(height: 8),
-  //                   Text(
-  //                     "Upload Photo",
-  //                     style: TextStyle(color: Colors.teal),
-  //                   ),
-  //                 ],
-  //               ),
-  //       ),
-  //     ),
-  //   );
-  // }
+  Widget _buildImagePicker(File? image, VoidCallback onPick) {
+    return Center(
+      child: GestureDetector(
+        onTap: onPick,
+        child: Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.teal, width: 2),
+          ),
+          child: image != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.file(image, fit: BoxFit.cover),
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.camera_alt, size: 40, color: Colors.teal),
+                    SizedBox(height: 8),
+                    Text(
+                      "Upload Photo",
+                      style: TextStyle(color: Colors.teal),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildTextField(
     TextEditingController controller,
