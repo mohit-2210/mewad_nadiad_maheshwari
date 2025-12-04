@@ -14,9 +14,8 @@ class AuthCubit extends Cubit<AuthState> {
   
   String? _currentVerificationId;
   String? _currentPhoneNumber;
-  String? _firebaseIdToken;
 
-  // ==================== Check User ====================
+  // ==================== Check User (Simplified) ====================
   Future<void> checkUser(String mobile) async {
     emit(AuthLoading());
 
@@ -26,22 +25,12 @@ class AuthCubit extends Cubit<AuthState> {
 
       switch (result.status) {
         case UserExistsStatus.existsWithPinVerified:
-          print('✅ User exists with PIN and phone verified - Direct login');
-          emit(UserExistsWithPin(mobile, isPhoneVerified: true));
-          break;
-
         case UserExistsStatus.existsWithPinNotVerified:
-          print('⚠️ User exists with PIN but phone not verified - Send Firebase OTP');
-          emit(UserExistsWithPin(mobile, isPhoneVerified: false));
-          // Send Firebase OTP to verify phone
-          await sendFirebaseOtp(mobile, isForPhoneVerification: true);
-          break;
-
         case UserExistsStatus.existsWithoutPin:
-          print('⚠️ User exists without PIN - Need Firebase OTP then set PIN');
-          emit(UserExistsWithoutPin(mobile, result.user!));
-          // Send Firebase OTP for PIN setup flow
-          await sendFirebaseOtp(mobile, isForPinSetup: true);
+          // Existing user -> directly call backend login (no OTP)
+          print('✅ User exists - logging in with mobile');
+          final user = await _repo.loginWithMobile(mobile);
+          emit(AuthSuccess(user));
           break;
 
         case UserExistsStatus.doesNotExist:
@@ -72,8 +61,6 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       print('📤 Sending Firebase OTP to: $mobile');
       print('   - isNewUser: $isNewUser');
-      print('   - isForPinSetup: $isForPinSetup');
-      print('   - isForPhoneVerification: $isForPhoneVerification');
       
       _currentPhoneNumber = mobile;
 
@@ -85,7 +72,7 @@ class AuthCubit extends Cubit<AuthState> {
           emit(OtpSent(
             mobile,
             isNewUser: isNewUser,
-            isForPinSetup: isForPinSetup,
+            isForPinSetup: false,
             isForPhoneVerification: isForPhoneVerification,
             verificationId: verificationId,
           ));
@@ -95,13 +82,8 @@ class AuthCubit extends Cubit<AuthState> {
           emit(AuthError(error));
         },
         onAutoVerify: (credential) async {
-          print('✅ Auto-verification completed (Android only)');
-          await _handleFirebaseAutoVerify(
-            credential,
-            isNewUser,
-            isForPinSetup,
-            isForPhoneVerification,
-          );
+          print('✅ Auto-verification completed');
+          await _handleFirebaseAutoVerify(credential, isNewUser);
         },
       );
 
@@ -120,16 +102,12 @@ class AuthCubit extends Cubit<AuthState> {
     String otp, {
     required String verificationId,
     bool isNewUser = false,
-    bool isForPinSetup = false,
-    bool isForPhoneVerification = false,
   }) async {
     emit(AuthLoading());
     
     try {
       print('🔐 Verifying Firebase OTP for $mobile');
       print('   - isNewUser: $isNewUser');
-      print('   - isForPinSetup: $isForPinSetup');
-      print('   - isForPhoneVerification: $isForPhoneVerification');
 
       final firebaseUser = await _firebaseAuth.verifyOtp(
         otp: otp,
@@ -142,103 +120,15 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (firebaseUser != null) {
         print('✅ Firebase OTP verified successfully');
-        print('👤 Firebase UID: ${firebaseUser.uid}');
-        
-        // Get Firebase ID Token
-        final idToken = await _firebaseAuth.getIdToken();
-        
-        if (idToken != null) {
-          print('🎫 Firebase ID Token obtained');
-          _firebaseIdToken = idToken;
-          
-          // Handle different flows based on user type
-          if (isNewUser) {
-            await _handleNewUserVerification(mobile, idToken);
-          } else if (isForPinSetup) {
-            await _handlePinSetupVerification(mobile, idToken);
-          } else if (isForPhoneVerification) {
-            await _handlePhoneVerification(mobile, idToken);
-          } else {
-            emit(AuthError('Invalid verification flow'));
-          }
-        } else {
-          emit(AuthError('Failed to get authentication token'));
-        }
+
+        // After successful OTP verification (only for new users),
+        // perform backend login with mobile + device info.
+        final user = await _repo.loginWithMobile(mobile);
+        print('✅ User logged in successfully after OTP');
+        emit(AuthSuccess(user));
       }
     } catch (e) {
       print('❌ Error in verifyFirebaseOtp: $e');
-      emit(AuthError('Verification failed: ${e.toString()}'));
-    }
-  }
-
-  // ==================== Handle New User Verification ====================
-  Future<void> _handleNewUserVerification(String mobile, String firebaseIdToken) async {
-    try {
-      print('🆕 Handling new user verification');
-      
-      // Send Firebase ID token to backend for verification
-      await _repo.sendFirebaseTokenToBackend(
-        mobile: mobile,
-        firebaseIdToken: firebaseIdToken,
-        tokenType: 'OTP_VERIFICATION_TOKEN',
-      );
-      
-      print('✅ New user phone verified via backend');
-      emit(OtpVerified(
-        mobile,
-        needsPin: false,
-        isNewUser: true,
-      ));
-    } catch (e) {
-      print('❌ New user verification error: $e');
-      emit(AuthError('Verification failed: ${e.toString()}'));
-    }
-  }
-
-  // ==================== Handle PIN Setup Verification ====================
-  Future<void> _handlePinSetupVerification(String mobile, String firebaseIdToken) async {
-    try {
-      print('🔧 Handling PIN setup verification');
-      
-      // Send Firebase ID token to backend with PASSWORD_RESET_TOKEN type
-      final tokens = await _repo.sendFirebaseTokenToBackend(
-        mobile: mobile,
-        firebaseIdToken: firebaseIdToken,
-        tokenType: 'PASSWORD_RESET_TOKEN',
-      );
-      
-      print('✅ Phone verified, ready for PIN setup');
-      emit(OtpVerified(
-        mobile,
-        needsPin: true,
-        isNewUser: false,
-      ));
-    } catch (e) {
-      print('❌ PIN setup verification error: $e');
-      emit(AuthError('Verification failed: ${e.toString()}'));
-    }
-  }
-
-  // ==================== Handle Phone Verification (Existing User with PIN) ====================
-  Future<void> _handlePhoneVerification(String mobile, String firebaseIdToken) async {
-    try {
-      print('📱 Handling phone verification for existing user');
-      
-      // Send Firebase ID token to backend for phone verification
-      await _repo.sendFirebaseTokenToBackend(
-        mobile: mobile,
-        firebaseIdToken: firebaseIdToken,
-        tokenType: 'OTP_VERIFICATION_TOKEN',
-      );
-      
-      print('✅ Phone verified, user can now login with PIN');
-      emit(OtpVerified(
-        mobile,
-        needsPin: false,
-        isNewUser: false,
-      ));
-    } catch (e) {
-      print('❌ Phone verification error: $e');
       emit(AuthError('Verification failed: ${e.toString()}'));
     }
   }
@@ -247,20 +137,14 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> _handleFirebaseAutoVerify(
     firebase_auth.PhoneAuthCredential credential,
     bool isNewUser,
-    bool isForPinSetup,
-    bool isForPhoneVerification,
   ) async {
     try {
-      final idToken = await _firebaseAuth.getIdToken();
-      if (idToken != null && _currentPhoneNumber != null) {
-        if (isNewUser) {
-          await _handleNewUserVerification(_currentPhoneNumber!, idToken);
-        } else if (isForPinSetup) {
-          await _handlePinSetupVerification(_currentPhoneNumber!, idToken);
-        } else if (isForPhoneVerification) {
-          await _handlePhoneVerification(_currentPhoneNumber!, idToken);
-        }
-      }
+      if (_currentPhoneNumber == null) return;
+
+      // If auto-verified for a new user, directly login with mobile.
+      final user = await _repo.loginWithMobile(_currentPhoneNumber!);
+      print('✅ Auto-verified and logged in');
+      emit(AuthSuccess(user));
     } catch (e) {
       print('❌ Auto-verify error: $e');
       emit(AuthError('Auto-verification failed'));
@@ -278,7 +162,7 @@ class AuthCubit extends Cubit<AuthState> {
       print('✅ Registration successful, sending Firebase OTP');
       emit(RegistrationSuccess(
         mobile: userData['mobile'] as String,
-        pin: userData['password'] as String,
+        pin: '', // No longer needed
       ));
     } on ValidationException catch (e) {
       final errorMessage = e.errors != null && e.errors!.isNotEmpty
@@ -292,84 +176,12 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ==================== Login After Registration ====================
-  Future<void> loginAfterRegistration(String mobile, String pin) async {
-    emit(AuthLoading());
-    try {
-      print('🔐 Auto-login after registration: $mobile');
-
-      final deviceId = DeviceService.instance.deviceId;
-      final deviceToken = DeviceService.instance.deviceToken;
-
-      if (deviceId == null || deviceToken == null) {
-        emit(AuthError("Device details not ready. Please try again."));
-        return;
-      }
-
-      final user = await _repo.loginAfterRegistration(mobile, pin);
-      print('✅ Auto-login successful');
-      emit(AuthSuccess(user));
-    } on ApiException catch (e) {
-      print('❌ Auto-login failed: ${e.message}');
-      emit(AuthError(e.message));
-    } catch (e) {
-      print('❌ Auto-login error: $e');
-      emit(AuthError('Auto-login failed: ${e.toString()}'));
-    }
-  }
-
-  // ==================== Login with PIN ====================
-  Future<void> loginWithPin(String mobile, String password) async {
-    emit(AuthLoading());
-    try {
-      print('🔐 Logging in with PIN: $mobile');
-
-      final deviceId = DeviceService.instance.deviceId;
-      final deviceToken = DeviceService.instance.deviceToken;
-
-      if (deviceId == null || deviceToken == null) {
-        emit(AuthError("Device details not ready. Please try again."));
-        return;
-      }
-
-      final user = await _repo.login(mobile, password, deviceId, deviceToken);
-      print('✅ Login successful');
-      emit(AuthSuccess(user));
-    } on ApiException catch (e) {
-      emit(AuthError(e.message));
-    } catch (e) {
-      emit(AuthError('An unexpected error occurred: ${e.toString()}'));
-    }
-  }
-
-  // ==================== Set PIN ====================
-  Future<void> setPin(String mobile, String pin) async {
-    emit(AuthLoading());
-    try {
-      print('🔒 Setting PIN for: $mobile');
-      final user = await _repo.setPin(mobile, pin);
-      print('✅ PIN set and user logged in');
-      emit(AuthSuccess(user));
-    } on ApiException catch (e) {
-      emit(AuthError(e.message));
-    } catch (e) {
-      emit(AuthError('Failed to set PIN: ${e.toString()}'));
-    }
-  }
-
   // ==================== Resend OTP ====================
   Future<void> resendOtp(
     String mobile, {
     bool isNewUser = false,
-    bool isForPinSetup = false,
-    bool isForPhoneVerification = false,
   }) async {
-    await sendFirebaseOtp(
-      mobile,
-      isNewUser: isNewUser,
-      isForPinSetup: isForPinSetup,
-      isForPhoneVerification: isForPhoneVerification,
-    );
+    await sendFirebaseOtp(mobile, isNewUser: isNewUser);
   }
 
   // ==================== Logout ====================
@@ -403,21 +215,6 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       print('⚠️ Auth check error: $e');
       emit(AuthInitial());
-    }
-  }
-
-  // ==================== Change Password ====================
-  Future<void> changePassword(String oldPassword, String newPassword) async {
-    emit(AuthLoading());
-    try {
-      print('🔐 Changing password');
-      await _repo.changePassword(oldPassword, newPassword);
-      print('✅ Password changed successfully');
-      emit(PasswordChanged());
-    } on ApiException catch (e) {
-      emit(AuthError(e.message));
-    } catch (e) {
-      emit(AuthError("Failed to change password: ${e.toString()}"));
     }
   }
 }

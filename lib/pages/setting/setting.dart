@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
+import 'package:mmsn/app/globals/app_state.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchEmail.dart';
 import 'package:mmsn/app/services/openPlayOrAppStore.dart';
@@ -22,12 +24,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appState = AppState.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: Text(
+          AppLocalizations.text(context, 'settingsTitle'),
+        ),
+      ),
       body: ListView(
         children: [
           Gap.s10H(),
+
+          // 🔹 LANGUAGE
+          _buildSectionHeader(
+            AppLocalizations.text(context, 'settingsLanguage'),
+            theme,
+          ),
+          RadioListTile<AppLanguage>(
+            value: AppLanguage.en,
+            groupValue: appState.language,
+            onChanged: (lang) => appState.changeLanguage(lang ?? AppLanguage.en),
+            title: Text(AppLocalizations.text(context, 'languageEnglish')),
+          ),
+          RadioListTile<AppLanguage>(
+            value: AppLanguage.hi,
+            groupValue: appState.language,
+            onChanged: (lang) => appState.changeLanguage(lang ?? AppLanguage.hi),
+            title: Text(AppLocalizations.text(context, 'languageHindi')),
+          ),
+          RadioListTile<AppLanguage>(
+            value: AppLanguage.gu,
+            groupValue: appState.language,
+            onChanged: (lang) => appState.changeLanguage(lang ?? AppLanguage.gu),
+            title: Text(AppLocalizations.text(context, 'languageGujarati')),
+          ),
+          const Divider(),
 
           // 🔹 NOTIFICATIONS
           _buildSectionHeader('Notifications', theme),
@@ -68,17 +100,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           const Divider(),
-          // 🔹 ACCOUNT SETTINGS
-          _buildSectionHeader('Account Settings', theme),
-          _buildListTile(
-            context,
-            icon: Icons.lock_outline,
-            title: 'Change Password',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
-            ),
-          ),
           logoutButton(
             context: context,
             icon: Icons.logout,

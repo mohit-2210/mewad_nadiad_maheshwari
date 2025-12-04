@@ -161,7 +161,6 @@ class AuthApiService {
   /// Login with mobile and password
   Future<Response> login(
     String mobile,
-    String password,
     String deviceId,
     String deviceToken,
   ) async {
@@ -170,7 +169,6 @@ class AuthApiService {
         loginEndpoint,
         data: {
           "mobile": mobile,
-          "password": password,
           "deviceId": deviceId,
           "deviceToken": deviceToken,
         },
@@ -183,6 +181,49 @@ class AuthApiService {
         if (responseData != null) {
           final accessToken = responseData['tokens']?['access']?['token'];
           final refreshToken = responseData['tokens']?['refresh']?['token'];
+
+          if (accessToken != null && refreshToken != null) {
+            await AuthLocalStorage.saveTokens(accessToken, refreshToken);
+          }
+        }
+      }
+
+      return response;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  /// Login using Firebase ID token (phone-only auth)
+  /// Backend is expected to accept firebaseIdToken instead of password
+  Future<Response> loginWithFirebaseToken(
+    String mobile,
+    String firebaseIdToken,
+    String deviceId,
+    String deviceToken,
+  ) async {
+    try {
+      final response = await _dio.post(
+        loginEndpoint,
+        data: {
+          "mobile": mobile,
+          "firebaseIdToken": firebaseIdToken,
+          "deviceId": deviceId,
+          "deviceToken": deviceToken,
+        },
+      );
+
+      // Save tokens from login response (same structure as normal login)
+      final data = response.data as Map<String, dynamic>?;
+      if (data != null && data['status'] == true) {
+        final responseData =
+            (data['data'] as Map<String, dynamic>?) ?? data['tokens'];
+
+        if (responseData != null) {
+          final accessToken = responseData['tokens']?['access']?['token'] ??
+              responseData['access']?['token'];
+          final refreshToken = responseData['tokens']?['refresh']?['token'] ??
+              responseData['refresh']?['token'];
 
           if (accessToken != null && refreshToken != null) {
             await AuthLocalStorage.saveTokens(accessToken, refreshToken);

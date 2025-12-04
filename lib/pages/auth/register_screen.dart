@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
@@ -34,37 +33,19 @@ class RegisterView extends StatefulWidget {
 class _RegisterViewState extends State<RegisterView> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _pinController = TextEditingController();
-  final _confirmPinController = TextEditingController();
-
-  bool _obscurePin = true;
-  bool _obscureConfirmPin = true;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _pinController.dispose();
-    _confirmPinController.dispose();
     super.dispose();
   }
 
   void _handleRegister() {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_pinController.text != _confirmPinController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('PINs do not match'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
     final userData = {
       'name': _nameController.text.trim(),
       'mobile': widget.phoneNumber,
-      'password': _pinController.text.trim(),
       'userType': 'MEMBER',
     };
 
@@ -78,7 +59,10 @@ class _RegisterViewState extends State<RegisterView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.register),
+        title: Builder(
+          builder: (context) =>
+              Text(AppLocalizations.text(context, 'register')),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -109,9 +93,6 @@ class _RegisterViewState extends State<RegisterView> {
                   isNewUser: true,
                 );
           } else if (state is OtpSent && state.isNewUser) {
-            // Get PIN from controller for auto-login after OTP verification
-            String? userPin = _pinController.text.trim();
-
             print('📱 Navigating to OTP verification for new user');
             // Navigate to OTP verification screen
             Navigator.pushReplacement(
@@ -122,7 +103,6 @@ class _RegisterViewState extends State<RegisterView> {
                   child: OTPVerificationScreen(
                     phoneNumber: state.mobile,
                     isNewUser: true,
-                    userPin: userPin,
                     verificationId: state.verificationId,
                   ),
                 ),
@@ -143,7 +123,7 @@ class _RegisterViewState extends State<RegisterView> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        AppStrings.createAcc,
+                        AppLocalizations.text(context, 'createAccount'),
                         style: Theme.of(context)
                             .textTheme
                             .headlineMedium
@@ -154,7 +134,7 @@ class _RegisterViewState extends State<RegisterView> {
                       ),
                       Gap.s8H(),
                       Text(
-                        AppStrings.appName,
+                        AppLocalizations.text(context, 'appName'),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -167,7 +147,10 @@ class _RegisterViewState extends State<RegisterView> {
                         initialValue: widget.phoneNumber,
                         enabled: false,
                         decoration: InputDecoration(
-                          labelText: AppStrings.phoneNumber,
+                          labelText: AppLocalizations.text(
+                            context,
+                            'phoneNumber',
+                          ),
                           prefixIcon: const Icon(Icons.phone),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -183,8 +166,10 @@ class _RegisterViewState extends State<RegisterView> {
                         controller: _nameController,
                         textCapitalization: TextCapitalization.words,
                         decoration: InputDecoration(
-                          labelText: AppStrings.fullName,
-                          hintText: AppStrings.fullNameHint,
+                          labelText:
+                              AppLocalizations.text(context, 'fullName'),
+                          hintText:
+                              AppLocalizations.text(context, 'fullNameHint'),
                           prefixIcon: const Icon(Icons.person),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -198,90 +183,6 @@ class _RegisterViewState extends State<RegisterView> {
                           }
                           if (value.trim().length < 2) {
                             return 'Name must be at least 2 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      Gap.s16H(),
-
-                      // PIN
-                      TextFormField(
-                        controller: _pinController,
-                        obscureText: _obscurePin,
-                        keyboardType: TextInputType.number,
-                        maxLength: 4,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        decoration: InputDecoration(
-                          labelText: AppStrings.pin,
-                          hintText: AppStrings.pinHint,
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePin
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                            ),
-                            onPressed: () {
-                              setState(() => _obscurePin = !_obscurePin);
-                            },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          counterText: '',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter PIN';
-                          }
-                          if (value.length != 4) {
-                            return 'PIN must be 4 digits';
-                          }
-                          return null;
-                        },
-                      ),
-                      Gap.s16H(),
-
-                      // Confirm PIN
-                      TextFormField(
-                        controller: _confirmPinController,
-                        obscureText: _obscureConfirmPin,
-                        keyboardType: TextInputType.number,
-                        maxLength: 4,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        decoration: InputDecoration(
-                          labelText: AppStrings.confirmPIN,
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureConfirmPin
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                            ),
-                            onPressed: () {
-                              setState(() =>
-                                  _obscureConfirmPin = !_obscureConfirmPin);
-                            },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          counterText: '',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please confirm your PIN';
-                          }
-                          if (value != _pinController.text) {
-                            return 'PINs do not match';
                           }
                           return null;
                         },
@@ -306,9 +207,11 @@ class _RegisterViewState extends State<RegisterView> {
                                   child:
                                       CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : const Text(
-                                  AppStrings.register,
-                                  style: TextStyle(fontSize: 18),
+                              : Builder(
+                                  builder: (context) => Text(
+                                    AppLocalizations.text(context, 'register'),
+                                    style: const TextStyle(fontSize: 18),
+                                  ),
                                 ),
                         ),
                       ),

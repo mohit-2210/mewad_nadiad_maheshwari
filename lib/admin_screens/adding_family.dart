@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:mmsn/app/Dio/dio_client.dart';
 import 'package:mmsn/app/globals/api_endpoint.dart';
 import 'package:mmsn/app/globals/app_constants.dart';
+import 'package:mmsn/app/services/selct_image.dart';
+import 'package:mmsn/pages/announcement/services/announcement_api_service.dart';
 
 class FamilyFormPage extends StatefulWidget {
   const FamilyFormPage({super.key});
@@ -30,13 +33,18 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
   File? headImage;
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> pickHeadImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        headImage = File(pickedFile.path);
-      });
-    }
+  Future<void> _pickHeadImage() async {
+    await showImageSourceDialog(
+      context: context,
+      onImageSelected: (source) async {
+        final pickedFile = await _picker.pickImage(source: source);
+        if (pickedFile != null) {
+          setState(() {
+            headImage = File(pickedFile.path);
+          });
+        }
+      },
+    );
   }
 
   List<Map<String, dynamic>> familyMembers = [];
@@ -44,6 +52,23 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
 
   Future<void> submitFamilyData() async {
     try {
+      // Upload head image first (if any)
+      String? headImageUrl;
+      if (headImage != null) {
+        headImageUrl =
+            await AnnouncementApiService.instance.uploadFile(headImage!);
+      }
+
+      // Upload member images and collect URLs
+      for (final mem in familyMembers) {
+        final File? imageFile = mem['image'] as File?;
+        if (imageFile != null) {
+          final url =
+              await AnnouncementApiService.instance.uploadFile(imageFile);
+          mem['imageUrl'] = url;
+        }
+      }
+
       // Prepare request body
       final Map<String, dynamic> requestBody = {
         "address": addressController.text.trim(),
@@ -56,7 +81,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
         "education": educationController.text.trim(),
         "occupation": occupationController.text.trim(),
         "occupationAddress": occupationAddressController.text.trim(),
-        "image": headImage, // handle image upload later
+        if (headImageUrl != null) "image": headImageUrl,
         "familyMembers": familyMembers.map((mem) {
           return {
             "name": mem["name"].text.trim(),
@@ -65,18 +90,33 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
             "phoneNumber": mem["phone"].text.trim().isNotEmpty
                 ? int.tryParse(mem["phone"].text.trim())
                 : null,
-            "education": mem["education"].text.trim() ?? "",
-            "occupation": mem["occupation"].text.trim() ?? "",
-            "occupationAddress": mem["occupationAddress"].text.trim() ?? "",
-            "image": "", // handle later
-            "role":
-                mem["name"].text.trim() == selectedEditor ? "EDITOR" : "MEMBER",
+            "education": mem["education"].text.trim().isNotEmpty
+                ? mem["education"].text.trim()
+                : null,
+            "occupation": mem["occupation"].text.trim().isNotEmpty
+                ? mem["occupation"].text.trim()
+                : null,
+            "occupationAddress":
+                mem["occupationAddress"].text.trim().isNotEmpty
+                    ? mem["occupationAddress"].text.trim()
+                    : null,
+            if (mem["imageUrl"] != null) "image": mem["imageUrl"],
+            "role": mem["name"].text.trim() == selectedEditor
+                ? "EDITOR"
+                : "MEMBER",
           };
         }).toList(),
       };
 
-      final response =
-          await DioClient.instance.post(addFamilyEndpoint, data: requestBody);
+      final response = await DioClient.instance.post(
+        addFamilyEndpoint,
+        data: requestBody,
+        options: Options(
+          headers: {
+            "Content-Type": "application/json",
+          },
+        ),
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -107,6 +147,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
         "occupation": TextEditingController(),
         "occupationAddress": TextEditingController(),
         "image": null,
+        "imageUrl": null,
         "isEditor": false,
       });
     });
@@ -151,14 +192,20 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
     }
   }
 
-  // Future<void> pickMemberImage(int index) async {
-  //   final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       familyMembers[index]["image"] = File(pickedFile.path);
-  //     });
-  //   }
-  // }
+  Future<void> _pickMemberImage(int index) async {
+    await showImageSourceDialog(
+      context: context,
+      onImageSelected: (source) async {
+        final pickedFile = await _picker.pickImage(source: source);
+        if (pickedFile != null) {
+          setState(() {
+            familyMembers[index]["image"] = File(pickedFile.path);
+            familyMembers[index]["imageUrl"] = null; // reset cached URL
+          });
+        }
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +224,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
             children: [
               _buildSectionHeader("Head of Family", Icons.person),
               SizedBox(height: 12),
-              _buildImagePicker(headImage, pickHeadImage),
+              _buildImagePicker(headImage, _pickHeadImage),
               SizedBox(height: 16),
               _buildTextField(
                 headNameController,
@@ -543,37 +590,44 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
               ],
             ),
             SizedBox(height: 12),
-            // Center(
-            //   child: GestureDetector(
-            //     onTap: () => pickMemberImage(index),
-            //     child: Container(
-            //       width: 100,
-            //       height: 100,
-            //       decoration: BoxDecoration(
-            //         color: Colors.grey[200],
-            //         borderRadius: BorderRadius.circular(12),
-            //         border: Border.all(color: Colors.teal, width: 2),
-            //       ),
-            //       child: mem["image"] != null
-            //           ? ClipRRect(
-            //               borderRadius: BorderRadius.circular(10),
-            //               child: Image.file(mem["image"], fit: BoxFit.cover),
-            //             )
-            //           : Column(
-            //               mainAxisAlignment: MainAxisAlignment.center,
-            //               children: [
-            //                 Icon(Icons.camera_alt, size: 32, color: Colors.teal),
-            //                 SizedBox(height: 4),
-            //                 Text(
-            //                   "Add Photo",
-            //                   style: TextStyle(color: Colors.teal, fontSize: 12),
-            //                 ),
-            //               ],
-            //             ),
-            //     ),
-            //   ),
-            // ),
-            // SizedBox(height: 16),
+            Center(
+              child: GestureDetector(
+                onTap: () => _pickMemberImage(index),
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.teal, width: 2),
+                  ),
+                  child: mem["image"] != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            mem["image"],
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.camera_alt,
+                                size: 32, color: Colors.teal),
+                            SizedBox(height: 4),
+                            Text(
+                              "Add Photo",
+                              style: TextStyle(
+                                color: Colors.teal,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
             _buildTextField(
               mem["name"],
               "Full Name",

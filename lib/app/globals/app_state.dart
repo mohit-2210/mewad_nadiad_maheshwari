@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mmsn/app/globals/themes.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 
 class AppState extends ChangeNotifier {
   AppState();
@@ -10,11 +11,19 @@ class AppState extends ChangeNotifier {
   }
 
   ThemeData _theme = lightTheme;
-
   ThemeData get theme => _theme;
+
+  AppLanguage _language = AppLanguage.en;
+  AppLanguage get language => _language;
 
   void changeTheme(ThemeData theme) {
     _theme = theme;
+    notifyListeners();
+  }
+
+  void changeLanguage(AppLanguage language) {
+    if (_language == language) return;
+    _language = language;
     notifyListeners();
   }
 }

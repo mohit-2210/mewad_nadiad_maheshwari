@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
@@ -32,15 +32,10 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
-  final _pinController = TextEditingController();
-
-  bool _showPinField = false;
-  bool _obscurePin = true;
 
   @override
   void dispose() {
     _phoneController.dispose();
-    _pinController.dispose();
     super.dispose();
   }
 
@@ -49,15 +44,6 @@ class _LoginViewState extends State<LoginView> {
 
     final mobile = _phoneController.text.trim();
     context.read<AuthCubit>().checkUser(mobile);
-  }
-
-  void _handleLogin() {
-    if (!_formKey.currentState!.validate()) return;
-
-    final mobile = _phoneController.text.trim();
-    final pin = _pinController.text.trim();
-
-    context.read<AuthCubit>().loginWithPin(mobile, pin);
   }
 
   @override
@@ -76,35 +62,20 @@ class _LoginViewState extends State<LoginView> {
                 backgroundColor: Colors.red,
               ),
             );
-          } else if (state is UserExistsWithPin) {
-            if (state.isPhoneVerified) {
-              // Phone verified, show PIN field for direct login
-              print('✅ Show PIN field for login');
-              setState(() => _showPinField = true);
-            }
-            // If phone not verified, Firebase OTP will be sent automatically
-            // and OtpSent state will be emitted
-          } else if (state is UserExistsWithoutPin) {
-            // User exists but no PIN
-            // Firebase OTP will be sent automatically for PIN setup flow
-            print('⚠️ User exists without PIN - Firebase OTP being sent');
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please verify your phone and set up your PIN'),
-                backgroundColor: Colors.orange,
+          } else if (state is UserDoesNotExist) {
+            // New user - navigate to registration
+            print('❌ User does not exist - navigate to registration');
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => RegisterScreen(
+                  phoneNumber: _phoneController.text.trim(),
+                ),
               ),
             );
-          } else if (state is UserDoesNotExist) {
-            // Show dialog to create account
-            _showNewUserDialog(context, state.mobile);
           } else if (state is OtpSent) {
-            // Navigate to OTP screen with correct flow flags
+            // Navigate to OTP screen
             print('📱 Navigating to OTP screen');
-            print('   - isNewUser: ${state.isNewUser}');
-            print('   - isForPinSetup: ${state.isForPinSetup}');
-            print(
-                '   - isForPhoneVerification: ${state.isForPhoneVerification}');
-
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -113,8 +84,6 @@ class _LoginViewState extends State<LoginView> {
                   child: OTPVerificationScreen(
                     phoneNumber: state.mobile,
                     isNewUser: state.isNewUser,
-                    isForPinSetup: state.isForPinSetup,
-                    isForPhoneVerification: state.isForPhoneVerification,
                     verificationId: state.verificationId,
                   ),
                 ),
@@ -150,7 +119,7 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       Gap.s16H(),
                       Text(
-                        AppStrings.loginTitle,
+                        AppLocalizations.text(context, 'loginTitle'),
                         style: Theme.of(context)
                             .textTheme
                             .headlineMedium
@@ -161,7 +130,7 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       Gap.s8H(),
                       Text(
-                        AppStrings.loginSubTitle,
+                        AppLocalizations.text(context, 'loginDescription'),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -174,13 +143,14 @@ class _LoginViewState extends State<LoginView> {
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         maxLength: 10,
-                        enabled: !_showPinField,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
                         decoration: InputDecoration(
-                          labelText: AppStrings.phoneNumber,
-                          hintText: AppStrings.phoneHint,
+                          labelText:
+                              AppLocalizations.text(context, 'phoneNumber'),
+                          hintText:
+                              AppLocalizations.text(context, 'phoneHint'),
                           prefixIcon: const Icon(Icons.phone),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -199,59 +169,14 @@ class _LoginViewState extends State<LoginView> {
                         },
                       ),
 
-                      // PIN Field (shown only for verified users)
-                      if (_showPinField) ...[
-                        Gap.s16H(),
-                        TextFormField(
-                          controller: _pinController,
-                          obscureText: _obscurePin,
-                          keyboardType: TextInputType.number,
-                          maxLength: 4,
-                          decoration: InputDecoration(
-                            labelText: AppStrings.pin,
-                            hintText: AppStrings.pinHint,
-                            prefixIcon: const Icon(Icons.lock),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePin
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                              ),
-                              onPressed: () {
-                                setState(() => _obscurePin = !_obscurePin);
-                              },
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[50],
-                            counterText: '',
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter PIN';
-                            }
-                            if (value.length != 4) {
-                              return 'PIN must be 4 digits';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-
                       Gap.s32H(),
 
-                      // Action Button
+                      // Continue Button
                       SizedBox(
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: isLoading
-                              ? null
-                              : (_showPinField
-                                  ? _handleLogin
-                                  : _handleContinue),
+                          onPressed: isLoading ? null : _handleContinue,
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -264,27 +189,14 @@ class _LoginViewState extends State<LoginView> {
                                   child:
                                       CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : Text(
-                                  _showPinField
-                                      ? AppStrings.loginButton
-                                      : 'Continue',
-                                  style: const TextStyle(fontSize: 18),
+                              : Builder(
+                                  builder: (context) => Text(
+                                    AppLocalizations.text(context, 'continue'),
+                                    style: const TextStyle(fontSize: 18),
+                                  ),
                                 ),
                         ),
                       ),
-
-                      if (_showPinField) ...[
-                        Gap.s16H(),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _showPinField = false;
-                              _pinController.clear();
-                            });
-                          },
-                          child: const Text('Use different number'),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -292,44 +204,6 @@ class _LoginViewState extends State<LoginView> {
             );
           },
         ),
-      ),
-    );
-  }
-
-  void _showNewUserDialog(BuildContext context, String mobile) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Create Account'),
-        content: const Text(
-          'This number is not registered. Would you like to create a new account?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              setState(() {
-                _phoneController.clear();
-              });
-            },
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => RegisterScreen(
-                    phoneNumber: _phoneController.text.trim(),
-                  ),
-                ),
-              );
-            },
-            child: const Text('Create Account'),
-          ),
-        ],
       ),
     );
   }

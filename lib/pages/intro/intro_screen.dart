@@ -15,33 +15,47 @@ class _IntroScreenState extends State<IntroScreen> {
   int _currentPage = 0;
 
   // ---- PAGES LIST (built safely inside build using getter) ----
-  List<Widget> get _pages => [
-        PeopleIntroPage(people: AppImages.peopleList),
-        buildIntroSlide(
-          image: 'assets/intro/intro1.webp',
-          title: 'Welcome to Family Directory',
-          description:
-              'Connect with families in your society and stay updated with community announcements.',
-        ),
-        buildIntroSlide(
-          image: 'assets/intro/intro2.webp',
-          title: 'Browse Family Profiles',
-          description:
-              'Discover families in your neighborhood and get to know your community members.',
-        ),
-        buildIntroSlide(
-          image: 'assets/intro/intro3.webp',
-          title: 'Stay Connected',
-          description:
-              'Get important society announcements and updates directly on your phone.',
-        ),
-        buildIntroSlide(
-          image: 'assets/intro/intro4.webp',
-          title: 'Get Started',
-          description:
-              'Join your community today and make meaningful connections with your neighbors.',
-        ),
-      ];
+  List<Widget> get _pages {
+    final people = AppImages.peopleList;
+
+    // Chunk people into pages of 12 (4 x 3 grid)
+    const int pageSize = 12;
+    final List<Widget> pages = [];
+    for (int i = 0; i < people.length; i += pageSize) {
+      final end = (i + pageSize > people.length) ? people.length : i + pageSize;
+      pages.add(PeopleIntroPage(people: people.sublist(i, end)));
+    }
+
+    // Advertisement / feature slides after people pages
+    pages.addAll([
+      buildIntroSlide(
+        image: 'assets/intro/intro1.webp',
+        title: 'Welcome to Family Directory',
+        description:
+            'Connect with families in your society and stay updated with community announcements.',
+      ),
+      buildIntroSlide(
+        image: 'assets/intro/intro2.webp',
+        title: 'Browse Family Profiles',
+        description:
+            'Discover families in your neighborhood and get to know your community members.',
+      ),
+      buildIntroSlide(
+        image: 'assets/intro/intro3.webp',
+        title: 'Stay Connected',
+        description:
+            'Get important society announcements and updates directly on your phone.',
+      ),
+      buildIntroSlide(
+        image: 'assets/intro/intro4.webp',
+        title: 'Get Started',
+        description:
+            'Join your community today and make meaningful connections with your neighbors.',
+      ),
+    ]);
+
+    return pages;
+  }
 
   // ---- Navigation ----
   void _nextPage() {

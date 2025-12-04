@@ -1,30 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
-import 'package:mmsn/app/globals/app_strings.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
-import 'package:mmsn/pages/auth/pin_setup_screen.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 
-/// OTP Verification Screen
-/// Handles Firebase OTP verification and backend token exchange
 class OTPVerificationScreen extends StatefulWidget {
   final String phoneNumber;
   final bool isNewUser;
-  final bool isForPinSetup;
-  final bool isForPhoneVerification;
-  final String? userPin;
   final String? verificationId;
 
   const OTPVerificationScreen({
     super.key,
     required this.phoneNumber,
     this.isNewUser = false,
-    this.isForPinSetup = false,
-    this.isForPhoneVerification = false,
-    this.userPin,
     this.verificationId,
   });
 
@@ -98,19 +89,13 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     }
 
     print('🔐 Verifying Firebase OTP: $otp');
-    print('📱 Flow type:');
     print('   - New user: ${widget.isNewUser}');
-    print('   - PIN setup: ${widget.isForPinSetup}');
-    print('   - Phone verification: ${widget.isForPhoneVerification}');
 
-    // Verify via Firebase which will then communicate with backend
     context.read<AuthCubit>().verifyFirebaseOtp(
           widget.phoneNumber,
           otp,
           verificationId: _currentVerificationId!,
           isNewUser: widget.isNewUser,
-          isForPinSetup: widget.isForPinSetup,
-          isForPhoneVerification: widget.isForPhoneVerification,
         );
   }
 
@@ -122,12 +107,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     }
     _focusNodes[0].requestFocus();
 
-    // Resend via existing cubit
     context.read<AuthCubit>().resendOtp(
           widget.phoneNumber,
           isNewUser: widget.isNewUser,
-          isForPinSetup: widget.isForPinSetup,
-          isForPhoneVerification: widget.isForPhoneVerification,
         );
     _startResendTimer();
   }
@@ -151,22 +133,14 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     _focusNodes[0].requestFocus();
   }
 
-  String _getFlowDescription() {
-    if (widget.isNewUser) {
-      return 'Verifying your phone number for registration';
-    } else if (widget.isForPinSetup) {
-      return 'Verifying your phone to set up PIN';
-    } else if (widget.isForPhoneVerification) {
-      return 'Verifying your phone number';
-    }
-    return 'Verifying OTP';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.verifyOTP),
+        title: Builder(
+          builder: (context) =>
+              Text(AppLocalizations.text(context, 'verifyOtpTitle')),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -178,46 +152,11 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
             _showSnackBar(state.message, isError: true);
             _clearOTPFields();
           } else if (state is OtpSent) {
-            // Update verification ID when new OTP is sent (for resend)
             setState(() {
               _currentVerificationId = state.verificationId;
             });
             print('✅ New verification ID received');
             _showSnackBar('OTP sent successfully');
-          } else if (state is OtpVerified) {
-            print('✅ OTP Verified and Backend Notified');
-            print('   - isNewUser: ${state.isNewUser}');
-            print('   - needsPin: ${state.needsPin}');
-
-            if (state.isNewUser) {
-              // New user - auto-login with PIN from registration
-              if (widget.userPin != null && widget.userPin!.isNotEmpty) {
-                _showSnackBar('Phone verified! Logging you in...');
-                context.read<AuthCubit>().loginAfterRegistration(
-                      widget.phoneNumber,
-                      widget.userPin!,
-                    );
-              } else {
-                _showSnackBar('Registration error: PIN not found',
-                    isError: true);
-              }
-            } else if (state.needsPin) {
-              // Existing user without PIN - navigate to PIN setup
-              _showSnackBar('Phone verified! Please set your PIN');
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (newContext) => BlocProvider.value(
-                    value: context.read<AuthCubit>(),
-                    child: PinSetupScreen(phoneNumber: widget.phoneNumber),
-                  ),
-                ),
-              );
-            } else {
-              // Existing user with PIN, phone verification complete
-              _showSnackBar('Phone verified! Please enter your PIN');
-              Navigator.pop(context);
-            }
           } else if (state is AuthSuccess) {
             print('✅ Auth Success - Navigating to home');
             _showSnackBar('Login successful!');
@@ -246,7 +185,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                     Gap.s24H(),
                     Text(
-                      AppStrings.verifyPhone,
+                      AppLocalizations.text(context, 'verifyPhone'),
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -261,37 +200,15 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                               color: Colors.grey[600],
                             ),
                         children: [
-                          const TextSpan(text: AppStrings.enter6DigitCode),
+                          TextSpan(
+                            text: AppLocalizations.text(
+                              context,
+                              'enter6DigitCode',
+                            ),
+                          ),
                           TextSpan(
                             text: widget.phoneNumber,
                             style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Gap.s16H(),
-
-                    // Flow indicator
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.info_outline,
-                              color: Colors.blue.shade700, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _getFlowDescription(),
-                              style: TextStyle(
-                                color: Colors.blue.shade700,
-                                fontSize: 12,
-                              ),
-                            ),
                           ),
                         ],
                       ),
@@ -340,7 +257,6 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                                 _focusNodes[index - 1].requestFocus();
                               }
 
-                              // Auto-verify when all 6 digits are entered
                               if (index == 5 && value.isNotEmpty) {
                                 final otp =
                                     _controllers.map((c) => c.text).join();
@@ -373,9 +289,12 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                                 child:
                                     CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : const Text(
-                                AppStrings.verifyOTP,
-                                style: TextStyle(fontSize: 18),
+                            : Builder(
+                                builder: (context) => Text(
+                                  AppLocalizations.text(
+                                      context, 'verifyOtpTitle'),
+                                  style: const TextStyle(fontSize: 18),
+                                ),
                               ),
                       ),
                     ),
@@ -385,16 +304,27 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(AppStrings.didntReciveCode),
+                        Builder(
+                          builder: (context) => Text(
+                            AppLocalizations.text(
+                              context,
+                              'didntReceiveCode',
+                            ),
+                          ),
+                        ),
                         if (_resendTimer > 0)
                           Text(
                             ' Resend in $_resendTimer s',
                             style: TextStyle(color: Colors.grey[600]),
                           )
                         else
-                          TextButton(
-                            onPressed: isLoading ? null : _resendOTP,
-                            child: const Text(AppStrings.resend),
+                          Builder(
+                            builder: (context) => TextButton(
+                              onPressed: isLoading ? null : _resendOTP,
+                              child: Text(
+                                AppLocalizations.text(context, 'resend'),
+                              ),
+                            ),
                           ),
                       ],
                     ),

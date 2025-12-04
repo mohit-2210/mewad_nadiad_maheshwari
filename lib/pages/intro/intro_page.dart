@@ -1,5 +1,3 @@
-
-
 class IntroPage {
   IntroPage({
     required this.image,
