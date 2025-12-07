@@ -29,7 +29,7 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
   final _contentController = TextEditingController();
 
   File? _imageFile;
-  // File? _pdfFile;
+  File? _pdfFile;
   bool _isSubmitting = false;
 
   final String _date = DateFormat('dd/MM/yyyy').format(DateTime.now());
@@ -38,10 +38,15 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
   String? _selectedSociety;
   User? _selectedHead;
 
-  // society data loaded from API
+  // Society data loaded from API
   Map<String, List<Family>> _societyGroups = {};
   List<String> _selectedSocieties = [];
   bool _isSocietyLoading = true;
+
+  // All members data for selection
+  List<User> _allMembers = [];
+  List<User> _allHeads = [];
+  bool _isLoadingUsers = false;
 
   @override
   void initState() {
@@ -50,11 +55,22 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
   }
 
   Future<void> _loadSocietyGroups() async {
-    final groups = await FamilyApiService.instance.getFamiliesBySociety();
     setState(() {
-      _societyGroups = groups;
-      _isSocietyLoading = false;
+      _isSocietyLoading = true;
     });
+
+    try {
+      final groups = await FamilyApiService.instance.getFamiliesBySociety();
+      setState(() {
+        _societyGroups = groups;
+        _isSocietyLoading = false;
+      });
+    } catch (e) {
+      print('Error loading societies: $e');
+      setState(() {
+        _isSocietyLoading = false;
+      });
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -63,48 +79,61 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
     if (picked != null) setState(() => _imageFile = File(picked.path));
   }
 
-  // Future<void> _pickPdf() async {
-  //   final result = await FilePicker.platform.pickFiles(
-  //     type: FileType.custom,
-  //     allowedExtensions: ['pdf'],
-  //   );
-  //   if (result != null && result.files.single.path != null) {
-  //     setState(() => _pdfFile = File(result.files.single.path!));
-  //   }
-  // }
+  Future<void> _pickPdf() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() => _pdfFile = File(result.files.single.path!));
+    }
+  }
 
-//   Future<List<String>> _getUserIdsToSend() async {
-//   List<String> userIds = [];
+  /// Get user IDs based on selected send-to option
+  Future<List<String>> _getUserIdsToSend() async {
+    List<String> userIds = [];
 
-//   if (_sendToOption == "all_members") {
-//     // fetch all members
-//     final members = await FamilyApiService.instance.getAllMembers();
-//     userIds = members.map((u) => u.id!).toList();
-//   }
+    try {
+      if (_sendToOption == "all_members") {
+        // Fetch all members including heads
+        final members = await FamilyApiService.instance.getAllMembers();
+        userIds = members
+            .where((u) => u.id.isNotEmpty)
+            .map((u) => u.id)
+            .toList();
+        print('📤 Sending to all members: ${userIds.length} users');
+      } else if (_sendToOption == "all_heads") {
+        // Fetch only heads
+        final heads = await FamilyApiService.instance.getAllHeads();
+        userIds = heads
+            .where((u) => u.id.isNotEmpty)
+            .map((u) => u.id)
+            .toList();
+        print('📤 Sending to all heads: ${userIds.length} users');
+      } else if (_sendToOption == "specific_society") {
+        // Fetch members from selected societies using new method
+        final members = await FamilyApiService.instance
+            .getMembersBySocieties(_selectedSocieties);
+        userIds = members
+            .where((u) => u.id.isNotEmpty)
+            .map((u) => u.id)
+            .toList();
+        print('📤 Sending to society members: ${userIds.length} users');
+      }
+    } catch (e) {
+      print('❌ Error fetching user IDs: $e');
+      throw Exception('Failed to fetch recipients: $e');
+    }
 
-//   else if (_sendToOption == "all_heads") {
-//     // fetch only heads
-//     final heads = await FamilyApiService.instance.getAllHeads();
-//     userIds = heads.map((u) => u.id!).toList();
-//   }
+    // Remove duplicates (safety check)
+    userIds = userIds.toSet().toList();
+    print('✅ Total unique recipients: ${userIds.length}');
 
-//   else if (_sendToOption == "specific_society") {
-//     for (final society in _selectedSocieties) {
-//       final families = _societyGroups[society] ?? [];
-//       for (final family in families) {
-//         if (family.user != null && family.user!.id != null) {
-//           userIds.add(family.user!.id!);
-//         }
-//       }
-//     }
-//   }
-
-//   return userIds;
-// }
-
+    return userIds;
+  }
 
   void _clearImage() => setState(() => _imageFile = null);
-  // void _clearPdf() => setState(() => _pdfFile = null);
+  void _clearPdf() => setState(() => _pdfFile = null);
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
@@ -116,39 +145,44 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
       // 1️⃣ Upload Image if selected
       List<String>? imageUrls;
       if (_imageFile != null) {
-        final uploadedImageUrl =
-            await uploadFile(_imageFile!);
+        final uploadedImageUrl = await uploadFile(_imageFile!);
         imageUrls = [uploadedImageUrl];
       }
 
-// 2️⃣ Upload PDF if selected
-      // List<String>? pdfUrls;
-      // if (_pdfFile != null) {
-      //   final uploadedPdfUrl =
-      //       await uploadFile(_pdfFile!);
-      //   pdfUrls = [uploadedPdfUrl];
-      // }
+      // 2️⃣ Upload PDF if selected
+      List<String>? pdfUrls;
+      if (_pdfFile != null) {
+        final uploadedPdfUrl = await uploadFile(_pdfFile!);
+        pdfUrls = [uploadedPdfUrl];
+      }
 
-      // final userIds = await _getUserIdsToSend();
+      // 3️⃣ Get user IDs based on selection
+      final userIds = await _getUserIdsToSend();
 
-// 3️⃣ Call Create Announcement API
-      await AnnouncementApiService.instance.createAnnouncement(
+      if (userIds.isEmpty) {
+        throw Exception('No recipients selected');
+      }
+
+      // 4️⃣ Call Create Announcement API
+      await AnnouncementApiService.instance.createAnnouncementWithRecipients(
         title: _titleController.text,
         description: _descriptionController.text,
         content: _contentController.text,
         date: DateTime.now(),
-        // userIds: userIds,
+        userIds: userIds,
         imageUrls: imageUrls,
-        // pdfUrls: pdfUrls,
+        pdfUrls: pdfUrls,
         selectedSocieties:
             _sendToOption == "specific_society" ? _selectedSocieties : null,
-
       );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Announcement added successfully!')),
+        SnackBar(
+          content: Text('Announcement sent to ${userIds.length} users!'),
+          backgroundColor: Colors.green,
+        ),
       );
 
       Navigator.pop(context, true);
@@ -175,7 +209,6 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      // ✅ Close keyboard when going back
       onWillPop: () async {
         FocusScope.of(context).unfocus();
         return true;
@@ -372,16 +405,16 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
                                 _buildTextField(
                                     _contentController, "Full Content",
                                     maxLines: 5),
-                                // Gap.s16H(),
+                                Gap.s16H(),
 
-                                // ---------- PDF Section ----------
-                                // _sectionLabel("Attach PDF (optional)"),
-                                // Gap.s8H(),
-                                // _buildPdfSelector(),
+                                // PDF Section
+                                _sectionLabel("Attach PDF (optional)"),
+                                Gap.s8H(),
+                                _buildPdfSelector(),
 
                                 Gap.s24H(),
 
-                                // ---------- Submit ----------
+                                // Submit Button
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
@@ -445,7 +478,7 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
     );
   }
 
-  //  Helper Widgets
+  // Helper Widgets
 
   Widget _buildTextField(TextEditingController controller, String label,
       {int maxLines = 1}) {
@@ -457,55 +490,55 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
     );
   }
 
-  // Widget _buildPdfSelector() {
-  //   return Container(
-  //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-  //     decoration: BoxDecoration(
-  //       color: Colors.deepPurple.shade50,
-  //       borderRadius: BorderRadius.circular(12),
-  //       border: Border.all(color: Colors.deepPurple.shade200, width: 1),
-  //     ),
-  //     child: Row(
-  //       children: [
-  //         Icon(Icons.picture_as_pdf, size: 32, color: Colors.deepPurple),
-  //         Gap.s10W(),
-  //         Expanded(
-  //           child: Text(
-  //             _pdfFile != null
-  //                 ? _pdfFile!.path.split('/').last
-  //                 : 'No PDF selected',
-  //             style: TextStyle(
-  //               fontSize: 14,
-  //               color: _pdfFile != null ? Colors.black : Colors.grey.shade600,
-  //             ),
-  //             overflow: TextOverflow.ellipsis,
-  //           ),
-  //         ),
-  //         Gap.s8W(),
-  //         if (_pdfFile != null)
-  //           IconButton(
-  //             icon: const Icon(Icons.clear_rounded, color: Colors.redAccent),
-  //             onPressed: _clearPdf,
-  //           )
-  //         else
-  //           ElevatedButton.icon(
-  //             style: ElevatedButton.styleFrom(
-  //               backgroundColor: Colors.deepPurple,
-  //               padding: const EdgeInsets.symmetric(horizontal: 12),
-  //               shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadius.circular(10),
-  //               ),
-  //             ),
-  //             onPressed: _pickPdf,
-  //             icon:
-  //                 const Icon(Icons.upload_file, color: Colors.white, size: 18),
-  //             label: const Text('Select PDF',
-  //                 style: TextStyle(color: Colors.white)),
-  //           ),
-  //       ],
-  //     ),
-  //   );
-  // }
+  Widget _buildPdfSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.deepPurple.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.deepPurple.shade200, width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.picture_as_pdf, size: 32, color: Colors.deepPurple),
+          Gap.s10W(),
+          Expanded(
+            child: Text(
+              _pdfFile != null
+                  ? _pdfFile!.path.split('/').last
+                  : 'No PDF selected',
+              style: TextStyle(
+                fontSize: 14,
+                color: _pdfFile != null ? Colors.black : Colors.grey.shade600,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Gap.s8W(),
+          if (_pdfFile != null)
+            IconButton(
+              icon: const Icon(Icons.clear_rounded, color: Colors.redAccent),
+              onPressed: _clearPdf,
+            )
+          else
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: _pickPdf,
+              icon:
+                  const Icon(Icons.upload_file, color: Colors.white, size: 18),
+              label: const Text('Select PDF',
+                  style: TextStyle(color: Colors.white)),
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _sectionLabel(String text) {
     return Text(

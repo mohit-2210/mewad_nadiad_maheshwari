@@ -94,10 +94,6 @@ class AppImages {
       "image": "assets/people/rajesh_inani.webp",
     },
     {
-      "name": "Vikas Toshniwal",
-      "image": "assets/people/vikas_toshniwal.webp",
-    },
-    {
       "name": "Mahesh Aagal",
       "image": "assets/people/mahesh_aagal.webp",
     },

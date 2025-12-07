@@ -12,6 +12,7 @@ class UserRepository {
     return _service.updateUser(
       userId,
       updatedData,
+      
     );
   }
 }

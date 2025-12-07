@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:mmsn/app/Dio/dio_client.dart';
 import 'package:mmsn/app/globals/api_endpoint.dart';
@@ -90,7 +88,7 @@ class AnnouncementApiService {
     }
   }
 
-  /// Create new announcement
+  /// Create new announcement (original method - without user IDs)
   Future<Announcement> createAnnouncement({
     required String title,
     required String description,
@@ -98,37 +96,29 @@ class AnnouncementApiService {
     required DateTime date,
     List<String>? imageUrls,
     List<String>? pdfUrls,
-    // required List<String> userIds,
     List<String>? selectedSocieties,
   }) async {
     try {
       final accessToken = await AuthLocalStorage.getAccessToken();
 
-      // Prepare request body
       final Map<String, dynamic> requestBody = {
         "title": title.trim(),
         "description": description.trim(),
         "content": content.trim(),
-        "date": date.toIso8601String().split('T')[0], // YYYY-MM-DD format
-        // "userIds": userIds,
+        "date": date.toIso8601String().split('T')[0],
       };
 
-      // Add images if provided
       if (imageUrls != null && imageUrls.isNotEmpty) {
         requestBody["image"] = imageUrls;
       }
 
-      // Add PDFs if provided
       if (pdfUrls != null && pdfUrls.isNotEmpty) {
         requestBody["pdf"] = pdfUrls;
       }
 
-      // Add selected societies if sendTo is specific_society
-      // if (sendTo == "specific_society" &&
-      //     selectedSocieties != null &&
-      //     selectedSocieties.isNotEmpty) {
-      //   requestBody["selectedSocieties"] = selectedSocieties;
-      // }
+      if (selectedSocieties != null && selectedSocieties.isNotEmpty) {
+        requestBody["selectedSocieties"] = selectedSocieties;
+      }
 
       final response = await _dio.post(
         announcementEndpoint,
@@ -164,27 +154,28 @@ class AnnouncementApiService {
     }
   }
 
-  /// Update announcement
-  Future<Announcement> updateAnnouncement({
-    required String id,
+  /// Create new announcement with specific recipients
+  Future<Announcement> createAnnouncementWithRecipients({
     required String title,
     required String description,
     required String content,
     required DateTime date,
+    required List<String> userIds,
     List<String>? imageUrls,
     List<String>? pdfUrls,
-    required String userIds,
     List<String>? selectedSocieties,
   }) async {
     try {
       final accessToken = await AuthLocalStorage.getAccessToken();
+
+      print('📤 Creating announcement with ${userIds.length} recipients');
 
       final Map<String, dynamic> requestBody = {
         "title": title.trim(),
         "description": description.trim(),
         "content": content.trim(),
         "date": date.toIso8601String().split('T')[0],
-        "userIds": userIds,
+        "userIds": userIds, // 🔥 Include user IDs
       };
 
       if (imageUrls != null && imageUrls.isNotEmpty) {
@@ -195,9 +186,83 @@ class AnnouncementApiService {
         requestBody["pdf"] = pdfUrls;
       }
 
-      if (userIds == "specific_society" &&
-          selectedSocieties != null &&
-          selectedSocieties.isNotEmpty) {
+      if (selectedSocieties != null && selectedSocieties.isNotEmpty) {
+        requestBody["selectedSocieties"] = selectedSocieties;
+      }
+
+      print('📋 Request body: ${requestBody.keys}');
+      print('👥 Recipients: ${userIds.length} users');
+
+      final response = await _dio.post(
+        announcementEndpoint,
+        data: requestBody,
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $accessToken",
+            "Content-Type": "application/json",
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonData = response.data;
+
+        if (jsonData['status'] == true && jsonData['data'] != null) {
+          print('✅ Announcement created successfully');
+          return Announcement.fromJson(jsonData['data']);
+        } else {
+          throw ApiException(
+            jsonData['message'] ?? 'Failed to create announcement',
+          );
+        }
+      } else {
+        throw ApiException(
+          'Failed to create announcement: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      print('Error creating announcement: $e');
+      throw ApiException('Failed to create announcement: ${e.toString()}');
+    }
+  }
+
+  /// Update announcement
+  Future<Announcement> updateAnnouncement({
+    required String id,
+    required String title,
+    required String description,
+    required String content,
+    required DateTime date,
+    List<String>? imageUrls,
+    List<String>? pdfUrls,
+    List<String>? userIds,
+    List<String>? selectedSocieties,
+  }) async {
+    try {
+      final accessToken = await AuthLocalStorage.getAccessToken();
+
+      final Map<String, dynamic> requestBody = {
+        "title": title.trim(),
+        "description": description.trim(),
+        "content": content.trim(),
+        "date": date.toIso8601String().split('T')[0],
+      };
+
+      if (imageUrls != null && imageUrls.isNotEmpty) {
+        requestBody["image"] = imageUrls;
+      }
+
+      if (pdfUrls != null && pdfUrls.isNotEmpty) {
+        requestBody["pdf"] = pdfUrls;
+      }
+
+      if (userIds != null && userIds.isNotEmpty) {
+        requestBody["userIds"] = userIds;
+      }
+
+      if (selectedSocieties != null && selectedSocieties.isNotEmpty) {
         requestBody["selectedSocieties"] = selectedSocieties;
       }
 
@@ -262,8 +327,6 @@ class AnnouncementApiService {
       throw ApiException('Failed to delete announcement: ${e.toString()}');
     }
   }
-
-
 
   /// Helper method to handle Dio errors
   ApiException _handleDioError(DioException error) {

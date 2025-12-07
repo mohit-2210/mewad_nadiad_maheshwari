@@ -10,12 +10,14 @@ import 'package:mmsn/pages/home/main_screen.dart';
 class OTPVerificationScreen extends StatefulWidget {
   final String phoneNumber;
   final bool isNewUser;
+  final bool isForPhoneVerification;
   final String? verificationId;
 
   const OTPVerificationScreen({
     super.key,
     required this.phoneNumber,
     this.isNewUser = false,
+    this.isForPhoneVerification = false,
     this.verificationId,
   });
 
@@ -90,12 +92,14 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
     print('🔐 Verifying Firebase OTP: $otp');
     print('   - New user: ${widget.isNewUser}');
+    print('   - For phone verification: ${widget.isForPhoneVerification}');
 
     context.read<AuthCubit>().verifyFirebaseOtp(
           widget.phoneNumber,
           otp,
           verificationId: _currentVerificationId!,
           isNewUser: widget.isNewUser,
+          isForPhoneVerification: widget.isForPhoneVerification,
         );
   }
 
@@ -159,7 +163,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
             _showSnackBar('OTP sent successfully');
           } else if (state is AuthSuccess) {
             print('✅ Auth Success - Navigating to home');
-            _showSnackBar('Login successful!');
+            _showSnackBar(
+                '${widget.isNewUser ? "Registration" : "Verification"} successful!');
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const MainScreen()),
@@ -213,6 +218,36 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                         ],
                       ),
                     ),
+
+                    // Show info message for existing users
+                    if (widget.isForPhoneVerification && !widget.isNewUser) ...[
+                      Gap.s16H(),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline,
+                                color: Colors.blue.shade700, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Verify your phone to continue',
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
                     Gap.s48H(),
 
                     // OTP Input Fields
