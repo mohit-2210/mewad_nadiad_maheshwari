@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
-import 'package:mmsn/pages/intro/people_intro_screen.dart';
 import 'package:mmsn/pages/setting/setting.dart';
 import 'package:mmsn/pages/setting/static_pages/About.dart';
 import 'package:mmsn/pages/setting/static_pages/PrivacyPolicy.dart';
@@ -151,16 +150,6 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
             ),
           ),
           Gap.s40H(),
-
-          _drawerItem(Icons.groups, AppLocalizations.text(context, 'drawerPeople'),
-              onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const PeopleIntroScreen(),
-              ),
-            );
-          }),
 
           _drawerItem(Icons.info_outline, "About Samaj", onTap: () {
             Navigator.push(

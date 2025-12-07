@@ -263,58 +263,7 @@ class AnnouncementApiService {
     }
   }
 
-  /// Upload a single file and return its public URL (as returned by the server).
-  /// Assumes your backend upload endpoint returns something like { status: true, data: { url: "https://..." } }
-  Future<String> uploadFile(File file) async {
-    try {
-      final accessToken = await AuthLocalStorage.getAccessToken();
 
-      final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
-          file.path,
-          filename: file.path.split(Platform.pathSeparator).last,
-        ),
-      });
-
-      final response = await _dio.post(
-        uploadEndpoint,
-        data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $accessToken',
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data;
-
-        if (data is Map<String, dynamic>) {
-          final list = data['data'];
-
-          if (list is List && list.isNotEmpty) {
-            final first = list[0];
-
-            if (first is Map<String, dynamic>) {
-              final url = first['url'] ?? first['filePath'];
-              if (url != null && url.toString().isNotEmpty) {
-                return url.toString();
-              }
-            }
-          }
-        }
-
-        throw ApiException('Invalid upload response format');
-      }
-
-      throw ApiException('Upload failed: ${response.statusCode}');
-    } on DioException catch (e) {
-      throw _handleDioError(e);
-    } catch (e) {
-      throw ApiException('Failed to upload file: ${e.toString()}');
-    }
-  }
 
   /// Helper method to handle Dio errors
   ApiException _handleDioError(DioException error) {

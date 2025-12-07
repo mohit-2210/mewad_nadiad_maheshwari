@@ -7,7 +7,7 @@ import 'package:mmsn/app/Dio/dio_client.dart';
 import 'package:mmsn/app/globals/api_endpoint.dart';
 import 'package:mmsn/app/globals/app_constants.dart';
 import 'package:mmsn/app/services/selct_image.dart';
-import 'package:mmsn/pages/announcement/services/announcement_api_service.dart';
+import 'package:mmsn/app/services/uploadFile.dart';
 
 class FamilyFormPage extends StatefulWidget {
   const FamilyFormPage({super.key});
@@ -32,6 +32,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
 
   File? headImage;
   final ImagePicker _picker = ImagePicker();
+  bool isSubmitting = false;
 
   Future<void> _pickHeadImage() async {
     await showImageSourceDialog(
@@ -51,23 +52,28 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
   String? selectedEditor;
 
   Future<void> submitFamilyData() async {
+      setState(() => isSubmitting = true);
+    List<String> uploadedImageUrls = []; // Track uploaded images
     try {
       // Upload head image first (if any)
       String? headImageUrl;
       if (headImage != null) {
-        headImageUrl =
-            await AnnouncementApiService.instance.uploadFile(headImage!);
+        headImageUrl = await uploadFile(headImage!);
+        uploadedImageUrls.add(headImageUrl); // TRACK
       }
 
-      // Upload member images and collect URLs
-      for (final mem in familyMembers) {
-        final File? imageFile = mem['image'] as File?;
-        if (imageFile != null) {
-          final url =
-              await AnnouncementApiService.instance.uploadFile(imageFile);
-          mem['imageUrl'] = url;
+      // Upload member images in parallel
+      final uploadTasks = familyMembers.map((mem) async {
+        final file = mem["image"];
+        if (file != null) {
+          final url = await uploadFile(file);
+          mem["imageUrl"] = url;
+
+          uploadedImageUrls.add(url); // TRACK
         }
-      }
+      }).toList();
+
+      await Future.wait(uploadTasks); // 🚀
 
       // Prepare request body
       final Map<String, dynamic> requestBody = {
@@ -96,14 +102,12 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
             "occupation": mem["occupation"].text.trim().isNotEmpty
                 ? mem["occupation"].text.trim()
                 : null,
-            "occupationAddress":
-                mem["occupationAddress"].text.trim().isNotEmpty
-                    ? mem["occupationAddress"].text.trim()
-                    : null,
+            "occupationAddress": mem["occupationAddress"].text.trim().isNotEmpty
+                ? mem["occupationAddress"].text.trim()
+                : null,
             if (mem["imageUrl"] != null) "image": mem["imageUrl"],
-            "role": mem["name"].text.trim() == selectedEditor
-                ? "EDITOR"
-                : "MEMBER",
+            "role":
+                mem["name"].text.trim() == selectedEditor ? "EDITOR" : "MEMBER",
           };
         }).toList(),
       };
@@ -124,7 +128,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
           backgroundColor: Colors.green,
         ),
       );
-      Navigator.pop(context); // ⬅ Go back after success
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -133,6 +137,7 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
         ),
       );
     } finally {
+      setState(() => isSubmitting = false);
     }
   }
 
@@ -215,126 +220,140 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
         elevation: 0,
         backgroundColor: Colors.teal,
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionHeader("Head of Family", Icons.person),
-              SizedBox(height: 12),
-              _buildImagePicker(headImage, _pickHeadImage),
-              SizedBox(height: 16),
-              _buildTextField(
-                headNameController,
-                "Full Name",
-                Icons.person_outline,
-              ),
-              _buildTextField(
-                phoneController,
-                "Phone Number",
-                Icons.phone,
-                keyboard: TextInputType.phone,
-                maxLength: 10,
-              ),
-              _buildDateField(dobController, "Date of Birth", Icons.cake),
-              _buildTextField(
-                addressController,
-                "Address",
-                Icons.home,
-                maxLines: 2,
-              ),
-              _buildTextField(
-                nativePlaceController,
-                "Native Place",
-                Icons.location_city,
-              ),
-              _buildTextField(
-                societyNameController,
-                "Society Name",
-                Icons.apartment,
-              ),
-              _buildTextField(
-                educationController,
-                "Education",
-                Icons.school,
-              ),
-              _buildTextField(
-                occupationController,
-                "Occupation",
-                Icons.work,
-              ),
-              _buildTextField(
-                occupationAddressController,
-                "Occupation Address",
-                Icons.business,
-                maxLines: 2,
-              ),
-              SizedBox(height: 24),
-              Divider(thickness: 1, color: Colors.grey[300]),
-              SizedBox(height: 16),
-              _buildSectionHeader("Family Members", Icons.group),
-              SizedBox(height: 12),
-              ...familyMembers.asMap().entries.map((entry) {
-                int index = entry.key;
-                Map<String, dynamic> member = entry.value;
-                return _memberWidget(member, index);
-              }),
-              SizedBox(height: 16),
-              Center(
-                child: OutlinedButton.icon(
-                  onPressed: addMember,
-                  icon: Icon(Icons.add),
-                  label: Text("Add Family Member"),
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                ),
-              ),
-              SizedBox(height: 24),
-              Divider(thickness: 1, color: Colors.grey[300]),
-              SizedBox(height: 16),
-              _buildSectionHeader("Select Family Editor", Icons.edit),
-              SizedBox(height: 12),
-              _buildEditorDropdown(),
-              SizedBox(height: 32),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      if (selectedEditor == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text("Please select a family editor"),
-                              backgroundColor: Colors.orange),
-                        );
-                        return;
-                      }
+      body: Stack(
+        children: [
+          AbsorbPointer(
+            absorbing: isSubmitting,
+            child: Opacity(
+              opacity: isSubmitting ? 0.6 : 1,
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader("Head of Family", Icons.person),
+                      SizedBox(height: 12),
+                      _buildImagePicker(headImage, _pickHeadImage),
+                      SizedBox(height: 16),
+                      _buildTextField(
+                        headNameController,
+                        "Full Name",
+                        Icons.person_outline,
+                      ),
+                      _buildTextField(
+                        phoneController,
+                        "Phone Number",
+                        Icons.phone,
+                        keyboard: TextInputType.phone,
+                        maxLength: 10,
+                      ),
+                      _buildDateField(
+                          dobController, "Date of Birth", Icons.cake),
+                      _buildTextField(
+                        addressController,
+                        "Address",
+                        Icons.home,
+                        maxLines: 2,
+                      ),
+                      _buildTextField(
+                        nativePlaceController,
+                        "Native Place",
+                        Icons.location_city,
+                      ),
+                      _buildTextField(
+                        societyNameController,
+                        "Society Name",
+                        Icons.apartment,
+                      ),
+                      _buildTextField(
+                        educationController,
+                        "Education",
+                        Icons.school,
+                      ),
+                      _buildTextField(
+                        occupationController,
+                        "Occupation",
+                        Icons.work,
+                      ),
+                      _buildTextField(
+                        occupationAddressController,
+                        "Occupation Address",
+                        Icons.business,
+                        maxLines: 2,
+                      ),
+                      SizedBox(height: 24),
+                      Divider(thickness: 1, color: Colors.grey[300]),
+                      SizedBox(height: 16),
+                      _buildSectionHeader("Family Members", Icons.group),
+                      SizedBox(height: 12),
+                      ...familyMembers.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        Map<String, dynamic> member = entry.value;
+                        return _memberWidget(member, index);
+                      }),
+                      SizedBox(height: 16),
+                      Center(
+                        child: OutlinedButton.icon(
+                          onPressed: addMember,
+                          icon: Icon(Icons.add),
+                          label: Text("Add Family Member"),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      Divider(thickness: 1, color: Colors.grey[300]),
+                      SizedBox(height: 16),
+                      _buildSectionHeader("Select Family Editor", Icons.edit),
+                      SizedBox(height: 12),
+                      _buildEditorDropdown(),
+                      SizedBox(height: 32),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              if (selectedEditor == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text("Please select a family editor"),
+                                      backgroundColor: Colors.orange),
+                                );
+                                return;
+                              }
 
-                      submitFamilyData(); // Only this
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 48, vertical: 12),
-                    child: Text(
-                      "Submit",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
+                              submitFamilyData(); // Only this
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 48, vertical: 12),
+                            child: Text(
+                              "Submit",
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 50),
+                    ],
                   ),
                 ),
               ),
-              SizedBox(height: 50),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

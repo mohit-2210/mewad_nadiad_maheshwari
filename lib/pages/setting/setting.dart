@@ -8,7 +8,6 @@ import 'package:mmsn/pages/auth/services/auth_service.dart';
 import 'package:mmsn/components/DeleteAccountButton.dart';
 import 'package:mmsn/components/logoutButton.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
-import 'package:mmsn/pages/auth/changePassword.dart';
 import 'package:mmsn/pages/setting/contactUs.dart';
 
 class SettingsScreen extends StatefulWidget {

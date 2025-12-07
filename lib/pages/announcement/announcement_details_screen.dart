@@ -280,7 +280,7 @@ String _formatDate(DateTime date) {
 
                     if (result == true) {
                       Navigator.pop(
-                          context, true); // Return true to refresh list
+                          context, true);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Announcement updated successfully'),

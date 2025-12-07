@@ -1,4 +1,3 @@
-// lib/models/api_response.dart
 /// Generic API Response Model
 class ApiResponse<T> {
   final bool status;

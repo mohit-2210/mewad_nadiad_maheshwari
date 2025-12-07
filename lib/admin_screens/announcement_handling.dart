@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/selct_image.dart';
+import 'package:mmsn/app/services/uploadFile.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/announcement/services/announcement_api_service.dart';
@@ -28,7 +29,7 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
   final _contentController = TextEditingController();
 
   File? _imageFile;
-  File? _pdfFile;
+  // File? _pdfFile;
   bool _isSubmitting = false;
 
   final String _date = DateFormat('dd/MM/yyyy').format(DateTime.now());
@@ -62,15 +63,15 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
     if (picked != null) setState(() => _imageFile = File(picked.path));
   }
 
-  Future<void> _pickPdf() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
-    if (result != null && result.files.single.path != null) {
-      setState(() => _pdfFile = File(result.files.single.path!));
-    }
-  }
+  // Future<void> _pickPdf() async {
+  //   final result = await FilePicker.platform.pickFiles(
+  //     type: FileType.custom,
+  //     allowedExtensions: ['pdf'],
+  //   );
+  //   if (result != null && result.files.single.path != null) {
+  //     setState(() => _pdfFile = File(result.files.single.path!));
+  //   }
+  // }
 
 //   Future<List<String>> _getUserIdsToSend() async {
 //   List<String> userIds = [];
@@ -103,7 +104,7 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
 
 
   void _clearImage() => setState(() => _imageFile = null);
-  void _clearPdf() => setState(() => _pdfFile = null);
+  // void _clearPdf() => setState(() => _pdfFile = null);
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
@@ -116,17 +117,17 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
       List<String>? imageUrls;
       if (_imageFile != null) {
         final uploadedImageUrl =
-            await AnnouncementApiService.instance.uploadFile(_imageFile!);
+            await uploadFile(_imageFile!);
         imageUrls = [uploadedImageUrl];
       }
 
 // 2️⃣ Upload PDF if selected
-      List<String>? pdfUrls;
-      if (_pdfFile != null) {
-        final uploadedPdfUrl =
-            await AnnouncementApiService.instance.uploadFile(_pdfFile!);
-        pdfUrls = [uploadedPdfUrl];
-      }
+      // List<String>? pdfUrls;
+      // if (_pdfFile != null) {
+      //   final uploadedPdfUrl =
+      //       await uploadFile(_pdfFile!);
+      //   pdfUrls = [uploadedPdfUrl];
+      // }
 
       // final userIds = await _getUserIdsToSend();
 
@@ -138,7 +139,7 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
         date: DateTime.now(),
         // userIds: userIds,
         imageUrls: imageUrls,
-        pdfUrls: pdfUrls,
+        // pdfUrls: pdfUrls,
         selectedSocieties:
             _sendToOption == "specific_society" ? _selectedSocieties : null,
 
@@ -371,12 +372,12 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
                                 _buildTextField(
                                     _contentController, "Full Content",
                                     maxLines: 5),
-                                Gap.s16H(),
+                                // Gap.s16H(),
 
                                 // ---------- PDF Section ----------
-                                _sectionLabel("Attach PDF (optional)"),
-                                Gap.s8H(),
-                                _buildPdfSelector(),
+                                // _sectionLabel("Attach PDF (optional)"),
+                                // Gap.s8H(),
+                                // _buildPdfSelector(),
 
                                 Gap.s24H(),
 
@@ -456,55 +457,55 @@ class _AddAnnouncementPageState extends State<AddAnnouncementPage> {
     );
   }
 
-  Widget _buildPdfSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.deepPurple.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.deepPurple.shade200, width: 1),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.picture_as_pdf, size: 32, color: Colors.deepPurple),
-          Gap.s10W(),
-          Expanded(
-            child: Text(
-              _pdfFile != null
-                  ? _pdfFile!.path.split('/').last
-                  : 'No PDF selected',
-              style: TextStyle(
-                fontSize: 14,
-                color: _pdfFile != null ? Colors.black : Colors.grey.shade600,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Gap.s8W(),
-          if (_pdfFile != null)
-            IconButton(
-              icon: const Icon(Icons.clear_rounded, color: Colors.redAccent),
-              onPressed: _clearPdf,
-            )
-          else
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: _pickPdf,
-              icon:
-                  const Icon(Icons.upload_file, color: Colors.white, size: 18),
-              label: const Text('Select PDF',
-                  style: TextStyle(color: Colors.white)),
-            ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildPdfSelector() {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+  //     decoration: BoxDecoration(
+  //       color: Colors.deepPurple.shade50,
+  //       borderRadius: BorderRadius.circular(12),
+  //       border: Border.all(color: Colors.deepPurple.shade200, width: 1),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Icon(Icons.picture_as_pdf, size: 32, color: Colors.deepPurple),
+  //         Gap.s10W(),
+  //         Expanded(
+  //           child: Text(
+  //             _pdfFile != null
+  //                 ? _pdfFile!.path.split('/').last
+  //                 : 'No PDF selected',
+  //             style: TextStyle(
+  //               fontSize: 14,
+  //               color: _pdfFile != null ? Colors.black : Colors.grey.shade600,
+  //             ),
+  //             overflow: TextOverflow.ellipsis,
+  //           ),
+  //         ),
+  //         Gap.s8W(),
+  //         if (_pdfFile != null)
+  //           IconButton(
+  //             icon: const Icon(Icons.clear_rounded, color: Colors.redAccent),
+  //             onPressed: _clearPdf,
+  //           )
+  //         else
+  //           ElevatedButton.icon(
+  //             style: ElevatedButton.styleFrom(
+  //               backgroundColor: Colors.deepPurple,
+  //               padding: const EdgeInsets.symmetric(horizontal: 12),
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(10),
+  //               ),
+  //             ),
+  //             onPressed: _pickPdf,
+  //             icon:
+  //                 const Icon(Icons.upload_file, color: Colors.white, size: 18),
+  //             label: const Text('Select PDF',
+  //                 style: TextStyle(color: Colors.white)),
+  //           ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _sectionLabel(String text) {
     return Text(
