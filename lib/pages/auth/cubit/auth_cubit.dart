@@ -14,9 +14,10 @@ class AuthCubit extends Cubit<AuthState> {
 
   String? _currentVerificationId;
   String? _currentPhoneNumber;
-  bool _tokensRetrieved = false; // Track if we have tokens
+  bool _tokensRetrieved = false;
+  String? _currentUserId; // Store user ID for verification update
 
-  // ==================== Check User (Updated) ====================
+  // ==================== Check User ====================
   Future<void> checkUser(String mobile) async {
     emit(AuthLoading());
 
@@ -28,13 +29,11 @@ class AuthCubit extends Cubit<AuthState> {
         case UserExistsStatus.existsWithPinVerified:
         case UserExistsStatus.existsWithPinNotVerified:
         case UserExistsStatus.existsWithoutPin:
-          // Existing user -> Call login to get tokens first
-          print('✅ User exists - Getting auth tokens');
-
-          // Call login API to get and store tokens
+          // Step 1: Call login API in background to get and store tokens
+          print('✅ User exists - Getting tokens via login API');
           await _loginAndGetTokens(mobile);
 
-          // Now send Firebase OTP for verification
+          // Step 2: Send Firebase OTP for verification
           print('📤 Sending Firebase OTP for verification');
           await sendFirebaseOtp(
             mobile,
@@ -59,12 +58,16 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ==================== Login and Get Tokens (New Method) ====================
+  // ==================== Login and Get Tokens (Background) ====================
   Future<void> _loginAndGetTokens(String mobile) async {
     try {
-      print('🔐 Logging in to retrieve tokens');
+      print('🔐 Step 1: Calling login API to get tokens');
 
+      // Call login API - this saves tokens automatically
       final user = await _repo.loginWithMobile(mobile);
+
+      // Store user ID for later verification update
+      _currentUserId = user.id;
 
       // Verify tokens were saved
       final accessToken = await AuthLocalStorage.getAccessToken();
@@ -76,7 +79,8 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       _tokensRetrieved = true;
-      print('✅ Tokens retrieved and stored successfully');
+      print('✅ Step 1 Complete: Tokens saved');
+      print('   - User ID: $_currentUserId');
       print('   - Access Token: ${accessToken.substring(0, 20)}...');
       print('   - Refresh Token: ${refreshToken.substring(0, 20)}...');
     } catch (e) {
@@ -95,7 +99,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
 
     try {
-      print('📤 Sending Firebase OTP to: $mobile');
+      print('📤 Step 2: Sending Firebase OTP to: $mobile');
       print('   - isNewUser: $isNewUser');
       print('   - isForPhoneVerification: $isForPhoneVerification');
 
@@ -104,7 +108,7 @@ class AuthCubit extends Cubit<AuthState> {
       final success = await _firebaseAuth.sendOtp(
         phoneNumber: mobile,
         onCodeSent: (verificationId) {
-          print('✅ Firebase OTP sent successfully');
+          print('✅ Step 2 Complete: Firebase OTP sent');
           _currentVerificationId = verificationId;
           emit(OtpSent(
             mobile,
@@ -134,7 +138,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ==================== Verify Firebase OTP (Updated) ====================
+  // ==================== Verify Firebase OTP ====================
   Future<void> verifyFirebaseOtp(
     String mobile,
     String otp, {
@@ -145,10 +149,11 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
 
     try {
-      print('🔐 Verifying Firebase OTP for $mobile');
+      print('🔐 Step 3: Verifying Firebase OTP for $mobile');
       print('   - isNewUser: $isNewUser');
       print('   - isForPhoneVerification: $isForPhoneVerification');
 
+      // Verify OTP with Firebase
       final firebaseUser = await _firebaseAuth.verifyOtp(
         otp: otp,
         verificationId: verificationId,
@@ -159,7 +164,7 @@ class AuthCubit extends Cubit<AuthState> {
       );
 
       if (firebaseUser != null) {
-        print('✅ Firebase OTP verified successfully');
+        print('✅ Step 3 Complete: Firebase OTP verified');
 
         // Get Firebase ID token
         final idToken = await _firebaseAuth.getIdToken();
@@ -168,22 +173,70 @@ class AuthCubit extends Cubit<AuthState> {
         }
 
         if (isForPhoneVerification && _tokensRetrieved) {
-          // Existing user verification - update verification status
-          print('📝 Updating phone verification status');
-          await _updatePhoneVerificationStatus(mobile, idToken);
+          // EXISTING USER FLOW
+          print('👤 Existing user flow');
 
-          // Now login to get updated user data
+          if (_currentUserId == null) {
+            throw AuthenticationException('User ID not found');
+          }
+
+          // Step 4: Update verification status to ACCEPTED using user update endpoint
+          print('📝 Step 4: Updating verification status to ACCEPTED');
+          print('   - User ID: $_currentUserId');
+          try {
+            await _repo.updateMobileVerificationStatus(_currentUserId!);
+            print('✅ Step 4 Complete: Verification status updated to ACCEPTED');
+          } catch (e) {
+            print('⚠️ Error updating verification status: $e');
+            emit(AuthError('Failed to update verification status'));
+            return;
+          }
+
+          // Step 5: Call login API again to get updated user with verified fields
+          print('🔐 Step 5: Calling login API to get updated user');
           final user = await _repo.loginWithMobile(mobile);
-          print('✅ User logged in with updated verification status');
+
+          print('✅ Step 5 Complete: User logged in with updated data');
+          print('   - Mobile Verification: ${user.mobileVerification}');
+          print('   - Email Verification: ${user.emailVerification}');
+          print('');
+          print('🎉 FLOW COMPLETE: Navigating to home');
+
           emit(AuthSuccess(user));
         } else if (isNewUser) {
-          // New user - perform backend login
-          print('🆕 New user - performing backend login');
+          // NEW USER FLOW
+          print('🆕 New user flow');
+
+          // For new user, first login to get user ID
+          print('🔐 Getting user ID for new user');
+          final tempUser = await _repo.loginWithMobile(mobile);
+          _currentUserId = tempUser.id;
+
+          // Step 4: Update verification status to ACCEPTED
+          print('📝 Step 4: Updating verification status for new user');
+          print('   - User ID: $_currentUserId');
+          try {
+            await _repo.updateMobileVerificationStatus(_currentUserId!);
+            print(
+                '✅ Step 4 Complete: New user verification updated to ACCEPTED');
+          } catch (e) {
+            print('⚠️ Error updating new user verification: $e');
+            emit(AuthError('Failed to update verification status'));
+            return;
+          }
+
+          // Step 5: Call login API again to get updated user
+          print('🔐 Step 5: Logging in new user with updated status');
           final user = await _repo.loginWithMobile(mobile);
-          print('✅ New user logged in successfully');
+
+          print('✅ Step 5 Complete: New user logged in');
+          print('   - Mobile Verification: ${user.mobileVerification}');
+          print('');
+          print('🎉 FLOW COMPLETE: Navigating to home');
+
           emit(AuthSuccess(user));
         } else {
-          // Regular login flow
+          // Regular login flow (shouldn't hit this case)
           final user = await _repo.loginWithMobile(mobile);
           print('✅ User logged in successfully');
           emit(AuthSuccess(user));
@@ -195,27 +248,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ==================== Update Phone Verification Status (New Method) ====================
-  Future<void> _updatePhoneVerificationStatus(
-      String mobile, String firebaseIdToken) async {
-    try {
-      print('🔄 Calling backend to update phone verification');
-
-      // Send Firebase token to backend to update verification status
-      await _repo.sendFirebaseTokenToBackend(
-        mobile: mobile,
-        firebaseIdToken: firebaseIdToken,
-        tokenType: 'OTP_VERIFICATION_TOKEN',
-      );
-
-      print('✅ Phone verification status updated on backend');
-    } catch (e) {
-      print('⚠️ Error updating verification status: $e');
-      // Don't throw - allow login to continue even if verification update fails
-    }
-  }
-
-  // ==================== Handle Firebase Auto-Verify (Updated) ====================
+  // ==================== Handle Firebase Auto-Verify ====================
   Future<void> _handleFirebaseAutoVerify(
     firebase_auth.PhoneAuthCredential credential,
     bool isNewUser,
@@ -223,6 +256,8 @@ class AuthCubit extends Cubit<AuthState> {
   ) async {
     try {
       if (_currentPhoneNumber == null) return;
+
+      print('🤖 Auto-verification flow started');
 
       // Get Firebase ID token from credential
       final userCredential = await firebase_auth.FirebaseAuth.instance
@@ -233,13 +268,35 @@ class AuthCubit extends Cubit<AuthState> {
         throw AuthenticationException('Failed to get Firebase ID token');
       }
 
-      if (isForPhoneVerification && _tokensRetrieved) {
-        // Update verification status
-        await _updatePhoneVerificationStatus(_currentPhoneNumber!, idToken);
+      // Step 4: Update verification status
+      if (isForPhoneVerification || isNewUser) {
+        if (_currentUserId == null) {
+          // For new user, get user ID first
+          final tempUser = await _repo.loginWithMobile(_currentPhoneNumber!);
+          _currentUserId = tempUser.id;
+        }
+
+        print('📝 Step 4 (Auto): Updating verification status');
+        print('   - User ID: $_currentUserId');
+        try {
+          await _repo.updateMobileVerificationStatus(_currentUserId!);
+          print('✅ Step 4 Complete (Auto): Verification updated to ACCEPTED');
+        } catch (e) {
+          print('⚠️ Auto-verify: Error updating verification: $e');
+          emit(AuthError('Failed to update verification status'));
+          return;
+        }
       }
 
+      // Step 5: Login to get updated user
+      print('🔐 Step 5 (Auto): Logging in with updated data');
       final user = await _repo.loginWithMobile(_currentPhoneNumber!);
-      print('✅ Auto-verified and logged in');
+
+      print('✅ Step 5 Complete (Auto): User logged in');
+      print('   - Mobile Verification: ${user.mobileVerification}');
+      print('');
+      print('🎉 AUTO-VERIFY FLOW COMPLETE: Navigating to home');
+
       emit(AuthSuccess(user));
     } catch (e) {
       print('❌ Auto-verify error: $e');
@@ -255,7 +312,7 @@ class AuthCubit extends Cubit<AuthState> {
 
       await _repo.register(userData);
 
-      print('✅ Registration successful, sending Firebase OTP');
+      print('✅ Registration successful, will send Firebase OTP');
       emit(RegistrationSuccess(
         mobile: userData['mobile'] as String,
         pin: '',
@@ -293,11 +350,13 @@ class AuthCubit extends Cubit<AuthState> {
       await _repo.logout();
       await _firebaseAuth.signOut();
       _tokensRetrieved = false;
+      _currentUserId = null;
       print('✅ Logged out successfully');
       emit(AuthLoggedOut());
     } catch (e) {
       print('⚠️ Logout error (clearing local data anyway): $e');
       _tokensRetrieved = false;
+      _currentUserId = null;
       emit(AuthLoggedOut());
     }
   }
@@ -312,7 +371,10 @@ class AuthCubit extends Cubit<AuthState> {
         final hasTokens = await AuthLocalStorage.hasAuthTokens();
         if (hasTokens) {
           _tokensRetrieved = true;
+          _currentUserId = user.id;
           print('✅ User is logged in: ${user.fullName}');
+          print('   - Mobile Verification: ${user.mobileVerification}');
+          print('   - Email Verification: ${user.emailVerification}');
           emit(AuthSuccess(user));
         } else {
           print('⚠️ User data exists but no tokens found');

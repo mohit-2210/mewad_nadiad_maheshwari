@@ -103,6 +103,7 @@ class _RegisterViewState extends State<RegisterView> {
                   child: OTPVerificationScreen(
                     phoneNumber: state.mobile,
                     isNewUser: true,
+                    isForPhoneVerification: state.isForPhoneVerification,
                     verificationId: state.verificationId,
                   ),
                 ),

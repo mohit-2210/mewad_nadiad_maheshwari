@@ -45,7 +45,6 @@ class AuthRepository {
       final userData = apiResponse.data!;
       final user = User.fromJson(userData);
 
-      // Since we removed PIN, all existing users are treated the same
       return CheckUserResult(
         status: UserExistsStatus.existsWithPinVerified,
         user: user,
@@ -60,8 +59,7 @@ class AuthRepository {
     }
   }
 
-  // ==================== Login with Mobile (no password) ====================
-  /// Used after OTP verification for new users OR directly for existing users.
+  // ==================== Login with Mobile ====================
   Future<User> loginWithMobile(String mobile) async {
     try {
       print('🔐 Logging in with mobile (no password)');
@@ -122,7 +120,8 @@ class AuthRepository {
     }
   }
 
-  // ==================== Send Firebase Token to Backend ====================
+  // ==================== Send Firebase Token to Backend (Step 4a) ====================
+  /// This generates the otpVerificationToken
   Future<Map<String, dynamic>> sendFirebaseTokenToBackend({
     required String mobile,
     required String firebaseIdToken,
@@ -152,34 +151,28 @@ class AuthRepository {
 
       if (apiResponse.isSuccess && apiResponse.data != null) {
         final data = apiResponse.data!;
-        
-        // Save tokens based on type
-        if (tokenType == 'PASSWORD_RESET_TOKEN') {
-          final passwordResetToken = data['passwordResetToken']?['token'] ?? 
-                                     data['passwordToken']?['token'];
-          if (passwordResetToken != null) {
-            await AuthLocalStorage.savePasswordResetToken(passwordResetToken);
-            print('✓ Password reset token saved');
-          }
-        } else if (tokenType == 'OTP_VERIFICATION_TOKEN') {
+
+        // Save the otpVerificationToken for Step 4b
+        if (tokenType == 'OTP_VERIFICATION_TOKEN') {
           final otpToken = data['otpVerificationToken']?['token'];
           if (otpToken != null) {
             await AuthLocalStorage.saveOtpVerificationToken(otpToken);
             print('✓ OTP verification token saved');
           }
+        } else if (tokenType == 'PASSWORD_RESET_TOKEN') {
+          final passwordResetToken = data['passwordResetToken']?['token'] ??
+              data['passwordToken']?['token'];
+          if (passwordResetToken != null) {
+            await AuthLocalStorage.savePasswordResetToken(passwordResetToken);
+            print('✓ Password reset token saved');
+          }
         }
 
-        // Save access and refresh tokens if provided
-        if (data['accessToken'] != null && data['refreshToken'] != null) {
-          final tokens = TokenModel.fromJson(data);
-          await AuthLocalStorage.saveTokens(tokens.accessToken, tokens.refreshToken);
-          print('✓ Access and refresh tokens saved');
-        }
-
-        print('✅ Backend verification complete');
+        print('✅ Backend token generation complete');
         return data;
       } else {
-        throw ApiException(apiResponse.message ?? 'Backend verification failed');
+        throw ApiException(
+            apiResponse.message ?? 'Backend verification failed');
       }
     } on ApiException {
       rethrow;
@@ -192,11 +185,54 @@ class AuthRepository {
     }
   }
 
+  // ==================== Update Verification Status (NEW - SIMPLIFIED) ====================
+  /// This actually updates mobileVerification and emailVerification to ACCEPTED
+  /// Uses the user update endpoint with access token
+  Future<void> updateMobileVerificationStatus(String userId) async {
+    try {
+      print('📝 Updating verification status to ACCEPTED');
+      print('   - User ID: $userId');
+
+      final response = await _api.updateVerificationStatus(
+        userId: userId,
+      );
+
+      final responseData = response.data as Map<String, dynamic>?;
+
+      if (responseData == null) {
+        throw ApiException('Invalid response from server');
+      }
+
+      final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+        responseData,
+        (data) => data as Map<String, dynamic>,
+      );
+
+      if (apiResponse.isSuccess) {
+        print('✅ Verification status updated to ACCEPTED');
+        // Clear any temporary tokens
+        await AuthLocalStorage.clearOtpVerificationToken();
+      } else {
+        throw ApiException(
+            apiResponse.message ?? 'Failed to update verification status');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(
+        'Failed to update verification: ${e.toString()}',
+        originalError: e,
+      );
+    }
+  }
+
   // ==================== Login with Firebase Token ====================
-  Future<User> loginWithFirebaseToken(String mobile, String firebaseIdToken) async {
+  Future<User> loginWithFirebaseToken(
+      String mobile, String firebaseIdToken) async {
     try {
       print('🔐 Logging in with Firebase token');
-      
+
       final deviceId = DeviceService.instance.deviceId;
       final deviceToken = DeviceService.instance.deviceToken;
 
@@ -232,7 +268,8 @@ class AuthRepository {
           throw AuthenticationException('Token data is missing');
         }
 
-        await AuthLocalStorage.saveTokens(tokens.accessToken, tokens.refreshToken);
+        await AuthLocalStorage.saveTokens(
+            tokens.accessToken, tokens.refreshToken);
         await AuthLocalStorage.saveUser(user);
         _api.updateCurrentUser(user);
 
@@ -255,10 +292,9 @@ class AuthRepository {
   // ==================== Register ====================
   Future<User> register(Map<String, dynamic> userData) async {
     try {
-      // Remove password field from registration data
       final registrationData = Map<String, dynamic>.from(userData);
       registrationData.remove('password');
-      
+
       final response = await _api.register(registrationData);
       final responseData = response.data as Map<String, dynamic>?;
 
@@ -273,7 +309,8 @@ class AuthRepository {
 
       if (apiResponse.isSuccess && apiResponse.data != null) {
         final data = apiResponse.data!;
-        final userDataFromResponse = data['user'] as Map<String, dynamic>? ?? data;
+        final userDataFromResponse =
+            data['user'] as Map<String, dynamic>? ?? data;
         final user = User.fromJson(userDataFromResponse);
 
         print('✓ User registered successfully');
@@ -294,7 +331,6 @@ class AuthRepository {
       );
     }
   }
-
 
   // ==================== Logout ====================
   Future<void> logout() async {

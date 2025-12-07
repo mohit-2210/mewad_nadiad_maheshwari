@@ -376,6 +376,47 @@ class AuthApiService {
     }
   }
 
+  /// Update user verification status using access token
+  /// This actually updates mobileVerification and emailVerification to ACCEPTED
+  Future<Response> updateVerificationStatus({
+    required String userId,
+  }) async {
+    try {
+      print('🔄 Calling backend to update verification status');
+      print('   - User ID: $userId');
+
+      final accessToken = await AuthLocalStorage.getAccessToken();
+
+      if (accessToken == null) {
+        throw AuthenticationException('No access token available');
+      }
+
+      final response = await _dio.put(
+        'https://nadiad-samaj.onrender.com/api/v1/user/$userId',
+        data: {
+          "emailVerification": "ACCEPTED",
+          "mobileVerification": "ACCEPTED",
+        },
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $accessToken",
+            "Content-Type": "application/json",
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data['status'] == true) {
+        print('✅ Backend updated verification status successfully');
+        return response;
+      }
+
+      throw Exception(
+          response.data['message'] ?? 'Failed to update verification status');
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
   /// Update current user in memory
   void updateCurrentUser(User user) {
     _currentUser = user;

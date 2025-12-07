@@ -84,6 +84,7 @@ class _LoginViewState extends State<LoginView> {
                   child: OTPVerificationScreen(
                     phoneNumber: state.mobile,
                     isNewUser: state.isNewUser,
+                    isForPhoneVerification: state.isForPhoneVerification,
                     verificationId: state.verificationId,
                   ),
                 ),
