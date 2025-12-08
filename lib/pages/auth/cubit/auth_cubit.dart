@@ -24,11 +24,22 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       print('🔍 Checking user: $mobile');
       final result = await _repo.checkUser(mobile);
+      final user = result.user;
 
       switch (result.status) {
         case UserExistsStatus.existsWithPinVerified:
         case UserExistsStatus.existsWithPinNotVerified:
         case UserExistsStatus.existsWithoutPin:
+
+          // 🔥 NEW LOGIC: If mobile is already verified → skip OTP
+          if (user?.mobileVerification == "ACCEPTED") {
+            print('🎉 User already verified → Direct login WITHOUT OTP');
+
+            final loggedInUser = await _repo.loginWithMobile(mobile);
+
+            emit(AuthSuccess(loggedInUser));
+            return;
+          }
           // Step 1: Call login API in background to get and store tokens
           print('✅ User exists - Getting tokens via login API');
           await _loginAndGetTokens(mobile);
