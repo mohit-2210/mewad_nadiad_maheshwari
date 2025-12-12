@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchCall.dart';
 import 'package:mmsn/app/services/launchEmail.dart';
+import 'package:mmsn/components/cached_avatar.dart';
 import 'package:mmsn/models/user.dart';
 
 class MemberDetailsScreen extends StatefulWidget {
@@ -326,18 +327,9 @@ class _MemberDetailsScreenState extends State<MemberDetailsScreen> {
                             ),
                           ],
                         ),
-                        child: CircleAvatar(
+                        child: CachedAvatar(
                           radius: 70,
-                          backgroundImage: widget.member.profileImage != null
-                              ? NetworkImage(widget.member.profileImage!)
-                              : null,
-                          child: widget.member.profileImage == null
-                              ? const Icon(
-                                  Icons.person,
-                                  size: 70,
-                                  color: Colors.white,
-                                )
-                              : null,
+                          imageUrl: widget.member.profileImage,
                         ),
                       ),
                     ),

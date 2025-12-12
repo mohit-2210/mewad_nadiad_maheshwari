@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmsn/app/globals/AppImages.dart';
+import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
+import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
+import 'package:mmsn/pages/home/main_screen.dart';
 import 'package:mmsn/pages/intro/people_intro_page.dart';
 
 class IntroScreen extends StatefulWidget {
@@ -17,6 +21,7 @@ class _IntroScreenState extends State<IntroScreen> {
   // ---- PAGES LIST (built safely inside build using getter) ----
   List<Widget> get _pages {
     final people = AppImages.peopleList;
+    final isLoggedIn = context.read<AuthCubit>().state is AuthSuccess;
 
     // Chunk people into pages of 12 (4 x 3 grid)
     const int pageSize = 12;
@@ -27,33 +32,34 @@ class _IntroScreenState extends State<IntroScreen> {
     }
 
     // Advertisement / feature slides after people pages
-    pages.addAll([
-      buildIntroSlide(
-        image: 'assets/intro/intro1.webp',
-        title: 'Welcome to Family Directory',
-        description:
-            'Connect with families in your society and stay updated with community announcements.',
-      ),
-      buildIntroSlide(
-        image: 'assets/intro/intro2.webp',
-        title: 'Browse Family Profiles',
-        description:
-            'Discover families in your neighborhood and get to know your community members.',
-      ),
-      buildIntroSlide(
-        image: 'assets/intro/intro3.webp',
-        title: 'Stay Connected',
-        description:
-            'Get important society announcements and updates directly on your phone.',
-      ),
-      buildIntroSlide(
-        image: 'assets/intro/intro4.webp',
-        title: 'Get Started',
-        description:
-            'Join your community today and make meaningful connections with your neighbors.',
-      ),
-    ]);
-
+    if (!isLoggedIn) {
+      pages.addAll([
+        buildIntroSlide(
+          image: 'assets/intro/intro1.webp',
+          title: 'Welcome to Family Directory',
+          description:
+              'Connect with families in your society and stay updated with community announcements.',
+        ),
+        buildIntroSlide(
+          image: 'assets/intro/intro2.webp',
+          title: 'Browse Family Profiles',
+          description:
+              'Discover families in your neighborhood and get to know your community members.',
+        ),
+        buildIntroSlide(
+          image: 'assets/intro/intro3.webp',
+          title: 'Stay Connected',
+          description:
+              'Get important society announcements and updates directly on your phone.',
+        ),
+        buildIntroSlide(
+          image: 'assets/intro/intro4.webp',
+          title: 'Get Started',
+          description:
+              'Join your community today and make meaningful connections with your neighbors.',
+        ),
+      ]);
+    }
     return pages;
   }
 
@@ -79,10 +85,21 @@ class _IntroScreenState extends State<IntroScreen> {
   }
 
   void _finishIntro() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
+    final authState = context.read<AuthCubit>().state;
+
+    if (authState is AuthSuccess) {
+      // User already logged in → Go to Home
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+      );
+    } else {
+      // Not logged in → Go to Login screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
   }
 
   // ---- SLIDE BUILDER ----

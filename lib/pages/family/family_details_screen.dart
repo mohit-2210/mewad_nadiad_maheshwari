@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchMap.dart';
+import 'package:mmsn/components/cached_avatar.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/family/member_details_screen.dart';
@@ -138,7 +139,7 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                   Expanded(
                     child: _buildStatCard(
                       Icons.apartment,
-                      'Society',
+                      null,
                       _family!.society,
                       Theme.of(context).colorScheme.secondary,
                     ),
@@ -251,41 +252,46 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
     );
   }
 
-  Widget _buildStatCard(
-    IconData icon,
-    String label,
-    String value,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 24),
-          Gap.s8H(),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+Widget _buildStatCard(
+  IconData icon,
+  String? label,     // ← label is now nullable
+  String value,
+  Color color,
+) {
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: 0.2)),
+    ),
+    child: Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        Gap.s8H(),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
           ),
+        ),
+
+        // Show label only if it's not null
+        if (label != null) ...[
           Gap.s4H(),
           Text(
-            label,
+            label!,
             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
         ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
+
 
   Widget _buildMemberCard(User member, {bool isHead = false}) {
     return Card(
@@ -327,24 +333,13 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                 isHead
                     ? Hero(
                         tag: 'family_head_${_family!.id}',
-                        child: CircleAvatar(
+                        child: CachedAvatar(
                           radius: 35,
-                          backgroundImage: member.profileImage != null
-                              ? NetworkImage(member.profileImage!)
-                              : null,
-                          child: member.profileImage == null
-                              ? const Icon(Icons.person, size: 35)
-                              : null,
-                        ),
-                      )
-                    : CircleAvatar(
+                          imageUrl: member.profileImage,
+                        ))
+                    : CachedAvatar(
                         radius: 30,
-                        backgroundImage: member.profileImage != null
-                            ? NetworkImage(member.profileImage!)
-                            : null,
-                        child: member.profileImage == null
-                            ? const Icon(Icons.person, size: 30)
-                            : null,
+                        imageUrl: member.profileImage,
                       ),
                 Gap.s20W(),
                 Expanded(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/helpers/gap.dart';
+import 'package:mmsn/components/cached_avatar.dart';
 import 'package:mmsn/models/family.dart';
 
 class FamilyCard extends StatefulWidget {
@@ -69,14 +70,9 @@ class _FamilyCardState extends State<FamilyCard> {
                         ),
                       ],
                     ),
-                    child: CircleAvatar(
+                    child: CachedAvatar(
                       radius: 30,
-                      backgroundImage: widget.family.head.profileImage != null
-                          ? NetworkImage(widget.family.head.profileImage!)
-                          : null,
-                      child: widget.family.head.profileImage == null
-                          ? const Icon(Icons.person, size: 30)
-                          : null,
+                      imageUrl: widget.family.head.profileImage
                     ),
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchCall.dart';
+import 'package:mmsn/components/cached_avatar.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/family/services/family_api_services.dart';
 import 'package:mmsn/pages/family/family_details_screen.dart';
@@ -74,14 +75,9 @@ class MemberActionDialog extends StatelessWidget {
                 children: [
                   Hero(
                     tag: 'member_action_${member.id}',
-                    child: CircleAvatar(
+                    child: CachedAvatar(
                       radius: 40,
-                      backgroundImage: member.profileImage != null
-                          ? NetworkImage(member.profileImage!)
-                          : null,
-                      child: member.profileImage == null
-                          ? const Icon(Icons.person, size: 40)
-                          : null,
+                      imageUrl: member.profileImage
                     ),
                   ),
                   Gap.s16H(),

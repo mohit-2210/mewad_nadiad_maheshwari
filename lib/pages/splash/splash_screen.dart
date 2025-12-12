@@ -121,17 +121,10 @@ class _SplashScreenState extends State<SplashScreen>
 
           if (!mounted) return;
 
-          if (state is AuthSuccess) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const MainScreen()),
-            );
-          } else {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const IntroScreen()),
-            );
-          }
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const IntroScreen()),
+          );
         },
         child: Center(
           child: AnimatedBuilder(

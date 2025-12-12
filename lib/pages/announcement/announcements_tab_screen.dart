@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/admin_screens/announcement_handling.dart';
 import 'package:mmsn/app/helpers/gap.dart';
+import 'package:mmsn/components/cached_avatar.dart';
 import 'package:mmsn/models/announcement.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/announcement/announcement_details_screen.dart';
@@ -342,25 +343,25 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                   Stack(
                                     children: [
                                       if (announcement.image != null)
-                                        Image.network(
-                                          announcement.image!,
+                                        CachedImage(
+                                          imageUrl : announcement.image!,
                                           height: 180,
                                           width: double.infinity,
                                           fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            return Container(
-                                              height: 180,
-                                              color: Colors.grey[300],
-                                              child: const Center(
-                                                child: Icon(
-                                                  Icons.broken_image,
-                                                  size: 50,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                            );
-                                          },
+                                          // errorBuilder:
+                                          //     (context, error, stackTrace) {
+                                          //   return Container(
+                                          //     height: 180,
+                                          //     color: Colors.grey[300],
+                                          //     child: const Center(
+                                          //       child: Icon(
+                                          //         Icons.broken_image,
+                                          //         size: 50,
+                                          //         color: Colors.grey,
+                                          //       ),
+                                          //     ),
+                                          //   );
+                                          // },
                                         ),
                                       if (_isAdmin &&
                                           announcement.image != null)

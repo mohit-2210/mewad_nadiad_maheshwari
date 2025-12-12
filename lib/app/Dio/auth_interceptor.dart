@@ -47,28 +47,42 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // Handle API Timeout (connect/send/receive)
+    // Handle API Timeout with AUTO-RETRY (no dialog)
     if (err.type == DioExceptionType.connectionTimeout ||
         err.type == DioExceptionType.sendTimeout ||
         err.type == DioExceptionType.receiveTimeout) {
       print("⏳ API timeout on: ${err.requestOptions.path}");
 
-      // Ask user whether to retry (Dialog)
-      final shouldRetry = await onTimeoutDialog();
+      // Show subtle loading indicator in global overlay
+      _showLoadingOverlay("Server is taking longer than usual...");
 
-      if (shouldRetry) {
+      try {
+        // Auto-retry after timeout
+        print("🔁 Auto-retrying after timeout...");
+
+        // Add small delay before retry
+        await Future.delayed(const Duration(seconds: 2));
+
+        final response = await dio.fetch(err.requestOptions);
+
+        _hideLoadingOverlay();
+        return handler.resolve(response);
+      } catch (e) {
+        _hideLoadingOverlay();
+
+        // If still fails, try one more time
         try {
-          print("🔁 Retrying after timeout...");
+          print("🔁 Second retry attempt...");
+          await Future.delayed(const Duration(seconds: 3));
 
           final response = await dio.fetch(err.requestOptions);
           return handler.resolve(response);
-        } catch (e) {
+        } catch (finalError) {
+          // After 2 retries, show error
+          print("❌ Failed after retries");
           return handler.next(e as DioException);
         }
       }
-
-      // User cancelled → continue error flow
-      return handler.next(err);
     }
 
     // Handle 401 Unauthorized - token expired
@@ -167,6 +181,72 @@ class AuthInterceptor extends Interceptor {
           );
     }
   }
+
+  // Global loading overlay
+  OverlayEntry? _overlayEntry;
+
+  void _showLoadingOverlay(String message) {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    _hideLoadingOverlay(); // Remove any existing overlay
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 10,
+        left: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _hideLoadingOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
 }
 
 class _PendingRequest {
@@ -174,30 +254,4 @@ class _PendingRequest {
   final Completer<Response> completer;
 
   _PendingRequest(this.requestOptions, this.completer);
-}
-
-Future<bool> onTimeoutDialog() async {
-  BuildContext? ctx = navigatorKey.currentContext;
-  if (ctx == null) return false;
-
-  return await showDialog<bool>(
-    context: ctx,
-    barrierDismissible: false,
-    builder: (_) => AlertDialog(
-      title: const Text("Server Timeout"),
-      content: const Text(
-        "We are connecting to server.\nPress Retry to build connection",
-      ),
-      actions: [
-        TextButton(
-          child: const Text("Cancel"),
-          onPressed: () => Navigator.pop(_, false),
-        ),
-        ElevatedButton(
-          child: const Text("Retry"),
-          onPressed: () => Navigator.pop(_, true),
-        ),
-      ],
-    ),
-  ) ?? false;
 }

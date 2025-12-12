@@ -3,6 +3,7 @@ import 'package:mmsn/admin_screens/adding_family.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchCall.dart';
 import 'package:mmsn/app/services/launchEmail.dart';
+import 'package:mmsn/components/cached_avatar.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/auth/services/auth_service.dart';
@@ -114,7 +115,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
         await AuthLocalStorage.saveUser(apiUser);
         AuthApiService.instance.updateCurrentUser(apiUser);
         user = apiUser; // Use the fresh data from API
-            } catch (e) {
+      } catch (e) {
         print('Error fetching user from API: $e');
         // If API fails, use stored user if available
         if (user == null) {
@@ -273,19 +274,9 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                                   ),
                                 ],
                               ),
-                              child: CircleAvatar(
+                              child: CachedAvatar(
                                 radius: 50,
-                                backgroundImage: currentUser.profileImage !=
-                                        null
-                                    ? NetworkImage(currentUser.profileImage!)
-                                    : null,
-                                child: currentUser.profileImage == null
-                                    ? const Icon(
-                                        Icons.person,
-                                        size: 50,
-                                        color: Colors.white,
-                                      )
-                                    : null,
+                                imageUrl: currentUser.profileImage,
                               ),
                             ),
                           ),
@@ -624,14 +615,9 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                       children: [
                         Hero(
                           tag: 'member_${member.id}',
-                          child: CircleAvatar(
+                          child: CachedAvatar(
                             radius: 30,
-                            backgroundImage: member.profileImage != null
-                                ? NetworkImage(member.profileImage!)
-                                : null,
-                            child: member.profileImage == null
-                                ? const Icon(Icons.person, size: 30)
-                                : null,
+                            imageUrl: member.profileImage,
                           ),
                         ),
                         Gap.s16W(),
@@ -724,7 +710,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (currentUser.userType == "HEAD" || currentUser.userType == "EDITOR")
+                            if (currentUser.userType == "HEAD" ||
+                                currentUser.userType == "EDITOR")
                               IconButton(
                                 onPressed: () => _editMember(member),
                                 icon: Icon(
@@ -755,7 +742,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   Widget _buildActionsSection(User currentUser) {
     return Column(
       children: [
-        if (currentUser.userType == 'HEAD' || currentUser.userType == 'EDITOR') ...[
+        if (currentUser.userType == 'HEAD' ||
+            currentUser.userType == 'EDITOR') ...[
           _buildAnimatedActionButton(
             icon: Icons.person_add,
             title: 'Add Family Member',
