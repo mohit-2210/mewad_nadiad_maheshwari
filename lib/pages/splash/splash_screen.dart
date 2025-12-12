@@ -6,6 +6,7 @@ import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 import 'package:mmsn/pages/intro/intro_screen.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -31,6 +32,18 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _setupAnimations();
     _controller.forward();
+    _requestATT();
+  }
+
+  Future<void> _requestATT() async {
+    // Give 0.5–1 second delay so iOS considers the app “fully launched”
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+
+    if (status == TrackingStatus.notDetermined) {
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    }
   }
 
   void _setupAnimations() {
