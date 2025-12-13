@@ -5,7 +5,7 @@ class DataService {
 
   // Keep only carousel images for local assets
   final List<String> carouselImages = [
-    AppImages.carouselImages1,
+    AppImages.SomaniGold,
     AppImages.devraj_industries,
     AppImages.carouselImages3, 
     AppImages.carouselImages4,

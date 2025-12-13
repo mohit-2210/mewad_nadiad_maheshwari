@@ -1,7 +1,7 @@
 class AppImages {
   // If you are using assets
-  static const String carouselImages1 = 'assets/carouselImages1.jpeg';
-  static const String devraj_industries = 'assets/devraj_industries.webp';
+  static const String SomaniGold = 'assets/Ads/SomaniGold.webp';
+  static const String devraj_industries = 'assets/Ads/devraj_industries.webp';
   static const String carouselImages3 = 'assets/carouselImages3.jpeg';
   static const String carouselImages4 = 'assets/carouselImages4.jpeg';
 
@@ -15,7 +15,7 @@ class AppImages {
 
   static const String profileImageHead2 = 'assets/profile_head2.jpeg';
 
-  static const String profileAvatar = 'assets/carouselImages1.jpeg';
+  // static const String profileAvatar = 'assets/carouselImages1.jpeg';
   static const String logo = 'assets/AppIcon.png';
   static const String background = 'assets/images/bg.png';
 

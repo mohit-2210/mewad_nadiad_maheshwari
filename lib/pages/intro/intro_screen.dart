@@ -35,13 +35,13 @@ class _IntroScreenState extends State<IntroScreen> {
     if (!isLoggedIn) {
       pages.addAll([
         buildIntroSlide(
-          image: 'assets/intro/intro1.webp',
+          image: 'assets/Ads/SomaniGold.webp',
           title: 'Welcome to Family Directory',
           description:
               'Connect with families in your society and stay updated with community announcements.',
         ),
         buildIntroSlide(
-          image: 'assets/intro/intro2.webp',
+          image: 'assets/Ads/devraj_industries.webp',
           title: 'Browse Family Profiles',
           description:
               'Discover families in your neighborhood and get to know your community members.',
