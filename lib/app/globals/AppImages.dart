@@ -1,7 +1,7 @@
 class AppImages {
   // If you are using assets
   static const String carouselImages1 = 'assets/carouselImages1.jpeg';
-  static const String carouselImages2 = 'assets/carouselImages2.jpeg';
+  static const String devraj_industries = 'assets/devraj_industries.webp';
   static const String carouselImages3 = 'assets/carouselImages3.jpeg';
   static const String carouselImages4 = 'assets/carouselImages4.jpeg';
 
