@@ -67,12 +67,6 @@ flutter:
     - assets/people/
     - assets/Ads/SomaniGold.webp
     - assets/Ads/devraj_industries.webp
-    - assets/carouselImages3.jpeg
-    - assets/carouselImages4.jpeg
-    - assets/profileImageHead1.jpeg
-    - assets/profileImageHead1Wife.jpeg
-    - assets/profileImageHead1Son.jpeg
-    - assets/profileImageHead1Daughter.jpeg
 #App Icon image
     - assets/AppIcon.png
 

@@ -18,7 +18,13 @@ class _IntroScreenState extends State<IntroScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // ---- PAGES LIST (built safely inside build using getter) ----
+  // List of advertisement images (2 per page)
+  final List<String> _adImages = [
+    'assets/Ads/SomaniGold.webp',
+    'assets/Ads/devraj_industries.webp',
+  ];
+
+  // ---- PAGES LIST ----
   List<Widget> get _pages {
     final people = AppImages.peopleList;
     final isLoggedIn = context.read<AuthCubit>().state is AuthSuccess;
@@ -31,36 +37,42 @@ class _IntroScreenState extends State<IntroScreen> {
       pages.add(PeopleIntroPage(people: people.sublist(i, end)));
     }
 
-    // Advertisement / feature slides after people pages
+    // Add image slides after people pages (only if not logged in)
     if (!isLoggedIn) {
-      pages.addAll([
-        buildIntroSlide(
-          image: 'assets/Ads/SomaniGold.webp',
-          title: 'Welcome to Family Directory',
-          description:
-              'Connect with families in your society and stay updated with community announcements.',
-        ),
-        buildIntroSlide(
-          image: 'assets/Ads/devraj_industries.webp',
-          title: 'Browse Family Profiles',
-          description:
-              'Discover families in your neighborhood and get to know your community members.',
-        ),
-        buildIntroSlide(
-          image: 'assets/intro/intro3.webp',
-          title: 'Stay Connected',
-          description:
-              'Get important society announcements and updates directly on your phone.',
-        ),
-        buildIntroSlide(
-          image: 'assets/intro/intro4.webp',
-          title: 'Get Started',
-          description:
-              'Join your community today and make meaningful connections with your neighbors.',
-        ),
-      ]);
+      pages.add(_buildTwoImageSlide());
     }
+    
     return pages;
+  }
+
+  // ---- BUILD TWO IMAGES SLIDE ----
+  Widget _buildTwoImageSlide() {
+    return Column(
+      children: [
+        // Top Image - Takes 50% of screen height
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            color: Colors.black,
+            child: Image.asset(
+              _adImages[0],
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+        // Bottom Image - Takes 50% of screen height
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            color: Colors.black,
+            child: Image.asset(
+              _adImages[1],
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   // ---- Navigation ----
@@ -102,60 +114,10 @@ class _IntroScreenState extends State<IntroScreen> {
     }
   }
 
-  // ---- SLIDE BUILDER ----
-  Widget buildIntroSlide({
-    required String image,
-    required String title,
-    required String description,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          Expanded(
-            flex: 5,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.asset(
-                image,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          Expanded(
-            flex: 3,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ---- MAIN UI ----
   @override
   Widget build(BuildContext context) {
-    final pages = _pages; // Cached for performance
+    final pages = _pages;
 
     return Scaffold(
       body: SafeArea(
@@ -174,20 +136,23 @@ class _IntroScreenState extends State<IntroScreen> {
             ),
 
             // DOT INDICATOR
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                pages.length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  height: 8,
-                  width: _currentPage == index ? 24 : 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(4),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  pages.length,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: 8,
+                    width: _currentPage == index ? 24 : 8,
+                    decoration: BoxDecoration(
+                      color: _currentPage == index
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
               ),
