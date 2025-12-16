@@ -1,4 +1,3 @@
-// lib/app/Dio/dio_client.dart
 import 'package:dio/dio.dart';
 import 'package:mmsn/app/globals/api_endpoint.dart';
 import 'package:mmsn/app/Dio/auth_interceptor.dart';
@@ -11,8 +10,9 @@ class DioClient {
       _dio = Dio(
         BaseOptions(
           baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
+          connectTimeout: const Duration(seconds: 60), 
+          receiveTimeout: const Duration(seconds: 60), 
+          sendTimeout: const Duration(seconds: 60),
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
