@@ -34,10 +34,9 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   late Animation<double> _headerOpacityAnimation;
 
   Family? _userFamily;
+  List<User> _familyMembersFromLogin = []; // ✅ Store login API data
 
   bool _isLoading = true;
-
-  double _scrollOffset = 0;
 
   // Cache the current user to prevent re-fetching on every rebuild
   User? _currentUser;
@@ -75,17 +74,14 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     super.dispose();
   }
 
-  void _handleScroll() {
-    final offset = _scrollController.offset;
-    if (offset != _scrollOffset) {
-      setState(() {
-        _scrollOffset = offset;
-        const maxOffset = 200;
-        final value = (_scrollOffset / maxOffset).clamp(0, 1).toDouble();
-        _headerAnimationController.value = value;
-      });
-    }
-  }
+void _handleScroll() {
+  const maxOffset = 200;
+  final value =
+      (_scrollController.offset / maxOffset).clamp(0.0, 1.0);
+
+  _headerAnimationController.value = value;
+}
+
 
   void _handleTap(String value, {bool? isEmail, bool? isPhone}) async {
     if (isPhone == true) {
@@ -148,26 +144,99 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     });
 
     try {
-      // Try to get family by head ID first
-      Family? family = await FamilyApiService.instance.getFamilyByHeadId(
-        _currentUser!.id,
+      // ✅ USE LOGIN API DATA which has userType field!
+      // This data is stored during login in AuthLocalStorage
+      final familyMembers = await AuthLocalStorage.getFamilyMembers();
+
+      if (familyMembers.isEmpty) {
+        print(
+            '⚠️ No family members found in storage. User may need to re-login.');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      print('📋 Loaded ${familyMembers.length} family members from login data');
+
+      // Create a mock Family object from the login data
+      // Find the head (userType == "HEAD")
+      final head = familyMembers.firstWhere(
+        (m) => m.userType.toUpperCase() == 'HEAD',
+        orElse: () => familyMembers.first,
       );
 
-      // If not found, try by member ID
-      family ??= await FamilyApiService.instance.getFamilyByMemberId(
-        _currentUser!.id,
-      );
+      // Get other members (excluding head)
+      final members = familyMembers.where((m) => m.id != head.id).toList();
+
+      // Create a Family object (we need to match the Family model structure)
+      // Since we don't have a direct constructor, we'll store the list directly
+      // and handle it in _buildFamilyMembersSection
 
       setState(() {
-        _userFamily = family;
+        // Store the complete family members list
+        _familyMembersFromLogin = familyMembers;
         _isLoading = false;
       });
+
+      print('✅ Family data loaded successfully from login API');
+      familyMembers.forEach((m) {
+        print('   - ${m.fullName}: ${m.userType}');
+      });
     } catch (e) {
-      print('Error loading user family: $e');
+      print('❌ Error loading family data: $e');
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  /// Determine the role tags for a member
+  /// Returns a list of role tags like ["Head", "Editor"] or ["Head & Editor"]
+  List<String> _getMemberRoleTags(User member, List<User> allMembers) {
+    List<String> tags = [];
+
+    final userType = member.userType.toUpperCase();
+    final isHead = userType == 'HEAD';
+    final isEditor = userType == 'EDITOR';
+
+    print('🔍 Checking role for: ${member.fullName}');
+    print('   - userType: $userType');
+    print('   - isHead: $isHead, isEditor: $isEditor');
+
+    // If member is HEAD
+    if (isHead) {
+      // Check if there are other editors in the family (excluding this member)
+      final otherEditors = allMembers
+          .where(
+              (m) => m.id != member.id && m.userType.toUpperCase() == 'EDITOR')
+          .toList();
+
+      print('   - Checking for other editors (excluding ${member.fullName}):');
+      print('   - Total family members: ${allMembers.length}');
+      allMembers.forEach((m) {
+        print('     * ${m.fullName}: userType=${m.userType}, id=${m.id}');
+      });
+      print('   - Other editors found: ${otherEditors.length}');
+      otherEditors.forEach((e) => print('     * ${e.fullName}'));
+
+      if (otherEditors.isEmpty) {
+        // Head is the only editor (implicit editor role)
+        tags.add('Head & Editor');
+        print('   ✅ Result: Head & Editor (no other editors)');
+      } else {
+        // There are other editors, so just show Head
+        tags.add('Head');
+        print('   ✅ Result: Head (other editors exist)');
+      }
+    }
+    // If member is EDITOR (but not HEAD)
+    else if (isEditor) {
+      tags.add('Editor');
+      print('   ✅ Result: Editor');
+    }
+
+    return tags;
   }
 
   @override
@@ -224,7 +293,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
             backgroundColor: Theme.of(context).colorScheme.primary,
             flexibleSpace: FlexibleSpaceBar(
               title: AnimatedOpacity(
-                opacity: _scrollOffset > 100 ? 1 : 0,
+                opacity: _headerAnimationController.value > 0.5 ? 1 : 0,
                 duration: const Duration(milliseconds: 200),
                 child: Text(
                   currentUser.fullName,
@@ -331,17 +400,18 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                           delay: 100,
                         ),
                         Gap.s24H(),
-                        if (_userFamily != null) ...[
+                        if (_familyMembersFromLogin.isNotEmpty) ...[
                           _buildAnimatedSection(
                             title: 'Family Members',
                             child: _buildFamilyMembersSection(
-                                _userFamily!, currentUser),
+                                _userFamily, currentUser),
                             delay: 200,
                           ),
                           Gap.s24H(),
                         ],
                         if (_currentUser!.userType == 'ADMIN' ||
-                            _currentUser!.userType == 'HEAD') ...[
+                            _currentUser!.userType == 'HEAD' ||
+                            _currentUser!.userType == 'EDITOR') ...[
                           _buildAnimatedSection(
                             title: 'Actions',
                             child: _buildActionsSection(currentUser),
@@ -552,18 +622,42 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
     );
   }
 
-  Widget _buildFamilyMembersSection(Family family, User currentUser) {
-    // Convert FamilyHead and FamilyMember to User objects
-    final headUser = User.fromJson(family.head.toUserJson());
-    final memberUsers =
-        family.members.map((m) => User.fromJson(m.toUserJson())).toList();
-    final allMembers = [headUser, ...memberUsers];
+  Widget _buildFamilyMembersSection(Family? family, User currentUser) {
+    // ✅ USE LOGIN API DATA (has userType)
+    final allMembers = <User>[
+      ..._familyMembersFromLogin.isNotEmpty
+          ? _familyMembersFromLogin
+          : (family != null
+              ? [
+                  User.fromJson(family.head.toUserJson()),
+                  ...family.members.map((m) => User.fromJson(m.toUserJson()))
+                ]
+              : [])
+    ];
+
+    if (allMembers.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text('No family members found'),
+        ),
+      );
+    }
+
+    print('🔍 Building family section with ${allMembers.length} members:');
+    allMembers.forEach((m) {
+      print('   - ${m.fullName}: userType=${m.userType}');
+    });
 
     return Column(
       children: allMembers.asMap().entries.map((entry) {
         final index = entry.key;
         final member = entry.value;
         final isCurrentUser = member.id == currentUser.id;
+
+        // ✅ Pass complete member list for accurate role checking
+        final roleTags = _getMemberRoleTags(member, allMembers);
+
         return TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: 1),
           duration: Duration(milliseconds: 300 + (index * 100)),
@@ -641,9 +735,12 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                                                   ).colorScheme.primary
                                                 : null,
                                           ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  if (isCurrentUser)
+                                  if (isCurrentUser) ...[
+                                    Gap.s8W(),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 8,
@@ -664,38 +761,67 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                                         ),
                                       ),
                                     ),
+                                  ],
                                 ],
                               ),
                               Gap.s4H(),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: member.isHeadOfFamily
-                                      ? Theme.of(
-                                          context,
-                                        )
-                                          .colorScheme
-                                          .primary
-                                          .withValues(alpha: 0.2)
-                                      : Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  member.isHeadOfFamily
-                                      ? 'Head of Family'
-                                      : (member.relation ?? 'Family Member'),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: member.isHeadOfFamily
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Colors.grey[700],
+                              // Role tags
+                              if (roleTags.isNotEmpty)
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 6,
+                                  children: roleTags.map((tag) {
+                                    final isHeadTag = tag.contains('Head');
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isHeadTag
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withValues(alpha: 0.2)
+                                            : Colors.orange
+                                                .withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        tag,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: isHeadTag
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                              : Colors.orange[800],
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                )
+                              else if (member.relation != null &&
+                                  member.relation!.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    member.relation!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[700],
+                                    ),
                                   ),
                                 ),
-                              ),
                               Gap.s4H(),
                               Text(
                                 member.phoneNumber,
@@ -711,7 +837,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (currentUser.userType == "HEAD" ||
-                                currentUser.userType == "EDITOR")
+                                currentUser.userType == "EDITOR" ||
+                                currentUser.userType == "ADMIN")
                               IconButton(
                                 onPressed: () => _editMember(member),
                                 icon: Icon(

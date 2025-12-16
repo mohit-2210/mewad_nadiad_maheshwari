@@ -6,6 +6,7 @@ import 'package:mmsn/models/family.dart';
 import 'package:mmsn/pages/family/services/family_api_services.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/components/member_action_dialog.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class SocietyTabScreen extends StatefulWidget {
   const SocietyTabScreen({super.key});
@@ -21,11 +22,24 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  // ✅ For scrollable index
+  final ItemScrollController _itemScrollController = ItemScrollController();
+  final ItemPositionsListener _itemPositionsListener =
+      ItemPositionsListener.create();
 
   @override
   void initState() {
     super.initState();
     _loadSocietyData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
   }
 
   List<String> get _filteredSocieties {
@@ -62,6 +76,14 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
     );
   }
 
+  void _clearSearch() {
+    _searchController.clear();
+    _searchFocusNode.unfocus();
+    setState(() {
+      _searchQuery = '';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -73,7 +95,7 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)], // Purple → Blue
+              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -110,9 +132,7 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
         builder: (context, isKeyboardVisible) {
           return Stack(
             children: [
-              _buildMainBody(), // main content extracted below
-
-              // Floating "Hide Keyboard" Button
+              _buildMainBody(),
               if (isKeyboardVisible)
                 Positioned(
                   bottom: MediaQuery.of(context).viewInsets.bottom + 10,
@@ -142,32 +162,56 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
       onRefresh: _loadSocietyData,
       child: Column(
         children: [
-          // 🔍 SEARCH BAR
+          // ✅ Enhanced Search Bar with Cancel Button
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search society...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Search society...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 0,
+                        horizontal: 16,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
                 ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+
+                // ✅ Cancel Button
+                if (_searchQuery.isNotEmpty || _searchFocusNode.hasFocus)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    child: TextButton(
+                      onPressed: _clearSearch,
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Color(0xFF6A11CB),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
 
-          // LIST CONTENT
           Expanded(
             child: _filteredSocieties.isEmpty
                 ? _buildEmptyState(theme)
@@ -179,7 +223,9 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
   }
 
   Widget _buildSocietyList(ThemeData theme) {
-    return ListView.builder(
+    return ScrollablePositionedList.builder(
+      itemScrollController: _itemScrollController,
+      itemPositionsListener: _itemPositionsListener,
       padding: const EdgeInsets.all(16),
       itemCount: _filteredSocieties.length,
       itemBuilder: (context, index) {
@@ -297,6 +343,14 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
             style:
                 theme.textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
           ),
+          if (_searchQuery.isNotEmpty) ...[
+            Gap.s8H(),
+            Text(
+              'Try a different search term',
+              style:
+                  theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
+            ),
+          ],
         ],
       ),
     );

@@ -11,6 +11,9 @@ class AppSpacing {
   static const double s30 = 30;
   static const double s32 = 32;
   static const double s40 = 40;
+  static const double s42 = 42;
+  static const double s44 = 44;
+  static const double s46 = 46;
   static const double s48 = 48;
   static const double s64 = 64;
 

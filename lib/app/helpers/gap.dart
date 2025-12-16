@@ -18,6 +18,9 @@ class Gap extends StatelessWidget {
   factory Gap.s30H() => Gap._(height: AppSpacing.s30);
   factory Gap.s32H() => Gap._(height: AppSpacing.s32);
   factory Gap.s40H() => Gap._(height: AppSpacing.s40);
+  factory Gap.s42H() => Gap._(height: AppSpacing.s42);
+  factory Gap.s44H() => Gap._(height: AppSpacing.s44);
+  factory Gap.s46H() => Gap._(height: AppSpacing.s46);
   factory Gap.s48H() => Gap._(height: AppSpacing.s48);
   factory Gap.s64H() => Gap._(height: AppSpacing.s64);
 
@@ -32,6 +35,9 @@ class Gap extends StatelessWidget {
   factory Gap.s30W() => Gap._(width: AppSpacing.s30);
   factory Gap.s32W() => Gap._(width: AppSpacing.s32);
   factory Gap.s40W() => Gap._(width: AppSpacing.s40);
+  factory Gap.s42W() => Gap._(width: AppSpacing.s42);
+  factory Gap.s44W() => Gap._(width: AppSpacing.s44);
+  factory Gap.s46W() => Gap._(width: AppSpacing.s46);
   factory Gap.s48W() => Gap._(width: AppSpacing.s48);
   factory Gap.s64W() => Gap._(width: AppSpacing.s64);
 

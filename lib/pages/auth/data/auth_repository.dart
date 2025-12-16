@@ -104,6 +104,14 @@ class AuthRepository {
         await AuthLocalStorage.saveUser(user);
         _api.updateCurrentUser(user);
 
+        // ✅ SAVE FAMILY MEMBERS FROM LOGIN RESPONSE
+        final familyMemberList = data['familyMemberList'];
+        if (familyMemberList != null && familyMemberList is List) {
+          print(
+              '💾 Saving ${familyMemberList.length} family members from login API');
+          await AuthLocalStorage.saveFamilyMembers(familyMemberList);
+        }
+
         print('✓ Login successful');
         return user;
       } else {

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mmsn/models/user.dart';
 
@@ -9,7 +11,7 @@ class AuthLocalStorage {
   static const _userKey = "user_profile";
   static const _passwordResetTokenKey = "passwordResetToken";
   static const _otpVerificationKey = "otpVerificationToken";
-
+  static const _familyMembersKey = "family_members_list";
 
   // ==================== Access Token ====================
 
@@ -69,32 +71,31 @@ class AuthLocalStorage {
 
   // ==================== OTP Verification Token ====================
 
-static Future<void> saveOtpVerificationToken(String token) async {
-  if (token.isEmpty) {
-    throw Exception("Cannot save empty otpVerificationToken");
+  static Future<void> saveOtpVerificationToken(String token) async {
+    if (token.isEmpty) {
+      throw Exception("Cannot save empty otpVerificationToken");
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_otpVerificationKey, token);
+    print("✓ OTP verification token saved: ${token.substring(0, 20)}...");
   }
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(_otpVerificationKey, token);
-  print("✓ OTP verification token saved: ${token.substring(0, 20)}...");
-}
 
-static Future<String?> getOtpVerificationToken() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString(_otpVerificationKey);
-  if (token != null) {
-    print("✓ Retrieved otpVerificationToken: ${token.substring(0, 20)}...");
-  } else {
-    print("⚠️ No otpVerificationToken found");
+  static Future<String?> getOtpVerificationToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_otpVerificationKey);
+    if (token != null) {
+      print("✓ Retrieved otpVerificationToken: ${token.substring(0, 20)}...");
+    } else {
+      print("⚠️ No otpVerificationToken found");
+    }
+    return token;
   }
-  return token;
-}
 
-static Future<void> clearOtpVerificationToken() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.remove(_otpVerificationKey);
-  print("✓ OTP verification token cleared");
-}
-
+  static Future<void> clearOtpVerificationToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_otpVerificationKey);
+    print("✓ OTP verification token cleared");
+  }
 
 // ==================== Password Reset Token ====================
 
@@ -162,6 +163,7 @@ static Future<void> clearOtpVerificationToken() async {
     await prefs.remove(_refreshTokenKey);
     await prefs.remove(_otpSessionKey);
     await prefs.remove(_userKey);
+    await prefs.remove(_familyMembersKey);
     print('✓ All auth data cleared');
   }
 
@@ -170,5 +172,33 @@ static Future<void> clearOtpVerificationToken() async {
     await removeRefreshToken();
     await clearOtpVerificationToken();
     print('✓ All tokens cleared');
+  }
+
+  /// Save family members list from login API
+  static Future<void> saveFamilyMembers(List<dynamic> familyMembers) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = jsonEncode(familyMembers);
+    await prefs.setString(_familyMembersKey, jsonString);
+    print(
+        '✓ Family members saved to storage (${familyMembers.length} members)');
+  }
+
+  /// Get family members list (returns List<User>)
+  static Future<List<User>> getFamilyMembers() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_familyMembersKey);
+
+    if (jsonString == null) return [];
+
+    final List<dynamic> jsonList = jsonDecode(jsonString);
+    return jsonList
+        .map((json) => User.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Remove family members
+  static Future<void> removeFamilyMembers() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_familyMembersKey);
   }
 }

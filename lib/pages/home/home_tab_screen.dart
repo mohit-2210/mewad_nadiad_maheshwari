@@ -5,10 +5,11 @@ import 'package:mmsn/models/family.dart';
 import 'package:mmsn/pages/auth/services/auth_service.dart';
 import 'package:mmsn/pages/family/family_directory_screen.dart';
 import 'package:mmsn/pages/family/services/family_api_services.dart';
-import 'package:mmsn/data_service.dart'; // Keep for carousel images only
+import 'package:mmsn/data_service.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/components/family_card.dart';
 import 'package:mmsn/pages/family/family_details_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class HomeTabScreen extends StatefulWidget {
   const HomeTabScreen({super.key, this.onDrawerToggle});
@@ -16,13 +17,18 @@ class HomeTabScreen extends StatefulWidget {
   final VoidCallback? onDrawerToggle;
 
   @override
-  State<HomeTabScreen> createState() {
-    return _HomeTabScreenState();
-  }
+  State<HomeTabScreen> createState() => _HomeTabScreenState();
 }
 
-class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateMixin {
+class _HomeTabScreenState extends State<HomeTabScreen> 
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  
+  // ✅ Keep state alive
+  @override
+  bool get wantKeepAlive => true;
+
   final PageController _carouselController = PageController();
+  final ScrollController _scrollController = ScrollController();
 
   int _currentCarouselIndex = 0;
   Timer? _carouselTimer;
@@ -53,6 +59,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
     _headerAnimationController.dispose();
     _carouselAnimationController.dispose();
     _listAnimationController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -90,9 +97,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
     );
   }
 
-  void _setupFamilyAnimations(int count) {
-  }
-
   void _startCarouselTimer() {
     _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
       if (_carouselImages.isNotEmpty && _carouselController.hasClients) {
@@ -113,10 +117,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
     });
 
     try {
-      // Get carousel images from DataService (keep this as it's local assets)
       final images = DataService.instance.carouselImages;
-      
-      // Fetch families from API
       final families = await FamilyApiService.instance.getFamilies();
       
       setState(() {
@@ -125,7 +126,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
         _isLoading = false;
       });
       
-      _setupFamilyAnimations(_recentFamilies.length);
       _headerAnimationController.forward();
       await Future.delayed(const Duration(milliseconds: 200));
       _carouselAnimationController.forward();
@@ -137,7 +137,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
         _errorMessage = 'Failed to load data: ${e.toString()}';
       });
       
-      // Show error snackbar
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -156,8 +155,11 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // ✅ Required for AutomaticKeepAliveClientMixin
+    
     final currentUser = AuthApiService.instance.currentUser;
     final size = MediaQuery.of(context).size;
+    
     return Scaffold(
       body: SafeArea(
         child: _isLoading
@@ -165,6 +167,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
             : RefreshIndicator(
                 onRefresh: _loadData,
                 child: SingleChildScrollView(
+                  controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -273,14 +276,21 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
                   children: [
                     Hero(
                       tag: 'home_profile_${currentUser?.id ?? 'unknown'}',
-                      child: CircleAvatar(
-                        radius: 35,
-                        backgroundImage: currentUser?.profileImage != null
-                            ? NetworkImage(currentUser!.profileImage!)
-                            : null,
-                        child: currentUser?.profileImage == null
-                            ? const Icon(Icons.person, size: 35)
-                            : null,
+                      // ✅ Use CachedNetworkImage instead of direct NetworkImage
+                      child: CachedNetworkImage(
+                        imageUrl: currentUser?.profileImage ?? '',
+                        imageBuilder: (context, imageProvider) => CircleAvatar(
+                          radius: 35,
+                          backgroundImage: imageProvider,
+                        ),
+                        placeholder: (context, url) => const CircleAvatar(
+                          radius: 35,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        errorWidget: (context, url, error) => const CircleAvatar(
+                          radius: 35,
+                          child: Icon(Icons.person, size: 35),
+                        ),
                       ),
                     ),
                     if (widget.onDrawerToggle != null)
@@ -303,7 +313,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
                               ),
                             ],
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.menu,
                             color: Colors.white,
                             size: 15,
@@ -342,6 +352,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
     );
   }
 
+  // ✅ Optimized carousel with proper caching
   Widget _buildEnhancedCarousel(Size size) {
     return Container(
       height: size.height * 0.25,
@@ -367,19 +378,17 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
                 });
               },
               itemCount: _carouselImages.length,
-              itemBuilder: (context, index) => TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.8, end: 1),
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeOut,
-                builder: (context, value, child) => Transform.scale(
-                  scale: value,
-                  child: Image(
-                    image: AssetImage(_carouselImages[index]),
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                  ),
-                ),
-              ),
+              itemBuilder: (context, index) {
+                // ✅ Use Image.asset with caching for local assets
+                return Image.asset(
+                  _carouselImages[index],
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  // ✅ Cache the image
+                  cacheWidth: (size.width * 3).toInt(),
+                  cacheHeight: (size.height * 0.25 * 3).toInt(),
+                );
+              },
             ),
             Container(
               decoration: BoxDecoration(
@@ -439,10 +448,10 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
               tween: Tween(begin: 0, end: 1),
               duration: const Duration(milliseconds: 800),
               curve: Curves.easeOut,
-              builder: (context, value, child) => Transform.translate(
-                offset: Offset(-30 * (1 - value), 0),
+              builder: (context, animation, child) => Transform.translate(
+                offset: Offset(-30 * (1 - animation), 0),
                 child: Opacity(
-                  opacity: value,
+                  opacity: animation,
                   child: child,
                 ),
               ),
@@ -458,10 +467,10 @@ class _HomeTabScreenState extends State<HomeTabScreen> with TickerProviderStateM
               tween: Tween(begin: 0, end: 1),
               duration: const Duration(milliseconds: 1000),
               curve: Curves.easeOut,
-              builder: (context, value, child) => Transform.translate(
-                offset: Offset(30 * (1 - value), 0),
+              builder: (context, animation, child) => Transform.translate(
+                offset: Offset(30 * (1 - animation), 0),
                 child: Opacity(
-                  opacity: value,
+                  opacity: animation,
                   child: child,
                 ),
               ),
