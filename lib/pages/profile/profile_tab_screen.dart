@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/admin_screens/adding_family.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchCall.dart';
 import 'package:mmsn/app/services/launchEmail.dart';
@@ -524,7 +525,8 @@ void _handleScroll() {
             ),
             _buildAnimatedInfoRow(
               Icons.place,
-              'Native Place',
+              // 'Native Place',
+              AppLocalizations.text(context, 'nativePlace'),
               user.nativePlace ?? 'Not specified',
               600,
             ),

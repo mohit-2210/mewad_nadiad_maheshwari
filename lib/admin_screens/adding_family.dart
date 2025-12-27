@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:mmsn/app/Dio/dio_client.dart';
 import 'package:mmsn/app/globals/api_endpoint.dart';
 import 'package:mmsn/app/globals/app_constants.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/services/selct_image.dart';
 import 'package:mmsn/app/services/uploadFile.dart';
 
@@ -259,7 +260,8 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
                       ),
                       _buildTextField(
                         nativePlaceController,
-                        "Native Place",
+                        // "Native Place",
+                        AppLocalizations.text(context, 'nativePlace'),
                         Icons.location_city,
                       ),
                       _buildTextField(

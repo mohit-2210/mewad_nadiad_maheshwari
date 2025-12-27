@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:mmsn/app/globals/app_navigator.dart';
 import 'package:mmsn/app/services/device_service.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mmsn/app/globals/app_spacing.dart';
 import 'package:mmsn/app/globals/app_state.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/notification/firebase_message_initializer.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/data/auth_repository.dart';
@@ -50,8 +52,22 @@ class MyApp extends StatelessWidget {
         
         return MaterialApp(
           navigatorKey: navigatorKey,
-          title: 'Mewad Maheshwari Samaj Nadiad',
+          title: AppLocalizations.text(context, 'appName'),
           theme: appState.theme,
+          
+          // ✅ ADD LOCALIZATION SUPPORT
+          locale: Locale(AppLocalizations.getCurrentLangCode(appState.language)),
+          supportedLocales: const [
+            Locale('en', ''),
+            Locale('hi', ''),
+            Locale('gu', ''),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          
           home: const SplashScreen(),
           debugShowCheckedModeBanner: false,
           builder: (context, child) {

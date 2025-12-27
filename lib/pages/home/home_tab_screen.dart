@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'dart:async';
 import 'package:mmsn/models/family.dart';
@@ -456,7 +457,7 @@ class _HomeTabScreenState extends State<HomeTabScreen>
                 ),
               ),
               child: Text(
-                'Family Directory',
+                AppLocalizations.text(context, 'familyDirectory'),
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.primary,

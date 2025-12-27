@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/admin_screens/announcement_handling.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/components/cached_avatar.dart';
 import 'package:mmsn/models/announcement.dart';
@@ -172,9 +173,9 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '📢 Announcements',
-                    style: TextStyle(
+                  Text(
+                    '📢 ${AppLocalizations.text(context, 'announcements')}',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -344,7 +345,7 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
                                     children: [
                                       if (announcement.image != null)
                                         CachedImage(
-                                          imageUrl : announcement.image!,
+                                          imageUrl: announcement.image!,
                                           height: 180,
                                           width: double.infinity,
                                           fit: BoxFit.cover,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchMap.dart';
 import 'package:mmsn/components/cached_avatar.dart';
@@ -223,7 +224,8 @@ class _FamilyDetailsScreenState extends State<FamilyDetailsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Native Place',
+                              // 'Native Place',
+                              AppLocalizations.text(context, 'nativePlace'),
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,

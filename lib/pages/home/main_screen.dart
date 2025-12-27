@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/home/home_tab_screen.dart';
@@ -303,30 +304,30 @@ class _MainScreenState extends State<MainScreen> {
               type: BottomNavigationBarType.fixed,
               selectedItemColor: Theme.of(context).colorScheme.primary,
               unselectedItemColor: Colors.grey[600],
-              items: const [
+              items: [
                 BottomNavigationBarItem(
                   icon: Icon(
                     Icons.home,
                   ),
-                  label: AppStrings.home,
+                  label: AppLocalizations.text(context, 'home'),
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(
                     Icons.notifications,
                   ),
-                  label: AppStrings.announcement,
+                  label: AppLocalizations.text(context, 'announcement'),
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(
                     Icons.apartment,
                   ),
-                  label: AppStrings.society,
+                  label: AppLocalizations.text(context, 'society'),
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(
                     Icons.person,
                   ),
-                  label: AppStrings.profile,
+                  label: AppLocalizations.text(context, 'profile'),
                 ),
               ],
             ),

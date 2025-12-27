@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/components/family_card.dart';
 import 'package:mmsn/models/family.dart';
@@ -113,10 +114,10 @@ class _SocietyTabScreenState extends State<SocietyTabScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text(
-                    '🏘️ Societies',
-                    style: TextStyle(
+                    '🏘️ ${AppLocalizations.text(context, 'society')}',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 22,
                       fontWeight: FontWeight.w700,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/auth/data/user_service.dart';
@@ -265,14 +266,15 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     Gap.s16H(),
                     _buildTextField(
                       controller: _addressController,
-                      label: 'Address (Optional)',
+                      label: '${AppLocalizations.text(context, 'address')} ${AppLocalizations.text(context, 'optional')}',
                       icon: Icons.home,
                       maxLines: 2,
                     ),
                     Gap.s16H(),
                     _buildTextField(
                       controller: _nativePlaceController,
-                      label: 'Native Place (Optional)',
+                      // label: 'Native Place (Optional)',
+                      label: '${AppLocalizations.text(context, 'nativePlace')} ${AppLocalizations.text(context, 'optional')}',
                       icon: Icons.place,
                     ),
                     Gap.s40H(),

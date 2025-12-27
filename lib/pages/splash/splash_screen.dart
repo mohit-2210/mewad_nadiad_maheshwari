@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
@@ -170,11 +171,11 @@ class _SplashScreenState extends State<SplashScreen>
                   // TITLE
                   Opacity(
                     opacity: _titleOpacity.value,
-                    child: const Padding(
-                      padding: EdgeInsets.all(12.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
                       child: Text(
-                        AppStrings.appName,
-                        style: TextStyle(
+                        AppLocalizations.text(context, 'appName'),
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -191,8 +192,8 @@ class _SplashScreenState extends State<SplashScreen>
                   Opacity(
                     opacity: _subtitleOpacity.value,
                     child: Text(
-                      AppStrings.splashSubtitle,
-                      style: TextStyle(
+                      AppLocalizations.text(context, 'splashSubtitle'),
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.white70,
                       ),

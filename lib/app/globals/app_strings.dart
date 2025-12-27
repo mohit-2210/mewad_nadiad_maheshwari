@@ -9,12 +9,6 @@ class AppStrings {
   static const retry = 'Retry';
   static const exit = 'Exit';
 
-  //Splash
-  static const splashSubtitle = 'Connect with your community';
-
-  // Logout
-  static const logoutButton = 'Logout';
-
   // Delete Account
   static const delete = 'Delete';
   static const deleteAccountButton = 'Delete Account';
@@ -27,12 +21,6 @@ class AppStrings {
   static const memberActionDialogBoxText = 'What would you like to do?';
   static const call = 'Call';
   static const family = 'Family';
-
-  // Bottom Navigation Bar
-  static const home = 'Home';
-  static const announcement = 'Announcement';
-  static const society = 'Society';
-  static const profile = 'Profile';
 
   // Errors
   static const errorNoInternet = 'No internet connection';

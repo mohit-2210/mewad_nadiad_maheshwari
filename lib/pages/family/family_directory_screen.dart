@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/family.dart';
 import 'package:mmsn/components/cached_avatar.dart';
@@ -165,7 +166,7 @@ class _FamilyDirectoryScreenState extends State<FamilyDirectoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Family Directory'),
+        title: Text(AppLocalizations.text(context, 'familyDirectory')),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
