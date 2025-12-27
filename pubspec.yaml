@@ -66,6 +66,7 @@ flutter:
   assets:
     # - assets/intro/
     - assets/people/
+    - assets/introPageAds/
     - assets/Ads/SomaniGold.webp
     - assets/Ads/devraj_industries.webp
 #App Icon image
