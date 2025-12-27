@@ -20,8 +20,7 @@ class _IntroScreenState extends State<IntroScreen> {
 
   // List of advertisement images (2 per page)
   final List<String> _adImages = [
-    'assets/Ads/SomaniGold.webp',
-    'assets/Ads/devraj_industries.webp',
+    'assets/introPageAds/introPage1Ad.webp',
   ];
 
   // ---- PAGES LIST ----
@@ -39,41 +38,24 @@ class _IntroScreenState extends State<IntroScreen> {
 
     // Add image slides after people pages (only if not logged in)
     if (!isLoggedIn) {
-      pages.add(_buildTwoImageSlide());
+      pages.add(_buildSingleImageSlide());
     }
     
     return pages;
   }
 
-  // ---- BUILD TWO IMAGES SLIDE ----
-  Widget _buildTwoImageSlide() {
-    return Column(
-      children: [
-        // Top Image - Takes 50% of screen height
-        Expanded(
-          child: Container(
-            width: double.infinity,
-            color: Colors.black,
-            child: Image.asset(
-              _adImages[0],
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-        // Bottom Image - Takes 50% of screen height
-        Expanded(
-          child: Container(
-            width: double.infinity,
-            color: Colors.black,
-            child: Image.asset(
-              _adImages[1],
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // ---- BUILD ONE IMAGES SLIDE ----
+  Widget _buildSingleImageSlide() {
+  return Container(
+    width: double.infinity,
+    color: Colors.black,
+    child: Image.asset(
+      _adImages.first,
+      fit: BoxFit.cover,
+    ),
+  );
+}
+
 
   // ---- Navigation ----
   void _nextPage() {
