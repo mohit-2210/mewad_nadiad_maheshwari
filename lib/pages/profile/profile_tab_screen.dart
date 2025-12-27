@@ -9,7 +9,6 @@ import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/auth/services/auth_service.dart';
 import 'package:mmsn/pages/auth/data/user_service.dart';
 import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
-import 'package:mmsn/pages/family/services/family_api_services.dart';
 import 'package:mmsn/pages/family/member_details_screen.dart';
 import 'package:mmsn/pages/profile/update/edit_member_screen.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
@@ -167,7 +166,7 @@ void _handleScroll() {
       );
 
       // Get other members (excluding head)
-      final members = familyMembers.where((m) => m.id != head.id).toList();
+      familyMembers.where((m) => m.id != head.id).toList();
 
       // Create a Family object (we need to match the Family model structure)
       // Since we don't have a direct constructor, we'll store the list directly

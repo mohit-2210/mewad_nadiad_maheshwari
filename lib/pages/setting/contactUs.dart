@@ -30,21 +30,57 @@ class ContactUsScreen extends StatelessWidget {
             ),
             Gap.s20H(),
             ListTile(
-              leading: const Icon(Icons.phone, color: Colors.green),
-              title: const Text('+91 98765 43210'),
-              onTap: () => launchPhone('+919876543210'),
+              leading: const Icon(
+                Icons.person,
+                color: Colors.black,
+              ),
+              title: const Text('Mohit Soni'),
             ),
             ListTile(
-              leading: const Icon(Icons.email, color: Colors.red),
+              leading: const Icon(
+                Icons.phone,
+                color: Colors.green,
+              ),
+              title: const Text('+91 6353668707'),
+              onTap: () => launchPhone('+916353668707'),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.email,
+                color: Colors.red,
+              ),
               title: const Text('nadiadmaheshwarisamaj'),
               onTap: () => launchEmail('nadiadmaheshwarisamaj@gmail.com'),
             ),
             ListTile(
-              leading: const Icon(Icons.location_on, color: Colors.blue),
+              leading: const Icon(
+                Icons.location_on,
+                color: Colors.blue,
+              ),
               title: const Text('Mahesh Vatika, Nadiad, Gujarat, India'),
               onTap: () => openMap('Mahesh Vatika, Nadiad, Gujarat, India'),
             ),
             Gap.s30H(),
+            Text(
+              'Development Team',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            Gap.s10H(),
+            ListTile(
+              leading: const Icon(
+                Icons.person,
+                color: Colors.black,
+              ),
+              title: const Text('Rushit Rabadiya'),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.person,
+                color: Colors.black,
+              ),
+              title: const Text('Mahak Shah'),
+            ),
             Center(
               child: Text(
                 'We value your feedback 🙏',
