@@ -6,7 +6,8 @@ class DataService {
   // Keep only carousel images for local assets
   final List<String> carouselImages = [
     AppImages.SomaniGold,
-    AppImages.devraj_industries
+    AppImages.devraj_industries,
+    AppImages.savaliya_iceCream,
   ];
 
   static DataService? _instance;

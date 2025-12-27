@@ -2,6 +2,7 @@ class AppImages {
   // If you are using assets
   static const String SomaniGold = 'assets/Ads/SomaniGold.webp';
   static const String devraj_industries = 'assets/Ads/devraj_industries.webp';
+  static const String savaliya_iceCream = 'assets/Ads/savaliya_iceCream.webp';
 
   //IntroPages Images
   static const String intro1 = 'assets/introPageAds/introPage1Ad.webp';
