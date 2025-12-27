@@ -22,7 +22,8 @@ class _IntroScreenState extends State<IntroScreen> {
   final List<String> _adImages = [
     AppImages.intro1,
     AppImages.intro2,
-    
+    AppImages.intro3,
+
   ];
 
   // ---- PAGES LIST ----
