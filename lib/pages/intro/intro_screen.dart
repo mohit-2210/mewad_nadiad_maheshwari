@@ -23,7 +23,6 @@ class _IntroScreenState extends State<IntroScreen> {
     AppImages.intro1,
     AppImages.intro2,
     AppImages.intro3,
-
   ];
 
   // ---- PAGES LIST ----
@@ -39,26 +38,27 @@ class _IntroScreenState extends State<IntroScreen> {
       pages.add(PeopleIntroPage(people: people.sublist(i, end)));
     }
 
-    // Add image slides after people pages (only if not logged in)
+    // ---- Advertisement image pages (dynamic) ----
     if (!isLoggedIn) {
-      pages.add(_buildSingleImageSlide());
+      for (final image in _adImages) {
+        pages.add(_buildImageSlide(image));
+      }
     }
-    
+
     return pages;
   }
 
-  // ---- BUILD ONE IMAGES SLIDE ----
-  Widget _buildSingleImageSlide() {
-  return Container(
-    width: double.infinity,
-    color: Colors.black,
-    child: Image.asset(
-      _adImages.first,
-      fit: BoxFit.cover,
-    ),
-  );
-}
-
+  // ---- BUILD IMAGES SLIDE ----
+  Widget _buildImageSlide(String imagePath) {
+    return Container(
+      width: double.infinity,
+      color: Colors.black,
+      child: Image.asset(
+        imagePath,
+        fit: BoxFit.fill,
+      ),
+    );
+  }
 
   // ---- Navigation ----
   void _nextPage() {
