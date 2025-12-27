@@ -37,13 +37,6 @@ class OrganizationInfoSlide extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Decorative top element
-              Icon(
-                Icons.account_balance,
-                size: screenWidth * 0.15,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-              ),
-              SizedBox(height: screenHeight * 0.03),
               
               // Main heading with decorative underline
               Column(
@@ -134,16 +127,35 @@ class OrganizationInfoSlide extends StatelessWidget {
               SizedBox(height: screenHeight * 0.03),
               
               // Second organization heading
-              Text(
-                'माहेश्वरी सेवा समिति',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: titleSize.clamp(20.0, 32.0),
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                  height: 1.4,
-                  letterSpacing: 0.5,
-                ),
+              Column(
+                children: [
+                  Text(
+                    'माहेश्वरी सेवा समिति',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: titleSize.clamp(20.0, 32.0),
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                      height: 1.4,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  SizedBox(height: screenHeight * 0.015),
+                  Container(
+                    width: screenWidth * 0.3,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Theme.of(context).colorScheme.primary,
+                          Colors.transparent,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ],
               ),
               
               SizedBox(height: screenHeight * 0.02),
@@ -163,12 +175,6 @@ class OrganizationInfoSlide extends StatelessWidget {
               
               SizedBox(height: screenHeight * 0.03),
               
-              // Decorative bottom element
-              Icon(
-                Icons.groups,
-                size: screenWidth * 0.12,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-              ),
             ],
           ),
         ),

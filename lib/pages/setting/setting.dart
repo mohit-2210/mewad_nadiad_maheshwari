@@ -35,44 +35,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           Gap.s10H(),
 
-          // 🔹 LANGUAGE
-          _buildSectionHeader(
-            AppLocalizations.text(context, 'settingsLanguage'),
-            theme,
-          ),
-          RadioListTile<AppLanguage>(
-            value: AppLanguage.en,
-            groupValue: appState.language,
-            onChanged: (lang) => appState.changeLanguage(lang ?? AppLanguage.en),
-            title: Text(AppLocalizations.text(context, 'languageEnglish')),
-          ),
-          RadioListTile<AppLanguage>(
-            value: AppLanguage.hi,
-            groupValue: appState.language,
-            onChanged: (lang) => appState.changeLanguage(lang ?? AppLanguage.hi),
-            title: Text(AppLocalizations.text(context, 'languageHindi')),
-          ),
-          RadioListTile<AppLanguage>(
-            value: AppLanguage.gu,
-            groupValue: appState.language,
-            onChanged: (lang) => appState.changeLanguage(lang ?? AppLanguage.gu),
-            title: Text(AppLocalizations.text(context, 'languageGujarati')),
-          ),
-          const Divider(),
+          // // 🔹 LANGUAGE
+          // _buildSectionHeader(
+          //   AppLocalizations.text(context, 'settingsLanguage'),
+          //   theme,
+          // ),
+          // RadioListTile<AppLanguage>(
+          //   value: AppLanguage.en,
+          //   groupValue: appState.language,
+          //   onChanged: (lang) => appState.changeLanguage(lang ?? AppLanguage.en),
+          //   title: Text(AppLocalizations.text(context, 'languageEnglish')),
+          // ),
+          // RadioListTile<AppLanguage>(
+          //   value: AppLanguage.hi,
+          //   groupValue: appState.language,
+          //   onChanged: (lang) => appState.changeLanguage(lang ?? AppLanguage.hi),
+          //   title: Text(AppLocalizations.text(context, 'languageHindi')),
+          // ),
+          // RadioListTile<AppLanguage>(
+          //   value: AppLanguage.gu,
+          //   groupValue: appState.language,
+          //   onChanged: (lang) => appState.changeLanguage(lang ?? AppLanguage.gu),
+          //   title: Text(AppLocalizations.text(context, 'languageGujarati')),
+          // ),
+          // const Divider(),
 
-          // 🔹 NOTIFICATIONS
-          _buildSectionHeader('Notifications', theme),
-          SwitchListTile(
-            value: notificationsEnabled,
-            onChanged: (value) {
-              setState(() => notificationsEnabled = value);
-              // Save preference in SharedPreferences or Firestore
-            },
-            title: const Text('Event & Update Alerts'),
-            secondary: Icon(Icons.notifications_active_outlined,
-                color: theme.colorScheme.primary),
-          ),
-          const Divider(),
+          // // 🔹 NOTIFICATIONS
+          // _buildSectionHeader('Notifications', theme),
+          // SwitchListTile(
+          //   value: notificationsEnabled,
+          //   onChanged: (value) {
+          //     setState(() => notificationsEnabled = value);
+          //     // Save preference in SharedPreferences or Firestore
+          //   },
+          //   title: const Text('Event & Update Alerts'),
+          //   secondary: Icon(Icons.notifications_active_outlined,
+          //       color: theme.colorScheme.primary),
+          // ),
+          // const Divider(),
 
           // 🔹 SUPPORT / FEEDBACK
           _buildSectionHeader('Support & Feedback', theme),

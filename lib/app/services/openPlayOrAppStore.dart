@@ -3,9 +3,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 Future<void> openStore() async {
   const String androidUrl =
-      'https://play.google.com/store/apps/details?id=com.mewad.samaj'; //debug
+      'https://play.google.com/store/apps/details?id=com.nadiadmaheshwari.app';
   const String iosUrl =
-      'https://apps.apple.com/in/app/mewad-maheshwari-nadiad-samaj/id1234567890'; // Replace with actual App Store ID
+      'https://apps.apple.com/in/app/mewad-maheshwari-samaj-nadiad/id6755380541'; // Replace with actual App Store ID
 
   final Uri uri = Uri.parse(Platform.isAndroid ? androidUrl : iosUrl);
 
