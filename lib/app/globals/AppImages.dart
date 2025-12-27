@@ -3,9 +3,11 @@ class AppImages {
   static const String SomaniGold = 'assets/Ads/SomaniGold.webp';
   static const String devraj_industries = 'assets/Ads/devraj_industries.webp';
   static const String savaliya_iceCream = 'assets/Ads/savaliya_iceCream.webp';
+  static const String umesh_bangad = 'assets/Ads/umesh_bangad.webp';
 
   //IntroPages Images
   static const String intro1 = 'assets/introPageAds/introPage1Ad.webp';
+  static const String intro2 = 'assets/introPageAds/introPage2Ad.webp';
 
   static const String logo = 'assets/AppIcon.png';
   static const String background = 'assets/images/bg.png';

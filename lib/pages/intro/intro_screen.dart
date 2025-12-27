@@ -20,7 +20,9 @@ class _IntroScreenState extends State<IntroScreen> {
 
   // List of advertisement images (2 per page)
   final List<String> _adImages = [
-    'assets/introPageAds/introPage1Ad.webp',
+    AppImages.intro1,
+    AppImages.intro2,
+    
   ];
 
   // ---- PAGES LIST ----
