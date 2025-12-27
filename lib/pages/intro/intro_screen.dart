@@ -6,6 +6,7 @@ import 'package:mmsn/pages/auth/cubit/auth_state.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
 import 'package:mmsn/pages/home/main_screen.dart';
 import 'package:mmsn/pages/intro/people_intro_page.dart';
+import 'package:mmsn/pages/intro/organization_info_slide.dart';
 
 class IntroScreen extends StatefulWidget {
   const IntroScreen({super.key});
@@ -36,6 +37,12 @@ class _IntroScreenState extends State<IntroScreen> {
     for (int i = 0; i < people.length; i += pageSize) {
       final end = (i + pageSize > people.length) ? people.length : i + pageSize;
       pages.add(PeopleIntroPage(people: people.sublist(i, end)));
+    }
+
+    // ---- ADD ORGANIZATION INFO SLIDE HERE ----
+    // This appears after people pages and before ad images
+    if (!isLoggedIn) {
+      pages.add(const OrganizationInfoSlide());
     }
 
     // ---- Advertisement image pages (dynamic) ----
