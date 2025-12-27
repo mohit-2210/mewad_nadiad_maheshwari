@@ -9,6 +9,7 @@ class DataService {
     AppImages.devraj_industries,
     AppImages.savaliya_iceCream,
     AppImages.umesh_bangad,
+    AppImages.dipak_furniture
   ];
 
   static DataService? _instance;
