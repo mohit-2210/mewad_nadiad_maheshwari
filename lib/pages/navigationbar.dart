@@ -5,6 +5,7 @@ import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/setting/setting.dart';
 import 'package:mmsn/pages/setting/static_pages/About.dart';
 import 'package:mmsn/pages/setting/static_pages/PrivacyPolicy.dart';
+import 'package:mmsn/pages/setting/static_pages/community_organization_names.dart';
 import 'package:mmsn/pages/setting/static_pages/termsAndCondition.dart';
 
 class AnimatedDrawer extends StatefulWidget {
@@ -151,31 +152,45 @@ class AnimatedDrawerState extends State<AnimatedDrawer>
           ),
           Gap.s40H(),
 
-          _drawerItem(Icons.info_outline, "About Samaj", onTap: () {
+          // _drawerItem(Icons.info_outline, "About Samaj", onTap: () {
+          //   Navigator.push(
+          //     context,
+          //     MaterialPageRoute(builder: (_) => const AboutScreen(),),
+          //   );
+          // }),
+          _drawerItem(Icons.apartment_outlined, "Organization", onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const AboutScreen(),),
+              MaterialPageRoute(
+                builder: (_) => const CommunityOrganizationsScreen(),
+              ),
             );
           }),
-
-          _drawerItem(Icons.description_outlined, "Terms & Conditions", onTap: () {
+          _drawerItem(Icons.description_outlined, "Terms & Conditions",
+              onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen(),),
+              MaterialPageRoute(
+                builder: (_) => const TermsAndConditionsScreen(),
+              ),
             );
           }),
 
           _drawerItem(Icons.privacy_tip_outlined, "Privacy Policy", onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen(),),
+              MaterialPageRoute(
+                builder: (_) => const PrivacyPolicyScreen(),
+              ),
             );
           }),
-          
+
           _drawerItem(Icons.settings, "Settings", onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen(),),
+              MaterialPageRoute(
+                builder: (_) => const SettingsScreen(),
+              ),
             );
           }),
         ],
