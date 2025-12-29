@@ -92,6 +92,10 @@ class AppImages {
       "name": "Mahesh Aagal",
       "image": "assets/people/mahesh_aagal.webp",
     },
+    {
+      "name": "kailash Inani",
+      "image": "assets/people/kailash_inani.webp",
+    },
     // add as many people as needed (scalable)
   ];
 }
