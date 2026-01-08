@@ -91,7 +91,7 @@ class User {
         return json['isHeadOfFamily'] == true;
       }
       // Check userType (for API data)
-      final userType = json['userType']?.toString()?.toUpperCase() ?? '';
+      final userType = json['userType']?.toString().toUpperCase() ?? '';
       return userType == 'HEAD';
     }
 

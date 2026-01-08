@@ -13,6 +13,7 @@ import 'package:mmsn/pages/auth/storage/auth_local_storage.dart';
 import 'package:mmsn/pages/family/member_details_screen.dart';
 import 'package:mmsn/pages/profile/update/edit_member_screen.dart';
 import 'package:mmsn/pages/auth/login_screen.dart';
+import 'package:mmsn/pages/family/services/family_api_services.dart';
 
 class ProfileTabScreen extends StatefulWidget {
   const ProfileTabScreen({super.key});
@@ -23,15 +24,8 @@ class ProfileTabScreen extends StatefulWidget {
   }
 }
 
-class _ProfileTabScreenState extends State<ProfileTabScreen>
-    with SingleTickerProviderStateMixin {
+class _ProfileTabScreenState extends State<ProfileTabScreen> {
   final ScrollController _scrollController = ScrollController();
-
-  late AnimationController _headerAnimationController;
-
-  late Animation<double> _headerScaleAnimation;
-
-  late Animation<double> _headerOpacityAnimation;
 
   Family? _userFamily;
   List<User> _familyMembersFromLogin = []; // ✅ Store login API data
@@ -45,43 +39,15 @@ class _ProfileTabScreenState extends State<ProfileTabScreen>
   @override
   void initState() {
     super.initState();
-    _headerAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _headerScaleAnimation = Tween<double>(begin: 1, end: 0.8).animate(
-      CurvedAnimation(
-        parent: _headerAnimationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    _headerOpacityAnimation = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(
-        parent: _headerAnimationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    _scrollController.addListener(_handleScroll);
-
     // Load user and family data once in initState
     _loadCurrentUser();
   }
 
   @override
   void dispose() {
-    _headerAnimationController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
-
-void _handleScroll() {
-  const maxOffset = 200;
-  final value =
-      (_scrollController.offset / maxOffset).clamp(0.0, 1.0);
-
-  _headerAnimationController.value = value;
-}
-
 
   void _handleTap(String value, {bool? isEmail, bool? isPhone}) async {
     if (isPhone == true) {
@@ -144,34 +110,57 @@ void _handleScroll() {
     });
 
     try {
-      // ✅ USE LOGIN API DATA which has userType field!
-      // This data is stored during login in AuthLocalStorage
-      final familyMembers = await AuthLocalStorage.getFamilyMembers();
+      List<User> familyMembers = [];
+
+      // 1. Try to fetch fresh data from API
+      try {
+        print('🌐 Fetching fresh family data from API...');
+        Family? family;
+        
+        if (_currentUser!.familyId != null && _currentUser!.familyId!.isNotEmpty) {
+           family = await FamilyApiService.instance.getFamilyById(_currentUser!.familyId!);
+        } else {
+           family = await FamilyApiService.instance.getFamilyByMemberId(_currentUser!.id);
+        }
+
+        if (family != null) {
+          // Convert Family to List<User>
+          familyMembers = [
+            User.fromJson(family.head.toUserJson()),
+            ...family.members.map((m) => User.fromJson(m.toUserJson()))
+          ];
+          
+          // Update local storage with fresh data
+          await AuthLocalStorage.saveFamilyMembers(
+            familyMembers.map((u) => u.toJson()).toList()
+          );
+          
+          print('✅ Fetched & saved ${familyMembers.length} family members from API');
+        }
+      } catch (e) {
+        print('⚠️ Failed to fetch family from API: $e. Falling back to local storage.');
+      }
+
+      // 2. If API failed or returned empty, fallback to local storage
+      if (familyMembers.isEmpty) {
+        familyMembers = await AuthLocalStorage.getFamilyMembers();
+        print('📂 Loaded ${familyMembers.length} family members from local storage');
+      }
 
       if (familyMembers.isEmpty) {
-        print(
-            '⚠️ No family members found in storage. User may need to re-login.');
+        print('⚠️ No family members found in API or storage.');
         setState(() {
           _isLoading = false;
         });
         return;
       }
 
-      print('📋 Loaded ${familyMembers.length} family members from login data');
-
-      // Create a mock Family object from the login data
+      // Create a mock Family object for internal use if needed
       // Find the head (userType == "HEAD")
       final head = familyMembers.firstWhere(
         (m) => m.userType.toUpperCase() == 'HEAD',
         orElse: () => familyMembers.first,
       );
-
-      // Get other members (excluding head)
-      familyMembers.where((m) => m.id != head.id).toList();
-
-      // Create a Family object (we need to match the Family model structure)
-      // Since we don't have a direct constructor, we'll store the list directly
-      // and handle it in _buildFamilyMembersSection
 
       setState(() {
         // Store the complete family members list
@@ -179,10 +168,7 @@ void _handleScroll() {
         _isLoading = false;
       });
 
-      print('✅ Family data loaded successfully from login API');
-      familyMembers.forEach((m) {
-        print('   - ${m.fullName}: ${m.userType}');
-      });
+      print('✅ Family data interaction complete');
     } catch (e) {
       print('❌ Error loading family data: $e');
       setState(() {
@@ -290,95 +276,126 @@ void _handleScroll() {
             floating: false,
             pinned: true,
             elevation: 0,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            flexibleSpace: FlexibleSpaceBar(
-              title: AnimatedOpacity(
-                opacity: _headerAnimationController.value > 0.5 ? 1 : 0,
-                duration: const Duration(milliseconds: 200),
-                child: Text(
-                  currentUser.fullName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+            actions: [
+              IconButton(
+                onPressed: _isLoadingUser ? null : _loadCurrentUser,
+                icon: _isLoadingUser
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.sync, color: Colors.white),
               ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.8),
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: AnimatedBuilder(
-                    animation: _headerScaleAnimation,
-                    builder: (context, child) => Transform.scale(
-                      scale: _headerScaleAnimation.value,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Gap.s40H(),
-                          Hero(
-                            tag: 'profile_image_${currentUser.id}',
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 3,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: CachedAvatar(
-                                radius: 50,
-                                imageUrl: currentUser.profileImage,
-                              ),
-                            ),
-                          ),
-                          Gap.s12H(),
-                          FadeTransition(
-                            opacity: _headerOpacityAnimation,
-                            child: Column(
-                              children: [
-                                Text(
-                                  currentUser.fullName,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Gap.s4H(),
-                                Text(
-                                  currentUser.phoneNumber,
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+            ],
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            flexibleSpace: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final double maxHeight = 200.0;
+                final double minHeight =
+                kToolbarHeight + MediaQuery.of(context).padding.top;
+                final double currentHeight = constraints.biggest.height;
+
+                // 0.0 = expanded, 1.0 = collapsed
+                final double collapsePercent =
+                (1 - (currentHeight - minHeight) / (maxHeight - minHeight))
+                    .clamp(0.0, 1.0);
+
+                return FlexibleSpaceBar(
+                  title: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    // Show title only when almost fully collapsed (prevent collision)
+                    opacity: collapsePercent > 0.85 ? 1.0 : 0.0,
+                    child: Text(
+                      currentUser.fullName,
+                      style: const TextStyle(
+                         // Consider adjusting font size or padding if still tight
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                ),
-              ),
+                  background: Opacity(
+                    // Fade out earlier to avoid collision with incoming title
+                    // e.g. at 0.6 progress it starts fading, by 0.8 it's gone
+                    opacity: (1 - collapsePercent * 1.5).clamp(0.0, 1.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.8),
+                          ],
+                        ),
+                      ),
+                      child: Center(
+                        child: Transform.scale(
+                          scale: 1.0 - (collapsePercent * 0.2), // Slight shrink effect
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Gap.s40H(),
+                              Hero(
+                                tag: 'profile_image_${currentUser.id}',
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 3,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CachedAvatar(
+                                    radius: 50,
+                                    imageUrl: currentUser.profileImage,
+                                  ),
+                                ),
+                              ),
+                              Gap.s12H(),
+                              Column(
+                                children: [
+                                  Text(
+                                    currentUser.fullName,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Gap.s4H(),
+                                  Text(
+                                    currentUser.phoneNumber,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.9),
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           SliverToBoxAdapter(

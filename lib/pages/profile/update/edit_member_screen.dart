@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mmsn/app/globals/app_constants.dart';
 import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/models/user.dart';
@@ -238,11 +239,7 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
                     ),
                     Gap.s16H(),
                     if (!widget.member.isHeadOfFamily) ...[
-                      _buildTextField(
-                        controller: _relationController,
-                        label: 'Relation',
-                        icon: Icons.people,
-                      ),
+                      _buildRelationDropdown(),
                       Gap.s16H(),
                     ],
                     _buildTextField(
@@ -404,6 +401,56 @@ class _EditMemberScreenState extends State<EditMemberScreen> {
         filled: true,
         fillColor: Colors.grey[50],
       ),
+    );
+  }
+
+  Widget _buildRelationDropdown() {
+    // Check if current value exists in list, otherwise null
+    String? currentValue = _relationController.text.trim();
+    if (currentValue.isEmpty || !relationList.contains(currentValue)) {
+      currentValue = null;
+    }
+
+    return DropdownButtonFormField<String>(
+      value: currentValue,
+      decoration: InputDecoration(
+        labelText: 'Relation',
+        prefixIcon: const Icon(Icons.people),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+            width: 2,
+          ),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+      ),
+      items: relationList.map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          setState(() {
+            _relationController.text = newValue;
+            _onFieldChanged();
+          });
+        }
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please select a relation';
+        }
+        return null;
+      },
     );
   }
 }

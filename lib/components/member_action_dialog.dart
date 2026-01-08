@@ -7,18 +7,33 @@ import 'package:mmsn/models/user.dart';
 import 'package:mmsn/pages/family/services/family_api_services.dart';
 import 'package:mmsn/pages/family/family_details_screen.dart';
 
-class MemberActionDialog extends StatelessWidget {
+class MemberActionDialog extends StatefulWidget {
   const MemberActionDialog({required this.member, super.key});
 
   final User member;
 
+  @override
+  State<MemberActionDialog> createState() => _MemberActionDialogState();
+}
+
+class _MemberActionDialogState extends State<MemberActionDialog> {
+  bool _isLoading = false;
+
   Future<void> _viewFamilyDetails(BuildContext context) async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      final family = await FamilyApiService.instance.getFamilyByMemberId(member.id);
+      final family =
+          await FamilyApiService.instance.getFamilyByMemberId(widget.member.id);
 
       if (!context.mounted) return;
 
       if (family != null) {
+        Navigator.pop(context); // Close dialog before navigating
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -35,6 +50,12 @@ class MemberActionDialog extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error loading family details')),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -74,15 +95,13 @@ class MemberActionDialog extends StatelessWidget {
               child: Column(
                 children: [
                   Hero(
-                    tag: 'member_action_${member.id}',
+                    tag: 'member_action_${widget.member.id}',
                     child: CachedAvatar(
-                      radius: 40,
-                      imageUrl: member.profileImage
-                    ),
+                        radius: 40, imageUrl: widget.member.profileImage),
                   ),
                   Gap.s16H(),
                   Text(
-                    member.fullName,
+                    widget.member.fullName,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.primary,
@@ -102,7 +121,7 @@ class MemberActionDialog extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      member.phoneNumber,
+                      widget.member.phoneNumber,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
@@ -129,7 +148,9 @@ class MemberActionDialog extends StatelessWidget {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => launchPhone(member.phoneNumber),
+                          onPressed: _isLoading
+                              ? null
+                              : () => launchPhone(widget.member.phoneNumber),
                           icon: const Icon(
                             Icons.phone,
                             size: 20,
@@ -150,12 +171,10 @@ class MemberActionDialog extends StatelessWidget {
                       ),
                       Gap.s12W(),
                       Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _viewFamilyDetails(context),
-                          icon: const Icon(Icons.people, size: 20),
-                          label: const Text(
-                            AppStrings.family,
-                          ),
+                        child: ElevatedButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () => _viewFamilyDetails(context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(
                               context,
@@ -167,13 +186,30 @@ class MemberActionDialog extends StatelessWidget {
                             ),
                             elevation: 4,
                           ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.people, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(AppStrings.family),
+                                  ],
+                                ),
                         ),
                       ),
                     ],
                   ),
                   Gap.s12H(),
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
