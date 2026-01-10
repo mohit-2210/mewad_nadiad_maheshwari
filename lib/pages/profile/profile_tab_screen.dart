@@ -428,7 +428,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                         ],
                         if (_currentUser!.userType == 'ADMIN' ||
                             _currentUser!.userType == 'HEAD' ||
-                            _currentUser!.userType == 'EDITOR') ...[
+                            _currentUser!.userType == 'EDITOR'||
+                            _currentUser!.userType == 'HeadAndAdmin') ...[
                           _buildAnimatedSection(
                             title: 'Actions',
                             child: _buildActionsSection(currentUser),
@@ -436,7 +437,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                           ),
                           Gap.s30H(),
                         ],
-                        if (_currentUser!.userType == 'ADMIN') ...[
+                        if (_currentUser!.userType == 'ADMIN' ||
+                            _currentUser!.userType == 'HeadAndAdmin') ...[
                           _buildAnimatedSection(
                             title: 'Super Admin Actions',
                             child: _buildSuperAdminActionsSection(currentUser),
@@ -856,7 +858,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                           children: [
                             if (currentUser.userType == "HEAD" ||
                                 currentUser.userType == "EDITOR" ||
-                                currentUser.userType == "ADMIN")
+                                currentUser.userType == "ADMIN" ||
+                                _currentUser?.userType == 'HeadAndAdmin')
                               IconButton(
                                 onPressed: () => _editMember(member),
                                 icon: Icon(
@@ -904,7 +907,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
   Widget _buildSuperAdminActionsSection(User currentUser) {
     return Column(
       children: [
-        if (currentUser.userType == 'ADMIN') ...[
+        if (currentUser.userType == 'ADMIN' ||
+            currentUser.userType == 'HeadAndAdmin') ...[
           _buildAnimatedActionButton(
             icon: Icons.group_add,
             title: 'Add Family',

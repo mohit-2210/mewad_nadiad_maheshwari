@@ -56,7 +56,11 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
   }
 
   bool get _isAdmin {
-    return _currentUser?.userType == 'ADMIN';
+    if(_currentUser?.userType == 'ADMIN'||
+      _currentUser!.userType == 'HeadAndAdmin') {
+      return true;
+    }
+    return false;
   }
 
   Future<void> _loadAnnouncements() async {
