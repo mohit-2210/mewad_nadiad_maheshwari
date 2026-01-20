@@ -284,7 +284,7 @@ Widget _buildStatCard(
         if (label != null) ...[
           Gap.s4H(),
           Text(
-            label!,
+            label,
             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),

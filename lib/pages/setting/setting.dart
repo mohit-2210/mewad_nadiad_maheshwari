@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mmsn/app/globals/app_localizations.dart';
-import 'package:mmsn/app/globals/app_state.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/app/services/launchEmail.dart';
 import 'package:mmsn/app/services/openPlayOrAppStore.dart';
@@ -23,7 +22,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final appState = AppState.of(context);
 
     return Scaffold(
       appBar: AppBar(

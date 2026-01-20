@@ -178,52 +178,45 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
   }
 
   /// Determine the role tags for a member
-  /// Returns a list of role tags like ["Head", "Editor"] or ["Head & Editor"]
-  List<String> _getMemberRoleTags(User member, List<User> allMembers) {
-    List<String> tags = [];
+/// Returns a list of role tags like ["Head", "Editor"] or ["Head & Editor"]
+List<String> _getMemberRoleTags(User member, List<User> allMembers) {
+  List<String> tags = [];
 
-    final userType = member.userType.toUpperCase();
-    final isHead = userType == 'HEAD';
-    final isEditor = userType == 'EDITOR';
+  final userType = member.userType.toUpperCase();
+  final isHead = userType == 'HEAD' || userType == 'HEAD_ADMIN';
+  final isEditor = userType == 'EDITOR';
+  final isAdmin = userType == 'ADMIN';
 
-    print('🔍 Checking role for: ${member.fullName}');
-    print('   - userType: $userType');
-    print('   - isHead: $isHead, isEditor: $isEditor');
+  print('🔍 Checking role for: ${member.fullName}');
+  print('   - userType: $userType');
+  print('   - isHead: $isHead, isEditor: $isEditor, isAdmin: $isAdmin');
 
-    // If member is HEAD
-    if (isHead) {
-      // Check if there are other editors in the family (excluding this member)
-      final otherEditors = allMembers
-          .where(
-              (m) => m.id != member.id && m.userType.toUpperCase() == 'EDITOR')
-          .toList();
+  if (isHead) {
+    // Check if there are other editors in the family (excluding this member)
+    final otherEditors = allMembers
+        .where((m) =>
+            m.id != member.id && m.userType.toUpperCase() == 'EDITOR')
+        .toList();
 
-      print('   - Checking for other editors (excluding ${member.fullName}):');
-      print('   - Total family members: ${allMembers.length}');
-      allMembers.forEach((m) {
-        print('     * ${m.fullName}: userType=${m.userType}, id=${m.id}');
-      });
-      print('   - Other editors found: ${otherEditors.length}');
-      otherEditors.forEach((e) => print('     * ${e.fullName}'));
+    allMembers.forEach((m) {
+    });
+    otherEditors.forEach((e) => print('     * ${e.fullName}'));
 
-      if (otherEditors.isEmpty) {
-        // Head is the only editor (implicit editor role)
-        tags.add('Head & Editor');
-        print('   ✅ Result: Head & Editor (no other editors)');
-      } else {
-        // There are other editors, so just show Head
-        tags.add('Head');
-        print('   ✅ Result: Head (other editors exist)');
-      }
+    if (otherEditors.isEmpty) {
+      tags.add('Head & Editor');
+    } else {
+      tags.add('Head');
     }
-    // If member is EDITOR (but not HEAD)
-    else if (isEditor) {
-      tags.add('Editor');
-      print('   ✅ Result: Editor');
-    }
-
-    return tags;
   }
+  else if (isEditor) {
+    tags.add('Editor');
+  }
+  else if (isAdmin) {
+    // No tag for regular Admins
+  }
+
+  return tags;
+}
 
   @override
   Widget build(BuildContext context) {

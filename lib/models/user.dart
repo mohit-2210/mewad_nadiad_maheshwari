@@ -92,7 +92,7 @@ class User {
       }
       // Check userType (for API data)
       final userType = json['userType']?.toString().toUpperCase() ?? '';
-      return userType == 'HEAD';
+      return userType == 'HEAD' || userType == 'HEAD_ADMIN';
     }
 
     return User(

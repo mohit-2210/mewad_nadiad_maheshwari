@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mmsn/app/globals/app_localizations.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/setting/setting.dart';
-import 'package:mmsn/pages/setting/static_pages/About.dart';
 import 'package:mmsn/pages/setting/static_pages/PrivacyPolicy.dart';
 import 'package:mmsn/pages/setting/static_pages/community_organization_names.dart';
 import 'package:mmsn/pages/setting/static_pages/termsAndCondition.dart';

@@ -21,9 +21,8 @@ class HomeTabScreen extends StatefulWidget {
   State<HomeTabScreen> createState() => _HomeTabScreenState();
 }
 
-class _HomeTabScreenState extends State<HomeTabScreen> 
+class _HomeTabScreenState extends State<HomeTabScreen>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  
   // ✅ Keep state alive
   @override
   bool get wantKeepAlive => true;
@@ -85,11 +84,11 @@ class _HomeTabScreenState extends State<HomeTabScreen>
     );
     _headerSlideAnimation =
         Tween<Offset>(begin: const Offset(0, -0.5), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _headerAnimationController,
-            curve: Curves.easeOutBack,
-          ),
-        );
+      CurvedAnimation(
+        parent: _headerAnimationController,
+        curve: Curves.easeOutBack,
+      ),
+    );
     _carouselScaleAnimation = Tween<double>(begin: 0.8, end: 1).animate(
       CurvedAnimation(
         parent: _carouselAnimationController,
@@ -99,7 +98,7 @@ class _HomeTabScreenState extends State<HomeTabScreen>
   }
 
   void _startCarouselTimer() {
-    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+    _carouselTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       if (_carouselImages.isNotEmpty && _carouselController.hasClients) {
         final nextIndex = (_currentCarouselIndex + 1) % _carouselImages.length;
         _carouselController.animateToPage(
@@ -120,13 +119,13 @@ class _HomeTabScreenState extends State<HomeTabScreen>
     try {
       final images = DataService.instance.carouselImages;
       final families = await FamilyApiService.instance.getFamilies();
-      
+
       setState(() {
         _carouselImages = images;
         _recentFamilies = families.take(3).toList();
         _isLoading = false;
       });
-      
+
       _headerAnimationController.forward();
       await Future.delayed(const Duration(milliseconds: 200));
       _carouselAnimationController.forward();
@@ -137,7 +136,7 @@ class _HomeTabScreenState extends State<HomeTabScreen>
         _isLoading = false;
         _errorMessage = 'Failed to load data: ${e.toString()}';
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -157,10 +156,10 @@ class _HomeTabScreenState extends State<HomeTabScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context); // ✅ Required for AutomaticKeepAliveClientMixin
-    
+
     final currentUser = AuthApiService.instance.currentUser;
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       body: SafeArea(
         child: _isLoading
@@ -288,7 +287,8 @@ class _HomeTabScreenState extends State<HomeTabScreen>
                           radius: 35,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                        errorWidget: (context, url, error) => const CircleAvatar(
+                        errorWidget: (context, url, error) =>
+                            const CircleAvatar(
                           radius: 35,
                           child: Icon(Icons.person, size: 35),
                         ),
@@ -338,8 +338,7 @@ class _HomeTabScreenState extends State<HomeTabScreen>
                   opacity: value,
                   child: Text(
                     currentUser?.fullName ?? 'User',
-                    style: Theme.of(context).textTheme.headlineSmall
-                        ?.copyWith(
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.primary,
                         ),
@@ -396,7 +395,10 @@ class _HomeTabScreenState extends State<HomeTabScreen>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.3)],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.3)
+                  ],
                 ),
               ),
             ),
@@ -485,8 +487,10 @@ class _HomeTabScreenState extends State<HomeTabScreen>
                   );
                 },
                 style: TextButton.styleFrom(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.1),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -526,7 +530,8 @@ class _HomeTabScreenState extends State<HomeTabScreen>
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.people_outline, size: 48, color: Colors.grey[400]),
+                    Icon(Icons.people_outline,
+                        size: 48, color: Colors.grey[400]),
                     Gap.s12H(),
                     const Text('No families found'),
                   ],

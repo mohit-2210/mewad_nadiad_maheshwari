@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mmsn/app/globals/app_localizations.dart';
-import 'package:mmsn/app/globals/app_strings.dart';
 import 'package:mmsn/app/helpers/gap.dart';
 import 'package:mmsn/pages/auth/cubit/auth_cubit.dart';
 import 'package:mmsn/pages/auth/cubit/auth_state.dart';
-import 'package:mmsn/pages/home/main_screen.dart';
 import 'package:mmsn/pages/intro/intro_screen.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 

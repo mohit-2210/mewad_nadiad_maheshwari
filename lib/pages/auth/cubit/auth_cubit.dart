@@ -381,6 +381,33 @@ class AuthCubit extends Cubit<AuthState> {
       if (user != null) {
         final hasTokens = await AuthLocalStorage.hasAuthTokens();
         if (hasTokens) {
+          // 🔄 PROACTIVE REFRESH CHECK
+          try {
+            print('🔄 Verifying session on startup...');
+            await _repo.refreshAccessToken();
+            print('✅ Session verified & refreshed');
+          } on AuthenticationException catch (e) {
+            print('⛔️ Session expired (AuthException): $e');
+            await logout();
+            return;
+          } on ApiException catch (e) {
+            if (e.statusCode == 401 || e.statusCode == 403) {
+              print('⛔️ Session expired (401/403): $e');
+              await logout();
+              return;
+            }
+            print('⚠️ Network/Server warning during refresh (proceeding offline): $e');
+          } catch (e) {
+            print('⚠️ CheckAuth warning: $e');
+            // Check if it looks like an auth error string
+            if (e.toString().toLowerCase().contains('unauthorized') || 
+                e.toString().toLowerCase().contains('token')) {
+               print('⛔️ inferred Auth error');
+               await logout();
+               return;
+            }
+          }
+
           _tokensRetrieved = true;
           _currentUserId = user.id;
           print('✅ User is logged in: ${user.fullName}');

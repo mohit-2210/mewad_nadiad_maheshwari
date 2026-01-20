@@ -167,8 +167,8 @@ class FamilyApiService {
       // Remove duplicates based on user ID
       final uniqueMembers = <String, User>{};
       for (final member in allMembers) {
-        if (member.id != null && member.id!.isNotEmpty) {
-          uniqueMembers[member.id!] = member;
+        if (member.id.isNotEmpty) {
+          uniqueMembers[member.id] = member;
         }
       }
 
@@ -216,8 +216,8 @@ class FamilyApiService {
       // Remove duplicates
       final uniqueMembers = <String, User>{};
       for (final member in societyMembers) {
-        if (member.id != null && member.id!.isNotEmpty) {
-          uniqueMembers[member.id!] = member;
+        if (member.id.isNotEmpty) {
+          uniqueMembers[member.id] = member;
         }
       }
 
@@ -284,8 +284,8 @@ class FamilyApiService {
       // Remove duplicates
       final uniqueMembers = <String, User>{};
       for (final member in nonHeadMembers) {
-        if (member.id != null && member.id!.isNotEmpty) {
-          uniqueMembers[member.id!] = member;
+        if (member.id.isNotEmpty) {
+          uniqueMembers[member.id] = member;
         }
       }
 
