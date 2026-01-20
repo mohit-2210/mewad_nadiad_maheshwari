@@ -429,7 +429,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                         if (_currentUser!.userType == 'ADMIN' ||
                             _currentUser!.userType == 'HEAD' ||
                             _currentUser!.userType == 'EDITOR'||
-                            _currentUser!.userType == 'HeadAndAdmin') ...[
+                            _currentUser!.userType == 'HEAD_ADMIN') ...[
                           _buildAnimatedSection(
                             title: 'Actions',
                             child: _buildActionsSection(currentUser),
@@ -438,7 +438,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                           Gap.s30H(),
                         ],
                         if (_currentUser!.userType == 'ADMIN' ||
-                            _currentUser!.userType == 'HeadAndAdmin') ...[
+                            _currentUser!.userType == 'HEAD_ADMIN') ...[
                           _buildAnimatedSection(
                             title: 'Super Admin Actions',
                             child: _buildSuperAdminActionsSection(currentUser),
@@ -859,7 +859,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                             if (currentUser.userType == "HEAD" ||
                                 currentUser.userType == "EDITOR" ||
                                 currentUser.userType == "ADMIN" ||
-                                _currentUser?.userType == 'HeadAndAdmin')
+                                _currentUser?.userType == 'HEAD_ADMIN')
                               IconButton(
                                 onPressed: () => _editMember(member),
                                 icon: Icon(
@@ -908,7 +908,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
     return Column(
       children: [
         if (currentUser.userType == 'ADMIN' ||
-            currentUser.userType == 'HeadAndAdmin') ...[
+            currentUser.userType == 'HEAD_ADMIN') ...[
           _buildAnimatedActionButton(
             icon: Icons.group_add,
             title: 'Add Family',

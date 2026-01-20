@@ -57,7 +57,7 @@ class _AnnouncementsTabScreenState extends State<AnnouncementsTabScreen> {
 
   bool get _isAdmin {
     if(_currentUser?.userType == 'ADMIN'||
-      _currentUser!.userType == 'HeadAndAdmin') {
+      _currentUser!.userType == 'HEAD_ADMIN') {
       return true;
     }
     return false;
